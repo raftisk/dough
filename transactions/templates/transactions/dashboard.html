@@ -1,0 +1,294 @@
+{% extends "transactions/base.html" %}
+
+{% block title %}Dashboard - Dough{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header with Quick Actions -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-notion-text">Dashboard</h1>
+            <p class="text-notion-textLight mt-1">{{ current_month|date:"F Y" }}</p>
+        </div>
+        <div class="flex gap-3 items-center">
+            <a href="{% url 'add_income' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                + Add Income
+            </a>
+            <a href="{% url 'add_expense' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                + Add Expense
+            </a>
+            <a href="/admin/" class="p-2 hover:bg-notion-secondary rounded-md transition-colors" title="Settings">
+                <svg class="w-5 h-5 text-notion-textLight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Monthly Income -->
+        <div class="bg-white rounded-lg border border-notion-border p-6 hover:shadow-sm transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-notion-textLight text-sm font-medium">Total Monthly Income</p>
+                    <p class="text-2xl font-bold text-green-600 mt-2">€{{ total_income|floatformat:2 }}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-notion-textLight mt-4">This month</p>
+        </div>
+
+        <!-- Total Monthly Expenses -->
+        <div class="bg-white rounded-lg border border-notion-border p-6 hover:shadow-sm transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-notion-textLight text-sm font-medium">Total Monthly Expenses</p>
+                    <p class="text-2xl font-bold text-red-600 mt-2">€{{ total_expenses|floatformat:2 }}</p>
+                </div>
+                <div class="bg-red-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-notion-textLight mt-4">This month</p>
+        </div>
+
+        <!-- Net Monthly Savings -->
+        <div class="bg-white rounded-lg border border-notion-border p-6 hover:shadow-sm transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-notion-textLight text-sm font-medium">Net Monthly Savings</p>
+                    <p class="text-2xl font-bold {% if net_savings >= 0 %}text-green-600{% else %}text-red-600{% endif %} mt-2">
+                        €{{ net_savings|floatformat:2 }}
+                    </p>
+                </div>
+                <div class="{% if net_savings >= 0 %}bg-green-100{% else %}bg-red-100{% endif %} p-3 rounded-lg">
+                    <svg class="w-6 h-6 {% if net_savings >= 0 %}text-green-600{% else %}text-red-600{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-notion-textLight mt-4">This month</p>
+        </div>
+
+        <!-- Total Wealth (Masked) -->
+        <div class="bg-white rounded-lg border border-notion-border p-6 hover:shadow-sm transition-shadow cursor-pointer" onclick="toggleWealthMask()" id="wealth-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-notion-textLight text-sm font-medium">Total Wealth</p>
+                    <p class="text-2xl font-bold text-notion-text mt-2" id="wealth-amount">€••••••</p>
+                    <p class="text-2xl font-bold text-notion-text mt-2 hidden" id="wealth-real">€{{ total_balance|floatformat:2 }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-notion-textLight mt-4">All wallets - Click to reveal</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Expenses -->
+        <div class="lg:col-span-2 bg-white rounded-lg border border-notion-border">
+            <div class="p-6 border-b border-notion-border">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-notion-text">Recent Expenses</h2>
+                    <div class="flex gap-2">
+                        <button onclick="filterTransactions('expense')" id="filter-expense" class="px-3 py-1 text-xs font-medium rounded-md bg-notion-secondary text-notion-text">
+                            Expenses
+                        </button>
+                        <button onclick="filterTransactions('income')" id="filter-income" class="px-3 py-1 text-xs font-medium rounded-md text-notion-textLight hover:bg-notion-secondary">
+                            Incomes
+                        </button>
+                        <a href="{% url 'transactions_log' %}" class="px-3 py-1 text-xs font-medium rounded-md text-blue-600 hover:bg-blue-50 transition-colors">
+                            View Log →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="divide-y divide-notion-border">
+                {% if recent_transactions %}
+                    {% for transaction in recent_transactions %}
+                    <div class="p-4 hover:bg-notion-secondary transition-colors transaction-item" data-type="{{ transaction.type }}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-1 text-xs font-medium rounded {% if transaction.type == 'income' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                                        {{ transaction.get_type_display }}
+                                    </span>
+                                    <span class="text-sm font-medium text-notion-text">{{ transaction.category.name }}</span>
+                                </div>
+                                <p class="text-sm text-notion-textLight mt-1">{{ transaction.wallet.name }}</p>
+                                {% if transaction.description %}
+                                <p class="text-xs text-notion-textLight mt-1">{{ transaction.description|truncatewords:10 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-semibold {% if transaction.type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {% if transaction.type == 'income' %}+{% else %}-{% endif %}€{{ transaction.amount|floatformat:2 }}
+                                </p>
+                                <p class="text-xs text-notion-textLight mt-1">{{ transaction.date|date:"M d, Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-8 text-center">
+                        <p class="text-notion-textLight">No transactions yet</p>
+                        <p class="text-sm text-notion-textLight mt-1">Create your first transaction to get started</p>
+                    </div>
+                {% endif %}
+            </div>
+            {% if recent_transactions %}
+            <div class="p-4 border-t border-notion-border">
+                <a href="/admin/transactions/transaction/" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    View all transactions →
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="bg-white rounded-lg border border-notion-border">
+            <div class="p-6 border-b border-notion-border flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-semibold text-notion-text">Categories</h2>
+                    <p class="text-sm text-notion-textLight mt-1">This month</p>
+                </div>
+                <a href="{% url 'categories_log' %}" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                    Manage →
+                </a>
+            </div>
+            <div class="p-4 space-y-4">
+                {% if category_breakdown %}
+                    {% for item in category_breakdown %}
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-notion-text">{{ item.category__name }}</span>
+                            <span class="text-sm font-semibold text-notion-text">€{{ item.total|floatformat:2 }}</span>
+                        </div>
+                        {% if item.budget %}
+                        <div class="w-full bg-notion-secondary rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {% widthratio item.total item.budget.amount 100 %}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-xs text-notion-textLight">
+                                {% widthratio item.total item.budget.amount 100 %}% of budget
+                            </span>
+                            <span class="text-xs text-notion-textLight">
+                                €{{ item.budget.remaining|floatformat:2 }} left
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8">
+                        <p class="text-notion-textLight text-sm">No category data yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallets Overview -->
+    <div class="bg-white rounded-lg border border-notion-border">
+        <div class="p-6 border-b border-notion-border">
+            <h2 class="text-lg font-semibold text-notion-text">Wallets</h2>
+        </div>
+        <div class="p-6">
+            {% if wallets %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for wallet in wallets %}
+                <div class="border border-notion-border rounded-lg p-4 hover:shadow-sm transition-shadow">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-medium text-notion-text">{{ wallet.name }}</h3>
+                            <p class="text-xs text-notion-textLight mt-1">{{ wallet.get_type_display }}</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-medium rounded bg-notion-secondary text-notion-text">
+                            {{ wallet.currency }}
+                        </span>
+                    </div>
+                    <p class="text-xl font-bold text-notion-text mt-4">€{{ wallet.current_balance|floatformat:2 }}</p>
+                    <p class="text-xs text-notion-textLight mt-1">Initial: €{{ wallet.initial_balance|floatformat:2 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <p class="text-notion-textLight">No wallets created yet</p>
+                    <a href="/admin/transactions/wallet/add/" class="text-sm text-blue-600 hover:text-blue-700 font-medium mt-2 inline-block">
+                        Create your first wallet →
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize - show only expenses by default
+    document.addEventListener('DOMContentLoaded', function() {
+        filterTransactions('expense');
+    });
+
+    function filterTransactions(type) {
+        const items = document.querySelectorAll('.transaction-item');
+        const buttons = {
+            'income': document.getElementById('filter-income'),
+            'expense': document.getElementById('filter-expense')
+        };
+
+        // Update button styles
+        Object.values(buttons).forEach(btn => {
+            btn.classList.remove('bg-notion-secondary', 'text-notion-text');
+            btn.classList.add('text-notion-textLight');
+        });
+        buttons[type].classList.add('bg-notion-secondary', 'text-notion-text');
+        buttons[type].classList.remove('text-notion-textLight');
+
+        // Update heading
+        const heading = document.querySelector('h2.text-lg');
+        if (type === 'income') {
+            heading.textContent = 'Recent Incomes';
+        } else {
+            heading.textContent = 'Recent Expenses';
+        }
+
+        // Filter items
+        items.forEach(item => {
+            if (item.dataset.type === type) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function toggleWealthMask() {
+        const masked = document.getElementById('wealth-amount');
+        const real = document.getElementById('wealth-real');
+
+        if (masked.classList.contains('hidden')) {
+            masked.classList.remove('hidden');
+            real.classList.add('hidden');
+        } else {
+            masked.classList.add('hidden');
+            real.classList.remove('hidden');
+        }
+    }
+</script>
+{% endblock %}

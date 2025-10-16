@@ -1,0 +1,140 @@
+{% extends "transactions/base.html" %}
+
+{% block title %}Transactions Log - Dough{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'dashboard' %}" class="text-notion-textLight hover:text-notion-text">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <h1 class="text-3xl font-bold text-notion-text">Transactions Log</h1>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'add_income' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                + Add Income
+            </a>
+            <a href="{% url 'add_expense' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                + Add Expense
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg border border-notion-border p-4">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-notion-text mb-2">Type</label>
+                <select name="type" class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All</option>
+                    <option value="income" {% if request.GET.type == 'income' %}selected{% endif %}>Income</option>
+                    <option value="expense" {% if request.GET.type == 'expense' %}selected{% endif %}>Expense</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-notion-text mb-2">Category</label>
+                <select name="category" class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-notion-text mb-2">Wallet</label>
+                <select name="wallet" class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Wallets</option>
+                    {% for wallet in wallets %}
+                    <option value="{{ wallet.id }}" {% if request.GET.wallet == wallet.id|stringformat:"s" %}selected{% endif %}>
+                        {{ wallet.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="bg-white rounded-lg border border-notion-border">
+        <div class="p-6 border-b border-notion-border">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-notion-text">All Transactions ({{ transactions.count }})</h2>
+                {% if request.GET %}
+                <a href="{% url 'transactions_log' %}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    Clear Filters
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="divide-y divide-notion-border">
+            {% if transactions %}
+                {% for transaction in transactions %}
+                <div class="p-4 hover:bg-notion-secondary transition-colors">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-1 text-xs font-medium rounded {% if transaction.type == 'income' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                                    {{ transaction.get_type_display }}
+                                </span>
+                                <span class="text-sm font-medium text-notion-text">{{ transaction.category.name }}</span>
+                                <span class="text-xs text-notion-textLight">• {{ transaction.wallet.name }}</span>
+                            </div>
+                            {% if transaction.description %}
+                            <p class="text-sm text-notion-text mt-2">{{ transaction.description }}</p>
+                            {% endif %}
+                            <p class="text-xs text-notion-textLight mt-1">{{ transaction.date|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="text-right ml-4">
+                            <p class="text-lg font-semibold {% if transaction.type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
+                                {% if transaction.type == 'income' %}+{% else %}-{% endif %}€{{ transaction.amount|floatformat:2 }}
+                            </p>
+                            <div class="flex gap-1 mt-2 justify-end">
+                                <a href="{% url 'edit_transaction' transaction.id %}" class="p-1 hover:bg-gray-200 rounded transition-colors" title="Edit">
+                                    <svg class="w-4 h-4 text-notion-textLight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </a>
+                                <form method="post" action="{% url 'delete_transaction' transaction.id %}" onsubmit="return confirm('Are you sure you want to delete this transaction?');" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="p-1 hover:bg-red-50 rounded transition-colors" title="Delete">
+                                        <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="p-8 text-center">
+                    <p class="text-notion-textLight">No transactions found</p>
+                    <p class="text-sm text-notion-textLight mt-1">Try adjusting your filters or add a new transaction</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Load More Button -->
+        {% if has_more %}
+        <div class="p-4 border-t border-notion-border text-center">
+            <a href="?{% if request.GET.type %}type={{ request.GET.type }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.wallet %}wallet={{ request.GET.wallet }}&{% endif %}limit={{ limit|add:10 }}"
+               class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                Load More →
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
