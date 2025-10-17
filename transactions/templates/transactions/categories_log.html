@@ -14,9 +14,29 @@
             </a>
             <h1 class="text-3xl font-bold text-notion-text">Categories</h1>
         </div>
-        <button onclick="toggleAddForm()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-            + Add Category
-        </button>
+        <div class="flex gap-3">
+            <a href="{% url 'add_suggested_categories' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                + Add Categories
+            </a>
+            <button onclick="toggleAddForm()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                + Add Custom Category
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="bg-white rounded-lg border border-notion-border">
+        <div class="flex border-b border-notion-border">
+            <a href="?type=expense" class="flex-1 px-6 py-3 text-sm font-medium text-center transition-colors {% if current_type == 'expense' %}bg-notion-secondary text-notion-text border-b-2 border-blue-600{% else %}text-notion-textLight hover:bg-notion-secondary{% endif %}">
+                Expense Categories
+            </a>
+            <a href="?type=income" class="flex-1 px-6 py-3 text-sm font-medium text-center transition-colors {% if current_type == 'income' %}bg-notion-secondary text-notion-text border-b-2 border-blue-600{% else %}text-notion-textLight hover:bg-notion-secondary{% endif %}">
+                Income Categories
+            </a>
+            <a href="?type=all" class="flex-1 px-6 py-3 text-sm font-medium text-center transition-colors {% if current_type == 'all' %}bg-notion-secondary text-notion-text border-b-2 border-blue-600{% else %}text-notion-textLight hover:bg-notion-secondary{% endif %}">
+                All Categories
+            </a>
+        </div>
     </div>
 
     <!-- Add Category Form (Hidden by default) -->
@@ -34,6 +54,16 @@
                 {{ form.name }}
                 {% if form.name.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_type" class="block text-sm font-medium text-notion-text mb-2">
+                    Type <span class="text-red-600">*</span>
+                </label>
+                {{ form.type }}
+                {% if form.type.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.type.errors.0 }}</p>
                 {% endif %}
             </div>
 
@@ -62,38 +92,18 @@
         </form>
     </div>
 
-    <!-- Suggested Categories -->
-    <div class="bg-white rounded-lg border border-notion-border">
-        <div class="p-6 border-b border-notion-border">
-            <h2 class="text-lg font-semibold text-notion-text">Suggested Categories</h2>
-            <p class="text-sm text-notion-textLight mt-1">Quick add common categories</p>
-        </div>
-        <div class="p-6">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {% for suggested in suggested_categories %}
-                <form method="post" action="{% url 'add_suggested_category' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="name" value="{{ suggested.name }}">
-                    <input type="hidden" name="icon" value="{{ suggested.icon }}">
-                    <input type="hidden" name="color" value="{{ suggested.color }}">
-                    <button type="submit" class="w-full border border-notion-border rounded-lg p-3 hover:bg-notion-secondary transition-colors text-left group">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background-color: {{ suggested.color }}20;">
-                                <span style="color: {{ suggested.color }};">●</span>
-                            </div>
-                            <span class="text-sm font-medium text-notion-text group-hover:text-blue-600">{{ suggested.name }}</span>
-                        </div>
-                    </button>
-                </form>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
     <!-- Active Categories List -->
     <div class="bg-white rounded-lg border border-notion-border">
         <div class="p-6 border-b border-notion-border">
-            <h2 class="text-lg font-semibold text-notion-text">Active Categories</h2>
+            <h2 class="text-lg font-semibold text-notion-text">
+                {% if current_type == 'expense' %}
+                    Expense Categories
+                {% elif current_type == 'income' %}
+                    Income Categories
+                {% else %}
+                    All Categories
+                {% endif %}
+            </h2>
         </div>
         <div class="divide-y divide-notion-border">
             {% if categories %}
@@ -104,13 +114,18 @@
                             <span style="color: {{ category.color }}; font-size: 20px;">●</span>
                         </div>
                         <div>
-                            <h3 class="font-medium text-notion-text">{{ category.name }}</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-medium text-notion-text">{{ category.name }}</h3>
+                                <span class="px-2 py-1 text-xs font-medium rounded {% if category.type == 'income' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                                    {{ category.get_type_display }}
+                                </span>
+                            </div>
                             <p class="text-xs text-notion-textLight">{{ category.icon }}</p>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <a href="{% url 'edit_category' category.id %}" class="p-2 hover:bg-gray-200 rounded-md transition-colors" title="Edit">
-                            <svg class="w-4 h-4 text-notion-textLight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <a href="{% url 'edit_category' category.id %}" class="p-2 hover:bg-blue-50 rounded-md transition-colors" title="Edit">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                         </a>

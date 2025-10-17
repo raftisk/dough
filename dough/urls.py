@@ -22,11 +22,23 @@ from transactions.views import (
     add_income,
     transactions_log,
     categories_log,
+    add_suggested_categories,
     add_suggested_category,
     edit_category,
     delete_category,
     edit_transaction,
     delete_transaction,
+    wallet_list,
+    wallet_create,
+    wallet_edit,
+    wallet_delete,
+    add_transfer,
+    edit_transfer,
+    delete_transfer,
+    budget_log,
+    budget_create,
+    budget_edit,
+    budget_delete,
 )
 
 urlpatterns = [
@@ -42,9 +54,27 @@ urlpatterns = [
 
     # Categories
     path('categories/', categories_log, name='categories_log'),
+    path('categories/add-categories/', add_suggested_categories, name='add_suggested_categories'),
     path('categories/add-suggested/', add_suggested_category, name='add_suggested_category'),
     path('categories/<int:pk>/edit/', edit_category, name='edit_category'),
     path('categories/<int:pk>/delete/', delete_category, name='delete_category'),
+
+    # Wallets
+    path('wallets/', wallet_list, name='wallet_list'),
+    path('wallets/create/', wallet_create, name='wallet_create'),
+    path('wallets/<int:pk>/edit/', wallet_edit, name='wallet_edit'),
+    path('wallets/<int:pk>/delete/', wallet_delete, name='wallet_delete'),
+
+    # Transfers
+    path('add-transfer/', add_transfer, name='add_transfer'),
+    path('transfers/<int:pk>/edit/', edit_transfer, name='edit_transfer'),
+    path('transfers/<int:pk>/delete/', delete_transfer, name='delete_transfer'),
+
+    # Budgets
+    path('budgets/', budget_log, name='budget_log'),
+    path('budgets/create/', budget_create, name='budget_create'),
+    path('budgets/<int:pk>/edit/', budget_edit, name='budget_edit'),
+    path('budgets/<int:pk>/delete/', budget_delete, name='budget_delete'),
 
     # Admin
     path('admin/', admin.site.urls),

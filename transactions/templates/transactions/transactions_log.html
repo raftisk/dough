@@ -33,6 +33,7 @@
                     <option value="">All</option>
                     <option value="income" {% if request.GET.type == 'income' %}selected{% endif %}>Income</option>
                     <option value="expense" {% if request.GET.type == 'expense' %}selected{% endif %}>Expense</option>
+                    <option value="transfer" {% if request.GET.type == 'transfer' %}selected{% endif %}>Transfer</option>
                 </select>
             </div>
             <div>
@@ -69,7 +70,7 @@
     <div class="bg-white rounded-lg border border-notion-border">
         <div class="p-6 border-b border-notion-border">
             <div class="flex justify-between items-center">
-                <h2 class="text-lg font-semibold text-notion-text">All Transactions ({{ transactions.count }})</h2>
+                <h2 class="text-lg font-semibold text-notion-text">All Items ({{ items|length }})</h2>
                 {% if request.GET %}
                 <a href="{% url 'transactions_log' %}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
                     Clear Filters
@@ -78,34 +79,36 @@
             </div>
         </div>
         <div class="divide-y divide-notion-border">
-            {% if transactions %}
-                {% for transaction in transactions %}
+            {% if items %}
+                {% for item in items %}
                 <div class="p-4 hover:bg-notion-secondary transition-colors">
+                    {% if item.item_type == 'transaction' %}
+                    <!-- Regular Transaction -->
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
-                                <span class="px-2 py-1 text-xs font-medium rounded {% if transaction.type == 'income' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                                    {{ transaction.get_type_display }}
+                                <span class="px-2 py-1 text-xs font-medium rounded {% if item.type == 'income' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                                    {{ item.get_type_display }}
                                 </span>
-                                <span class="text-sm font-medium text-notion-text">{{ transaction.category.name }}</span>
-                                <span class="text-xs text-notion-textLight">• {{ transaction.wallet.name }}</span>
+                                <span class="text-sm font-medium text-notion-text">{{ item.category.name }}</span>
+                                <span class="text-xs text-notion-textLight">• {{ item.wallet.name }}</span>
                             </div>
-                            {% if transaction.description %}
-                            <p class="text-sm text-notion-text mt-2">{{ transaction.description }}</p>
+                            {% if item.description %}
+                            <p class="text-sm text-notion-text mt-2">{{ item.description }}</p>
                             {% endif %}
-                            <p class="text-xs text-notion-textLight mt-1">{{ transaction.date|date:"F d, Y" }}</p>
+                            <p class="text-xs text-notion-textLight mt-1">{{ item.date|date:"F d, Y" }}</p>
                         </div>
                         <div class="text-right ml-4">
-                            <p class="text-lg font-semibold {% if transaction.type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
-                                {% if transaction.type == 'income' %}+{% else %}-{% endif %}€{{ transaction.amount|floatformat:2 }}
+                            <p class="text-lg font-semibold {% if item.type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
+                                {% if item.type == 'income' %}+{% else %}-{% endif %}€{{ item.amount|floatformat:2 }}
                             </p>
                             <div class="flex gap-1 mt-2 justify-end">
-                                <a href="{% url 'edit_transaction' transaction.id %}" class="p-1 hover:bg-gray-200 rounded transition-colors" title="Edit">
-                                    <svg class="w-4 h-4 text-notion-textLight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <a href="{% url 'edit_transaction' item.id %}" class="p-1 hover:bg-blue-50 rounded transition-colors" title="Edit">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </a>
-                                <form method="post" action="{% url 'delete_transaction' transaction.id %}" onsubmit="return confirm('Are you sure you want to delete this transaction?');" class="inline">
+                                <form method="post" action="{% url 'delete_transaction' item.id %}" onsubmit="return confirm('Are you sure you want to delete this transaction?');" class="inline">
                                     {% csrf_token %}
                                     <button type="submit" class="p-1 hover:bg-red-50 rounded transition-colors" title="Delete">
                                         <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,11 +119,52 @@
                             </div>
                         </div>
                     </div>
+                    {% else %}
+                    <!-- Transfer -->
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-700">
+                                    Transfer
+                                </span>
+                                <span class="text-sm font-medium text-notion-text">{{ item.from_wallet.name }}</span>
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                </svg>
+                                <span class="text-sm font-medium text-notion-text">{{ item.to_wallet.name }}</span>
+                            </div>
+                            {% if item.description %}
+                            <p class="text-sm text-notion-text mt-2">{{ item.description }}</p>
+                            {% endif %}
+                            <p class="text-xs text-notion-textLight mt-1">{{ item.date|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="text-right ml-4">
+                            <p class="text-lg font-semibold text-blue-600">
+                                €{{ item.amount|floatformat:2 }}
+                            </p>
+                            <div class="flex gap-1 mt-2 justify-end">
+                                <a href="{% url 'edit_transfer' item.id %}" class="p-1 hover:bg-blue-50 rounded transition-colors" title="Edit">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </a>
+                                <form method="post" action="{% url 'delete_transfer' item.id %}" onsubmit="return confirm('Are you sure you want to delete this transfer?');" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="p-1 hover:bg-red-50 rounded transition-colors" title="Delete">
+                                        <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="p-8 text-center">
-                    <p class="text-notion-textLight">No transactions found</p>
+                    <p class="text-notion-textLight">No items found</p>
                     <p class="text-sm text-notion-textLight mt-1">Try adjusting your filters or add a new transaction</p>
                 </div>
             {% endif %}

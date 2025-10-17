@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.utils import timezone
 from decimal import Decimal
 from datetime import date, datetime
-from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction
+from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer
 from .serializers import (
     WalletSerializer,
     CategorySerializer,
@@ -15,7 +15,8 @@ from .serializers import (
     BudgetSerializer,
     UpcomingTransactionSerializer
 )
-from .forms import ExpenseForm, IncomeForm, CategoryForm, SUGGESTED_CATEGORIES
+from .forms import ExpenseForm, IncomeForm, CategoryForm, WalletForm, TransferForm, BudgetForm
+from .suggested_categories import SUGGESTED_CATEGORIES
 
 
 def dashboard(request):
@@ -59,7 +60,7 @@ def dashboard(request):
     # Get category breakdown for current month (expenses only)
     category_breakdown = month_transactions.filter(
         type=Transaction.EXPENSE
-    ).values('category__name').annotate(
+    ).values('category__name', 'category__id', 'category__type').annotate(
         total=Sum('amount')
     ).order_by('-total')
 
@@ -67,17 +68,21 @@ def dashboard(request):
     for item in category_breakdown:
         category = Category.objects.filter(name=item['category__name']).first()
         if category:
-            # Get active budget for this category
-            budget = Budget.objects.filter(
-                category=category,
-                start_date__lte=today,
-                end_date__gte=today
-            ).first()
+            # Get active budget for this category (budget period contains today)
+            budgets = Budget.objects.filter(category=category)
+            active_budget = None
 
-            if budget:
+            for budget in budgets:
+                if budget.start_date <= today <= budget.end_date:
+                    active_budget = budget
+                    break
+
+            if active_budget:
                 item['budget'] = {
-                    'amount': budget.amount,
-                    'remaining': budget.get_remaining_amount()
+                    'amount': active_budget.amount,
+                    'spent': active_budget.spent_amount(),
+                    'remaining': active_budget.remaining_amount(),
+                    'percentage': active_budget.percentage_used()
                 }
 
     context = {
@@ -293,37 +298,65 @@ def add_income(request):
 
 
 def transactions_log(request):
-    """View for displaying all transactions with filters"""
+    """View for displaying all transactions and transfers with filters"""
     transactions = Transaction.objects.select_related('wallet', 'category').all()
+    transfers = Transfer.objects.select_related('from_wallet', 'to_wallet').all()
 
     # Apply filters
     transaction_type = request.GET.get('type')
     category_id = request.GET.get('category')
     wallet_id = request.GET.get('wallet')
 
-    if transaction_type:
-        transactions = transactions.filter(type=transaction_type)
+    # Filter for "transfer" type
+    if transaction_type == 'transfer':
+        transactions = Transaction.objects.none()  # No transactions
+        if wallet_id:
+            transfers = transfers.filter(
+                Q(from_wallet_id=wallet_id) | Q(to_wallet_id=wallet_id)
+            )
+    else:
+        # Regular transaction filters
+        if transaction_type:
+            transactions = transactions.filter(type=transaction_type)
 
-    if category_id:
-        transactions = transactions.filter(category_id=category_id)
+        if category_id:
+            transactions = transactions.filter(category_id=category_id)
 
-    if wallet_id:
-        transactions = transactions.filter(wallet_id=wallet_id)
+        if wallet_id:
+            transactions = transactions.filter(wallet_id=wallet_id)
 
-    # Order by date descending
-    transactions = transactions.order_by('-date', '-created_at')
+        # If no type filter specified, include all transactions but no transfers
+        if not transaction_type:
+            transfers = Transfer.objects.none()
+
+    # Combine and sort transactions and transfers
+    from itertools import chain
+    from operator import attrgetter
+
+    # Add a 'item_type' attribute to differentiate
+    for t in transactions:
+        t.item_type = 'transaction'
+    for t in transfers:
+        t.item_type = 'transfer'
+
+    # Combine and sort by date
+    all_items = sorted(
+        chain(transactions, transfers),
+        key=attrgetter('date', 'created_at'),
+        reverse=True
+    )
 
     # Get limit for "load more" functionality
-    limit = int(request.GET.get('limit', 10))
-    has_more = transactions.count() > limit
-    transactions = transactions[:limit]
+    limit = int(request.GET.get('limit', 20))
+    has_more = len(all_items) > limit
+    all_items = all_items[:limit]
 
     # Get all categories and wallets for filter dropdowns
     categories = Category.objects.filter(is_active=True).order_by('name')
     wallets = Wallet.objects.all().order_by('name')
 
     context = {
-        'transactions': transactions,
+        'items': all_items,
         'categories': categories,
         'wallets': wallets,
         'has_more': has_more,
@@ -344,38 +377,68 @@ def categories_log(request):
     else:
         form = CategoryForm()
 
-    categories = Category.objects.filter(is_active=True).order_by('name')
+    # Get filter parameter
+    category_type = request.GET.get('type', 'expense')  # Default to expense
+
+    # Filter categories by type
+    if category_type == 'all':
+        categories = Category.objects.filter(is_active=True).order_by('type', 'name')
+    else:
+        categories = Category.objects.filter(is_active=True, type=category_type).order_by('name')
 
     # Filter out already existing suggested categories
-    existing_names = set(categories.values_list('name', flat=True))
-    suggested_categories = [cat for cat in SUGGESTED_CATEGORIES if cat['name'] not in existing_names]
+    existing_names = set(Category.objects.values_list('name', flat=True))
+    suggested_expense = [cat for cat in SUGGESTED_CATEGORIES if cat['type'] == 'expense' and cat['name'] not in existing_names]
+    suggested_income = [cat for cat in SUGGESTED_CATEGORIES if cat['type'] == 'income' and cat['name'] not in existing_names]
 
     context = {
         'form': form,
         'categories': categories,
-        'suggested_categories': suggested_categories,
+        'suggested_expense': suggested_expense,
+        'suggested_income': suggested_income,
+        'current_type': category_type,
     }
 
     return render(request, 'transactions/categories_log.html', context)
+
+
+def add_suggested_categories(request):
+    """View to show all suggested categories for selection"""
+    # Filter out already existing suggested categories
+    existing_names = set(Category.objects.values_list('name', flat=True))
+    suggested_expense = [cat for cat in SUGGESTED_CATEGORIES if cat['type'] == 'expense' and cat['name'] not in existing_names]
+    suggested_income = [cat for cat in SUGGESTED_CATEGORIES if cat['type'] == 'income' and cat['name'] not in existing_names]
+
+    existing_count = len([cat for cat in SUGGESTED_CATEGORIES if cat['name'] in existing_names])
+
+    context = {
+        'suggested_expense': suggested_expense,
+        'suggested_income': suggested_income,
+        'existing_count': existing_count,
+    }
+
+    return render(request, 'transactions/add_suggested_categories.html', context)
 
 
 def add_suggested_category(request):
     """Quick add a suggested category"""
     if request.method == 'POST':
         name = request.POST.get('name')
+        cat_type = request.POST.get('type')
         icon = request.POST.get('icon')
         color = request.POST.get('color')
 
-        if name:
+        if name and cat_type:
             Category.objects.create(
                 name=name,
+                type=cat_type,
                 icon=icon,
                 color=color,
                 is_active=True
             )
             messages.success(request, f'Category "{name}" added successfully!')
 
-    return redirect('categories_log')
+    return redirect('add_suggested_categories')
 
 
 def edit_category(request, pk):
@@ -405,9 +468,19 @@ def delete_category(request, pk):
     if request.method == 'POST':
         category = get_object_or_404(Category, pk=pk)
         category_name = category.name
-        category.is_active = False
-        category.save()
-        messages.success(request, f'Category "{category_name}" removed successfully!')
+
+        # Check if category has transactions
+        transaction_count = category.transactions.count()
+        if transaction_count > 0:
+            messages.error(
+                request,
+                f'Cannot delete category "{category_name}" because it has {transaction_count} associated transaction(s). '
+                f'Please change the category of those transactions first.'
+            )
+        else:
+            category.is_active = False
+            category.save()
+            messages.success(request, f'Category "{category_name}" removed successfully!')
 
     return redirect('categories_log')
 
@@ -450,3 +523,240 @@ def delete_transaction(request, pk):
         messages.success(request, 'Transaction deleted successfully!')
 
     return redirect('transactions_log')
+
+
+# Wallet CRUD Views
+
+def wallet_list(request):
+    """View for displaying all wallets"""
+    wallets = Wallet.objects.all()
+
+    # Calculate current balance for each wallet
+    for wallet in wallets:
+        wallet.current_balance = wallet.get_current_balance()
+
+    context = {
+        'wallets': wallets,
+    }
+
+    return render(request, 'wallets/wallet_log.html', context)
+
+
+def wallet_create(request):
+    """View for creating a new wallet"""
+    if request.method == 'POST':
+        form = WalletForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Wallet created successfully!')
+            return redirect('wallet_list')
+    else:
+        form = WalletForm()
+
+    context = {
+        'form': form,
+        'editing': False,
+    }
+
+    return render(request, 'wallets/add_wallet.html', context)
+
+
+def wallet_edit(request, pk):
+    """View for editing a wallet"""
+    wallet = get_object_or_404(Wallet, pk=pk)
+
+    if request.method == 'POST':
+        form = WalletForm(request.POST, instance=wallet)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Wallet updated successfully!')
+            return redirect('wallet_list')
+    else:
+        form = WalletForm(instance=wallet)
+
+    context = {
+        'form': form,
+        'wallet': wallet,
+        'editing': True,
+    }
+
+    return render(request, 'wallets/add_wallet.html', context)
+
+
+def wallet_delete(request, pk):
+    """View for deleting a wallet"""
+    if request.method == 'POST':
+        wallet = get_object_or_404(Wallet, pk=pk)
+        wallet_name = wallet.name
+        wallet.delete()
+        messages.success(request, f'Wallet "{wallet_name}" deleted successfully!')
+
+    return redirect('wallet_list')
+
+
+# Transfer Views
+
+def add_transfer(request):
+    """View for adding a new transfer"""
+    if request.method == 'POST':
+        form = TransferForm(request.POST)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Transfer completed successfully!')
+                return redirect('dashboard')
+            except Exception as e:
+                messages.error(request, f'Transfer failed: {str(e)}')
+    else:
+        form = TransferForm()
+
+    return render(request, 'transactions/add_transfer.html', {'form': form})
+
+
+def edit_transfer(request, pk):
+    """View for editing a transfer"""
+    transfer = get_object_or_404(Transfer, pk=pk)
+
+    if request.method == 'POST':
+        form = TransferForm(request.POST, instance=transfer)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Transfer updated successfully!')
+                return redirect('transactions_log')
+            except Exception as e:
+                messages.error(request, f'Transfer update failed: {str(e)}')
+    else:
+        form = TransferForm(instance=transfer)
+
+    context = {
+        'form': form,
+        'transfer': transfer,
+        'editing': True,
+    }
+
+    return render(request, 'transactions/add_transfer.html', context)
+
+
+def delete_transfer(request, pk):
+    """View for deleting a transfer"""
+    if request.method == 'POST':
+        transfer = get_object_or_404(Transfer, pk=pk)
+        transfer.delete()
+        messages.success(request, 'Transfer deleted successfully!')
+
+    return redirect('transactions_log')
+
+
+# Budget CRUD Views
+
+def budget_log(request):
+    """View for displaying all budgets with progress bars and statistics"""
+    budgets = Budget.objects.select_related('category').all()
+
+    # Calculate additional data for each budget
+    for budget in budgets:
+        budget.spent = budget.spent_amount()
+        budget.remaining = budget.remaining_amount()
+        budget.percentage = budget.percentage_used()
+        budget.over_budget = budget.is_over_budget()
+
+        # Determine status
+        if budget.over_budget:
+            budget.status = 'over'
+            budget.status_color = 'red'
+        elif budget.percentage >= 80:
+            budget.status = 'warning'
+            budget.status_color = 'yellow'
+        else:
+            budget.status = 'on-track'
+            budget.status_color = 'green'
+
+    # Get filter parameters
+    category_id = request.GET.get('category')
+    status_filter = request.GET.get('status')
+
+    # Apply filters
+    if category_id:
+        budgets = [b for b in budgets if b.category.id == int(category_id)]
+
+    if status_filter:
+        budgets = [b for b in budgets if b.status == status_filter]
+
+    # Get categories for filter dropdown
+    categories = Category.objects.filter(is_active=True).order_by('name')
+
+    context = {
+        'budgets': budgets,
+        'categories': categories,
+    }
+
+    return render(request, 'budgets/budget_log.html', context)
+
+
+def budget_create(request):
+    """View for creating a new budget"""
+    if request.method == 'POST':
+        form = BudgetForm(request.POST)
+        if form.is_valid():
+            try:
+                budget = form.save(commit=False)
+                budget.full_clean()  # Run model validation
+                budget.save()
+                messages.success(request, 'Budget created successfully!')
+                return redirect('budget_log')
+            except Exception as e:
+                messages.error(request, f'Budget creation failed: {str(e)}')
+    else:
+        form = BudgetForm()
+
+    context = {
+        'form': form,
+        'editing': False,
+    }
+
+    return render(request, 'budgets/budget_form.html', context)
+
+
+def budget_edit(request, pk):
+    """View for editing a budget"""
+    budget = get_object_or_404(Budget, pk=pk)
+
+    if request.method == 'POST':
+        form = BudgetForm(request.POST, instance=budget)
+        if form.is_valid():
+            try:
+                budget = form.save(commit=False)
+                budget.full_clean()  # Run model validation
+                budget.save()
+                messages.success(request, 'Budget updated successfully!')
+                return redirect('budget_log')
+            except Exception as e:
+                messages.error(request, f'Budget update failed: {str(e)}')
+    else:
+        form = BudgetForm(instance=budget)
+
+    context = {
+        'form': form,
+        'budget': budget,
+        'editing': True,
+    }
+
+    return render(request, 'budgets/budget_form.html', context)
+
+
+def budget_delete(request, pk):
+    """View for deleting a budget"""
+    budget = get_object_or_404(Budget, pk=pk)
+
+    if request.method == 'POST':
+        budget_name = f"{budget.category.name} - {budget.get_period_display()}"
+        budget.delete()
+        messages.success(request, f'Budget "{budget_name}" deleted successfully!')
+        return redirect('budget_log')
+
+    context = {
+        'budget': budget,
+    }
+
+    return render(request, 'budgets/budget_confirm_delete.html', context)

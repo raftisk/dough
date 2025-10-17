@@ -17,6 +17,9 @@
             <a href="{% url 'add_expense' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
                 + Add Expense
             </a>
+            <a href="{% url 'add_transfer' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                + Add Transfer
+            </a>
             <a href="/admin/" class="p-2 hover:bg-notion-secondary rounded-md transition-colors" title="Settings">
                 <svg class="w-5 h-5 text-notion-textLight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -179,13 +182,19 @@
                         </div>
                         {% if item.budget %}
                         <div class="w-full bg-notion-secondary rounded-full h-2">
-                            <div class="bg-blue-600 h-2 rounded-full" style="width: {% widthratio item.total item.budget.amount 100 %}%"></div>
+                            {% if item.budget.percentage > 100 %}
+                            <div class="bg-red-600 h-2 rounded-full transition-all" style="width: 100%"></div>
+                            {% elif item.budget.percentage >= 80 %}
+                            <div class="bg-yellow-500 h-2 rounded-full transition-all" style="width: {{ item.budget.percentage }}%"></div>
+                            {% else %}
+                            <div class="bg-green-600 h-2 rounded-full transition-all" style="width: {{ item.budget.percentage }}%"></div>
+                            {% endif %}
                         </div>
                         <div class="flex justify-between items-center mt-1">
                             <span class="text-xs text-notion-textLight">
-                                {% widthratio item.total item.budget.amount 100 %}% of budget
+                                {{ item.budget.percentage|floatformat:1 }}% of €{{ item.budget.amount|floatformat:2 }}
                             </span>
-                            <span class="text-xs text-notion-textLight">
+                            <span class="text-xs font-medium {% if item.budget.remaining < 0 %}text-red-600{% else %}text-green-600{% endif %}">
                                 €{{ item.budget.remaining|floatformat:2 }} left
                             </span>
                         </div>

@@ -1,0 +1,151 @@
+{% extends "transactions/base.html" %}
+
+{% block title %}{% if editing %}Edit Budget{% else %}Create Budget{% endif %} - Dough{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg border border-notion-border">
+        <div class="p-6 border-b border-notion-border">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'budget_log' %}" class="text-notion-textLight hover:text-notion-text">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <h1 class="text-2xl font-bold text-notion-text">
+                    {% if editing %}Edit Budget{% else %}Create Budget{% endif %}
+                </h1>
+            </div>
+        </div>
+
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                <p class="text-sm text-red-600">{{ form.non_field_errors }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Category -->
+            <div>
+                <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-notion-text mb-2">
+                    Category <span class="text-red-600">*</span>
+                </label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.category.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-notion-textLight">Select the category for this budget</p>
+            </div>
+
+            <!-- Amount -->
+            <div>
+                <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-notion-text mb-2">
+                    Budget Amount (EUR) <span class="text-red-600">*</span>
+                </label>
+                <div class="relative">
+                    <span class="absolute left-3 top-2 text-notion-textLight">€</span>
+                    <input type="number" name="amount" id="{{ form.amount.id_for_label }}"
+                           class="w-full pl-8 pr-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="0.00" step="0.01" min="0.01" value="{{ form.amount.value|default:'0.00' }}" required>
+                </div>
+                {% if form.amount.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-notion-textLight">Maximum amount you want to spend in this category</p>
+            </div>
+
+            <!-- Period -->
+            <div>
+                <label for="{{ form.period.id_for_label }}" class="block text-sm font-medium text-notion-text mb-2">
+                    Period <span class="text-red-600">*</span>
+                </label>
+                {{ form.period }}
+                {% if form.period.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.period.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-notion-textLight">Budget tracking period</p>
+            </div>
+
+            <!-- Start Date -->
+            <div>
+                <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-notion-text mb-2">
+                    Start Date <span class="text-red-600">*</span>
+                </label>
+                {{ form.start_date }}
+                {% if form.start_date.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.start_date.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-notion-textLight">Budget period start date (end date is calculated automatically)</p>
+            </div>
+
+            <!-- Reset (Recurring) -->
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    {{ form.reset }}
+                </div>
+                <div class="ml-3">
+                    <label for="{{ form.reset.id_for_label }}" class="text-sm font-medium text-notion-text">
+                        Recurring Budget
+                    </label>
+                    <p class="text-xs text-notion-textLight">Budget automatically resets each period</p>
+                    {% if form.reset.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.reset.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Rollover -->
+            <div class="flex items-start" id="rollover-container">
+                <div class="flex items-center h-5">
+                    {{ form.rollover }}
+                </div>
+                <div class="ml-3">
+                    <label for="{{ form.rollover.id_for_label }}" class="text-sm font-medium text-notion-text">
+                        Rollover Remaining Budget
+                    </label>
+                    <p class="text-xs text-notion-textLight">Unused budget carries over to next period (only if recurring is enabled)</p>
+                    {% if form.rollover.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.rollover.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium transition-colors">
+                    {% if editing %}Update Budget{% else %}Create Budget{% endif %}
+                </button>
+                <a href="{% url 'budget_log' %}" class="flex-1 text-center bg-notion-secondary hover:bg-gray-200 text-notion-text px-6 py-3 rounded-md font-medium transition-colors">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide rollover option based on reset checkbox
+    const resetCheckbox = document.getElementById('id_reset');
+    const rolloverContainer = document.getElementById('rollover-container');
+    const rolloverCheckbox = document.getElementById('id_rollover');
+
+    function toggleRollover() {
+        if (resetCheckbox.checked) {
+            rolloverContainer.style.display = 'flex';
+        } else {
+            rolloverContainer.style.display = 'none';
+            rolloverCheckbox.checked = false;
+        }
+    }
+
+    // Initialize on page load
+    toggleRollover();
+
+    // Listen for changes
+    resetCheckbox.addEventListener('change', toggleRollover);
+</script>
+{% endblock %}

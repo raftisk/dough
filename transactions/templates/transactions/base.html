@@ -39,7 +39,7 @@
                         <a href="/" class="{% if request.resolver_match.url_name == 'dashboard' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Dashboard
                         </a>
-                        <a href="/admin/transactions/wallet/" class="text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <a href="{% url 'wallet_list' %}" class="{% if request.resolver_match.url_name == 'wallet_list' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Wallets
                         </a>
                         <a href="{% url 'transactions_log' %}" class="{% if request.resolver_match.url_name == 'transaction_list' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
@@ -48,7 +48,7 @@
                         <a href="{% url 'categories_log' %}" class="{% if request.resolver_match.url_name == 'category_list' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Categories
                         </a>
-                        <a href="/admin/transactions/budget/" class="text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                        <a href="{% url 'budget_log' %}" class="{% if request.resolver_match.url_name == 'budget_log' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Budgets
                         </a>
                     </div>
