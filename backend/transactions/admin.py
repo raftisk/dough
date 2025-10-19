@@ -1,0 +1,110 @@
+from django.contrib import admin
+from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem
+
+
+@admin.register(Wallet)
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ['name', 'type', 'initial_balance', 'currency', 'created_at']
+    list_filter = ['type', 'currency', 'created_at']
+    search_fields = ['name']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'type', 'icon', 'is_active', 'created_at']
+    list_filter = ['type', 'is_active', 'created_at']
+    search_fields = ['name']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ['date', 'type', 'wallet', 'category', 'amount', 'get_description']
+    list_filter = ['type', 'wallet', 'category', 'date', 'recurrence']
+    search_fields = ['desc', 'wallet__name', 'category__name']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'date'
+    ordering = ['-date', '-created_at']
+
+    def get_description(self, obj):
+        """Display description (desc field)"""
+        return obj.desc[:50] if obj.desc else ''
+    get_description.short_description = 'Description'
+
+
+@admin.register(Budget)
+class BudgetAdmin(admin.ModelAdmin):
+    list_display = ['category', 'amount', 'period', 'start_month', 'get_end_date', 'reset', 'rollover', 'created_at']
+    list_filter = ['category', 'period', 'reset', 'rollover']
+    search_fields = ['category__name']
+    readonly_fields = ['created_at', 'updated_at', 'get_start_date', 'get_end_date', 'get_spent_amount', 'get_remaining_amount', 'get_percentage_used']
+
+    def get_start_date(self, obj):
+        """Display calculated start date"""
+        return obj.start_date
+    get_start_date.short_description = 'Start Date'
+
+    def get_end_date(self, obj):
+        """Display calculated end date"""
+        return obj.end_date
+    get_end_date.short_description = 'End Date'
+
+    def get_spent_amount(self, obj):
+        """Display spent amount"""
+        return f"€{obj.spent_amount()}"
+    get_spent_amount.short_description = 'Spent'
+
+    def get_remaining_amount(self, obj):
+        """Display remaining amount"""
+        return f"€{obj.remaining_amount()}"
+    get_remaining_amount.short_description = 'Remaining'
+
+    def get_percentage_used(self, obj):
+        """Display percentage used"""
+        return f"{obj.percentage_used()}%"
+    get_percentage_used.short_description = 'Usage %'
+
+
+@admin.register(UpcomingTransaction)
+class UpcomingTransactionAdmin(admin.ModelAdmin):
+    list_display = ['date', 'type', 'wallet', 'category', 'amount', 'auto_post', 'get_recurring_status']
+    list_filter = ['type', 'wallet', 'category', 'auto_post', 'recurrence']
+    search_fields = ['desc', 'wallet__name', 'category__name']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'date'
+
+    def get_recurring_status(self, obj):
+        """Display if transaction is recurring"""
+        return obj.is_recurring()
+    get_recurring_status.short_description = 'Recurring'
+    get_recurring_status.boolean = True
+
+
+@admin.register(Transfer)
+class TransferAdmin(admin.ModelAdmin):
+    list_display = ['date', 'from_wallet', 'to_wallet', 'amount', 'get_description']
+    list_filter = ['from_wallet', 'to_wallet', 'date']
+    search_fields = ['desc', 'from_wallet__name', 'to_wallet__name']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'date'
+    ordering = ['-date', '-created_at']
+
+    def get_description(self, obj):
+        """Display description (desc field)"""
+        return obj.desc[:50] if obj.desc else ''
+    get_description.short_description = 'Description'
+
+
+@admin.register(WishlistItem)
+class WishlistItemAdmin(admin.ModelAdmin):
+    list_display = ['get_description', 'amount', 'category', 'priority', 'target', 'is_completed', 'created_at']
+    list_filter = ['category', 'priority', 'is_completed', 'target']
+    search_fields = ['desc', 'category__name']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering = ['target', '-priority', '-created_at']
+
+    def get_description(self, obj):
+        """Display description (desc field)"""
+        return obj.desc[:50] if obj.desc else ''
+    get_description.short_description = 'Description'

@@ -1,0 +1,135 @@
+{% extends "transactions/base.html" %}
+
+{% block title %}Edit Upcoming Transaction - Dough{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-center gap-3">
+        <a href="{% url 'upcoming_transactions' %}" class="text-notion-textLight hover:text-notion-text">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h1 class="text-3xl font-bold text-notion-text">Edit Upcoming Transaction</h1>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-lg border border-notion-border p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Description -->
+            <div>
+                <label for="id_description" class="block text-sm font-medium text-notion-text mb-2">
+                    Description
+                </label>
+                <input type="text" name="description" id="id_description" value="{{ upcoming.description }}"
+                       class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Enter description" required>
+            </div>
+
+            <!-- Amount -->
+            <div>
+                <label for="id_amount" class="block text-sm font-medium text-notion-text mb-2">
+                    Amount (€)
+                </label>
+                <input type="number" name="amount" id="id_amount" value="{{ upcoming.amount }}"
+                       step="0.01" min="0.01"
+                       class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="0.00" required>
+            </div>
+
+            <!-- Scheduled Date -->
+            <div>
+                <label for="id_scheduled_date" class="block text-sm font-medium text-notion-text mb-2">
+                    Scheduled Date
+                </label>
+                <input type="date" name="scheduled_date" id="id_scheduled_date" value="{{ upcoming.scheduled_date|date:'Y-m-d' }}"
+                       class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       required>
+            </div>
+
+            <!-- Wallet -->
+            <div>
+                <label for="id_wallet" class="block text-sm font-medium text-notion-text mb-2">
+                    Wallet
+                </label>
+                <select name="wallet" id="id_wallet"
+                        class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                    {% for wallet in wallets %}
+                    <option value="{{ wallet.id }}" {% if wallet.id == upcoming.wallet.id %}selected{% endif %}>
+                        {{ wallet.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label for="id_category" class="block text-sm font-medium text-notion-text mb-2">
+                    Category
+                </label>
+                <select name="category" id="id_category"
+                        class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category.id == upcoming.category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Auto Post -->
+            <div class="flex items-center">
+                <input type="checkbox" name="auto_post" id="id_auto_post"
+                       class="rounded border-notion-border focus:ring-2 focus:ring-blue-500"
+                       {% if upcoming.auto_post %}checked{% endif %}>
+                <label for="id_auto_post" class="ml-2 text-sm text-notion-text">
+                    Auto-post on scheduled date
+                </label>
+            </div>
+
+            <!-- Is Recurring -->
+            <div class="flex items-center">
+                <input type="checkbox" name="is_recurring" id="id_is_recurring"
+                       class="rounded border-notion-border focus:ring-2 focus:ring-blue-500"
+                       {% if upcoming.is_recurring %}checked{% endif %}
+                       onchange="document.getElementById('recurrence_options').style.display = this.checked ? 'block' : 'none'">
+                <label for="id_is_recurring" class="ml-2 text-sm text-notion-text">
+                    Make this a recurring transaction
+                </label>
+            </div>
+
+            <!-- Recurrence Pattern -->
+            <div id="recurrence_options" {% if not upcoming.is_recurring %}style="display: none;"{% endif %}>
+                <label for="id_recurrence_pattern" class="block text-sm font-medium text-notion-text mb-2">
+                    Recurrence Pattern
+                </label>
+                <select name="recurrence_pattern" id="id_recurrence_pattern"
+                        class="w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="daily" {% if upcoming.recurrence_pattern == 'daily' %}selected{% endif %}>Daily</option>
+                    <option value="weekly" {% if upcoming.recurrence_pattern == 'weekly' %}selected{% endif %}>Weekly</option>
+                    <option value="biweekly" {% if upcoming.recurrence_pattern == 'biweekly' %}selected{% endif %}>Biweekly</option>
+                    <option value="monthly" {% if upcoming.recurrence_pattern == 'monthly' %}selected{% endif %}>Monthly</option>
+                    <option value="yearly" {% if upcoming.recurrence_pattern == 'yearly' %}selected{% endif %}>Yearly</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    Save Changes
+                </button>
+                <a href="{% url 'upcoming_transactions' %}"
+                   class="px-4 py-2 text-sm font-medium text-notion-text hover:bg-notion-secondary rounded-md transition-colors">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

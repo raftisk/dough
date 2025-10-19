@@ -39,6 +39,11 @@ from transactions.views import (
     budget_create,
     budget_edit,
     budget_delete,
+    upcoming_transactions,
+    post_upcoming_transaction,
+    edit_upcoming_transaction,
+    delete_upcoming_transaction,
+    calendar_view,
 )
 
 urlpatterns = [
@@ -75,6 +80,15 @@ urlpatterns = [
     path('budgets/create/', budget_create, name='budget_create'),
     path('budgets/<int:pk>/edit/', budget_edit, name='budget_edit'),
     path('budgets/<int:pk>/delete/', budget_delete, name='budget_delete'),
+
+    # Upcoming Transactions
+    path('upcoming/', upcoming_transactions, name='upcoming_transactions'),
+    path('upcoming/<int:pk>/post/', post_upcoming_transaction, name='post_upcoming_transaction'),
+    path('upcoming/<int:pk>/edit/', edit_upcoming_transaction, name='edit_upcoming_transaction'),
+    path('upcoming/<int:pk>/delete/', delete_upcoming_transaction, name='delete_upcoming_transaction'),
+
+    # Calendar
+    path('calendar/', calendar_view, name='calendar'),
 
     # Admin
     path('admin/', admin.site.urls),

@@ -7,15 +7,17 @@ from django.contrib import messages
 from django.utils import timezone
 from decimal import Decimal
 from datetime import date, datetime
-from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer
+from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem
 from .serializers import (
     WalletSerializer,
     CategorySerializer,
     TransactionSerializer,
     BudgetSerializer,
-    UpcomingTransactionSerializer
+    UpcomingTransactionSerializer,
+    TransferSerializer,
+    WishlistItemSerializer
 )
-from .forms import ExpenseForm, IncomeForm, CategoryForm, WalletForm, TransferForm, BudgetForm
+from .forms import ExpenseForm, IncomeForm, CategoryForm, WalletForm, TransferForm, BudgetForm, WishlistItemForm
 from .suggested_categories import SUGGESTED_CATEGORIES
 
 
@@ -35,11 +37,11 @@ def dashboard(request):
         date__lt=next_month
     )
 
-    total_income = month_transactions.filter(type=Transaction.INCOME).aggregate(
+    total_income = month_transactions.filter(type='income').aggregate(
         total=Sum('amount')
     )['total'] or Decimal('0.00')
 
-    total_expenses = month_transactions.filter(type=Transaction.EXPENSE).aggregate(
+    total_expenses = month_transactions.filter(type='expense').aggregate(
         total=Sum('amount')
     )['total'] or Decimal('0.00')
 
@@ -59,7 +61,7 @@ def dashboard(request):
 
     # Get category breakdown for current month (expenses only)
     category_breakdown = month_transactions.filter(
-        type=Transaction.EXPENSE
+        type='expense'
     ).values('category__name', 'category__id', 'category__type').annotate(
         total=Sum('amount')
     ).order_by('-total')
@@ -194,12 +196,12 @@ class TransactionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(wallet_id=wallet_id)
 
         # Calculate income
-        income = queryset.filter(type=Transaction.INCOME).aggregate(
+        income = queryset.filter(type='income').aggregate(
             total=Sum('amount')
         )['total'] or Decimal('0.00')
 
         # Calculate expenses
-        expenses = queryset.filter(type=Transaction.EXPENSE).aggregate(
+        expenses = queryset.filter(type='expense').aggregate(
             total=Sum('amount')
         )['total'] or Decimal('0.00')
 
@@ -228,11 +230,6 @@ class BudgetViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Budget.objects.all()
 
-        # Filter by wallet
-        wallet_id = self.request.query_params.get('wallet', None)
-        if wallet_id:
-            queryset = queryset.filter(Q(wallet_id=wallet_id) | Q(wallet__isnull=True))
-
         # Filter by category
         category_id = self.request.query_params.get('category', None)
         if category_id:
@@ -242,7 +239,12 @@ class BudgetViewSet(viewsets.ModelViewSet):
         active_only = self.request.query_params.get('active', None)
         if active_only == 'true':
             today = date.today()
-            queryset = queryset.filter(start_date__lte=today, end_date__gte=today)
+            # Filter budgets where today falls within their period
+            active_budgets = []
+            for budget in queryset:
+                if budget.start_date <= today <= budget.end_date:
+                    active_budgets.append(budget.id)
+            queryset = queryset.filter(id__in=active_budgets)
 
         return queryset
 
@@ -259,10 +261,45 @@ class UpcomingTransactionViewSet(viewsets.ModelViewSet):
         if wallet_id:
             queryset = queryset.filter(wallet_id=wallet_id)
 
-        # Filter by active status
-        is_active = self.request.query_params.get('is_active', None)
-        if is_active is not None:
-            queryset = queryset.filter(is_active=is_active.lower() == 'true')
+        return queryset
+
+
+class TransferViewSet(viewsets.ModelViewSet):
+    queryset = Transfer.objects.all()
+    serializer_class = TransferSerializer
+
+    def get_queryset(self):
+        queryset = Transfer.objects.all()
+
+        # Filter by wallet (either from or to)
+        wallet_id = self.request.query_params.get('wallet', None)
+        if wallet_id:
+            queryset = queryset.filter(Q(from_wallet_id=wallet_id) | Q(to_wallet_id=wallet_id))
+
+        return queryset
+
+
+class WishlistItemViewSet(viewsets.ModelViewSet):
+    queryset = WishlistItem.objects.all()
+    serializer_class = WishlistItemSerializer
+
+    def get_queryset(self):
+        queryset = WishlistItem.objects.all()
+
+        # Filter by category
+        category_id = self.request.query_params.get('category', None)
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+
+        # Filter by priority
+        priority = self.request.query_params.get('priority', None)
+        if priority:
+            queryset = queryset.filter(priority=priority)
+
+        # Filter by completion status
+        is_completed = self.request.query_params.get('is_completed', None)
+        if is_completed is not None:
+            queryset = queryset.filter(is_completed=is_completed.lower() == 'true')
 
         return queryset
 
@@ -274,9 +311,31 @@ def add_expense(request):
     if request.method == 'POST':
         form = ExpenseForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Expense added successfully!')
-            return redirect('dashboard')
+            transaction_date = form.cleaned_data['date']
+            today = timezone.now().date()
+            auto_post = form.cleaned_data.get('auto_post', False)
+
+            # Check if date is in the future
+            if transaction_date > today:
+                # Create UpcomingTransaction instead
+                upcoming = UpcomingTransaction.objects.create(
+                    desc=form.cleaned_data['desc'],
+                    amount=form.cleaned_data['amount'],
+                    date=transaction_date,
+                    type='expense',
+                    wallet=form.cleaned_data['wallet'],
+                    category=form.cleaned_data['category'],
+                    auto_post=auto_post,
+                    recurrence=form.cleaned_data.get('recurrence', ''),
+                    recurrence_parent=form.cleaned_data.get('recurrence_parent')
+                )
+                messages.success(request, f'Transaction scheduled for {transaction_date}')
+                return redirect('upcoming_transactions')
+            else:
+                # Create normal transaction
+                transaction = form.save()
+                messages.success(request, 'Expense added successfully!')
+                return redirect('dashboard')
     else:
         form = ExpenseForm()
 
@@ -288,9 +347,31 @@ def add_income(request):
     if request.method == 'POST':
         form = IncomeForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Income added successfully!')
-            return redirect('dashboard')
+            transaction_date = form.cleaned_data['date']
+            today = timezone.now().date()
+            auto_post = form.cleaned_data.get('auto_post', False)
+
+            # Check if date is in the future
+            if transaction_date > today:
+                # Create UpcomingTransaction instead
+                upcoming = UpcomingTransaction.objects.create(
+                    desc=form.cleaned_data['desc'],
+                    amount=form.cleaned_data['amount'],
+                    date=transaction_date,
+                    type='income',
+                    wallet=form.cleaned_data['wallet'],
+                    category=form.cleaned_data['category'],
+                    auto_post=auto_post,
+                    recurrence=form.cleaned_data.get('recurrence', ''),
+                    recurrence_parent=form.cleaned_data.get('recurrence_parent')
+                )
+                messages.success(request, f'Transaction scheduled for {transaction_date}')
+                return redirect('upcoming_transactions')
+            else:
+                # Create normal transaction
+                transaction = form.save()
+                messages.success(request, 'Income added successfully!')
+                return redirect('dashboard')
     else:
         form = IncomeForm()
 
@@ -299,7 +380,10 @@ def add_income(request):
 
 def transactions_log(request):
     """View for displaying all transactions and transfers with filters"""
-    transactions = Transaction.objects.select_related('wallet', 'category').all()
+    # Exclude UpcomingTransaction from regular transactions by default
+    transactions = Transaction.objects.select_related('wallet', 'category').filter(
+        upcomingtransaction__isnull=True
+    ).all()
     transfers = Transfer.objects.select_related('from_wallet', 'to_wallet').all()
 
     # Apply filters
@@ -339,7 +423,7 @@ def transactions_log(request):
     for t in transfers:
         t.item_type = 'transfer'
 
-    # Combine and sort by date
+    # Combine and sort by date (most recent first)
     all_items = sorted(
         chain(transactions, transfers),
         key=attrgetter('date', 'created_at'),
@@ -490,7 +574,7 @@ def edit_transaction(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk)
 
     if request.method == 'POST':
-        if transaction.type == Transaction.EXPENSE:
+        if transaction.type == 'expense':
             form = ExpenseForm(request.POST, instance=transaction)
         else:
             form = IncomeForm(request.POST, instance=transaction)
@@ -500,7 +584,7 @@ def edit_transaction(request, pk):
             messages.success(request, 'Transaction updated successfully!')
             return redirect('transactions_log')
     else:
-        if transaction.type == Transaction.EXPENSE:
+        if transaction.type == 'expense':
             form = ExpenseForm(instance=transaction)
         else:
             form = IncomeForm(instance=transaction)
@@ -511,7 +595,7 @@ def edit_transaction(request, pk):
         'editing': True,
     }
 
-    template = 'transactions/add_expense.html' if transaction.type == Transaction.EXPENSE else 'transactions/add_income.html'
+    template = 'transactions/add_expense.html' if transaction.type == 'expense' else 'transactions/add_income.html'
     return render(request, template, context)
 
 
@@ -760,3 +844,233 @@ def budget_delete(request, pk):
     }
 
     return render(request, 'budgets/budget_confirm_delete.html', context)
+
+
+# Upcoming Transaction Views
+
+def upcoming_transactions(request):
+    """View for displaying all upcoming transactions grouped by overdue/upcoming"""
+    # Get all upcoming transactions
+    upcoming = UpcomingTransaction.objects.select_related(
+        'wallet', 'category'
+    ).order_by('date')
+
+    # Apply filters
+    transaction_type = request.GET.get('type')
+    category_id = request.GET.get('category')
+    wallet_id = request.GET.get('wallet')
+
+    if transaction_type:
+        upcoming = upcoming.filter(type=transaction_type)
+    if category_id:
+        upcoming = upcoming.filter(category_id=category_id)
+    if wallet_id:
+        upcoming = upcoming.filter(wallet_id=wallet_id)
+
+    # Get all categories and wallets for filter dropdowns
+    categories = Category.objects.filter(is_active=True).order_by('name')
+    wallets = Wallet.objects.all().order_by('name')
+
+    # Separate into overdue and upcoming
+    today = timezone.now().date()
+    overdue = []
+    upcoming_list = []
+
+    # For recurring transactions, show only the NEXT occurrence
+    seen_recurring = set()
+
+    for transaction in upcoming:
+        # Skip if this is a duplicate recurring transaction (keep only the earliest)
+        if transaction.is_recurring():
+            recurring_key = (
+                transaction.wallet_id,
+                transaction.category_id,
+                transaction.type,
+                transaction.amount,
+                transaction.recurrence
+            )
+            if recurring_key in seen_recurring:
+                continue
+            seen_recurring.add(recurring_key)
+
+        # Mark overdue if past date and auto_post is False
+        if transaction.date < today and not transaction.auto_post:
+            overdue.append(transaction)
+        else:
+            upcoming_list.append(transaction)
+
+    context = {
+        'overdue_transactions': overdue,
+        'upcoming_transactions': upcoming_list,
+        'categories': categories,
+        'wallets': wallets,
+    }
+
+    return render(request, 'transactions/upcoming_transactions.html', context)
+
+
+def post_upcoming_transaction(request, pk):
+    """Manually post an upcoming transaction"""
+    if request.method == 'POST':
+        upcoming = get_object_or_404(UpcomingTransaction, pk=pk)
+
+        try:
+            # Create a regular transaction from the upcoming transaction
+            transaction = Transaction.objects.create(
+                wallet=upcoming.wallet,
+                type=upcoming.type,
+                category=upcoming.category,
+                amount=upcoming.amount,
+                desc=upcoming.desc,
+                date=upcoming.date,
+                recurrence=upcoming.recurrence,
+                recurrence_parent=upcoming.recurrence_parent
+            )
+            # Delete the upcoming transaction after posting
+            upcoming.delete()
+            messages.success(request, f'Transaction posted successfully!')
+        except Exception as e:
+            messages.error(request, f'Failed to post transaction: {str(e)}')
+
+    return redirect('upcoming_transactions')
+
+
+def edit_upcoming_transaction(request, pk):
+    """Edit an upcoming transaction"""
+    upcoming = get_object_or_404(UpcomingTransaction, pk=pk)
+
+    if request.method == 'POST':
+        # Get form data
+        upcoming.desc = request.POST.get('desc', upcoming.desc)
+        upcoming.amount = request.POST.get('amount', upcoming.amount)
+        upcoming.date = request.POST.get('date', upcoming.date)
+        upcoming.wallet_id = request.POST.get('wallet', upcoming.wallet_id)
+        upcoming.category_id = request.POST.get('category', upcoming.category_id)
+        upcoming.auto_post = request.POST.get('auto_post') == 'on'
+        upcoming.recurrence = request.POST.get('recurrence', '')
+
+        upcoming.save()
+        messages.success(request, 'Upcoming transaction updated successfully!')
+        return redirect('upcoming_transactions')
+
+    # Get form data
+    if upcoming.type == 'expense':
+        categories = Category.objects.filter(is_active=True, type='expense')
+    else:
+        categories = Category.objects.filter(is_active=True, type='income')
+
+    wallets = Wallet.objects.all()
+
+    context = {
+        'upcoming': upcoming,
+        'categories': categories,
+        'wallets': wallets,
+        'editing': True,
+    }
+
+    return render(request, 'transactions/edit_upcoming_transaction.html', context)
+
+
+def delete_upcoming_transaction(request, pk):
+    """Delete an upcoming transaction"""
+    if request.method == 'POST':
+        upcoming = get_object_or_404(UpcomingTransaction, pk=pk)
+        upcoming.delete()
+        messages.success(request, 'Upcoming transaction deleted successfully!')
+
+    return redirect('upcoming_transactions')
+
+
+# Calendar View
+
+def calendar_view(request):
+    """
+    Calendar view showing transactions and upcoming transactions for the current month.
+    Displays a month grid with transactions summary per day.
+    """
+    import calendar as cal
+    from collections import defaultdict
+
+    # Get month and year from request, default to current month
+    today = timezone.now().date()
+    year = int(request.GET.get('year', today.year))
+    month = int(request.GET.get('month', today.month))
+
+    # Calculate previous and next month/year for navigation
+    if month == 1:
+        prev_month, prev_year = 12, year - 1
+    else:
+        prev_month, prev_year = month - 1, year
+
+    if month == 12:
+        next_month, next_year = 1, year + 1
+    else:
+        next_month, next_year = month + 1, year
+
+    # Get first and last day of the month
+    first_day = date(year, month, 1)
+    if month == 12:
+        last_day = date(year + 1, 1, 1) - timezone.timedelta(days=1)
+    else:
+        last_day = date(year, month + 1, 1) - timezone.timedelta(days=1)
+
+    # Get all transactions for this month (excluding UpcomingTransaction instances)
+    transactions = Transaction.objects.filter(
+        date__gte=first_day,
+        date__lte=last_day,
+        upcomingtransaction__isnull=True
+    ).select_related('wallet', 'category').order_by('date')
+
+    # Get all upcoming transactions for this month
+    upcoming_transactions = UpcomingTransaction.objects.filter(
+        date__gte=first_day,
+        date__lte=last_day
+    ).select_related('wallet', 'category').order_by('date')
+
+    # Group transactions by day
+    transactions_by_day = defaultdict(lambda: {'transactions': [], 'upcoming': [], 'balance': Decimal('0.00')})
+
+    for t in transactions:
+        day = t.date.day
+        transactions_by_day[day]['transactions'].append(t)
+        # Add to balance (income positive, expense negative)
+        transactions_by_day[day]['balance'] += t.get_signed_amount()
+
+    for t in upcoming_transactions:
+        day = t.date.day
+        transactions_by_day[day]['upcoming'].append(t)
+
+    # Create calendar grid
+    month_calendar = cal.monthcalendar(year, month)
+
+    # Prepare days data for template
+    calendar_weeks = []
+    for week in month_calendar:
+        week_days = []
+        for day in week:
+            if day == 0:
+                week_days.append(None)
+            else:
+                day_data = {
+                    'day': day,
+                    'is_today': (date(year, month, day) == today),
+                    'transactions': transactions_by_day[day]['transactions'],
+                    'upcoming': transactions_by_day[day]['upcoming'],
+                    'balance': transactions_by_day[day]['balance'],
+                }
+                week_days.append(day_data)
+        calendar_weeks.append(week_days)
+
+    context = {
+        'year': year,
+        'month': month,
+        'month_name': cal.month_name[month],
+        'prev_month': prev_month,
+        'prev_year': prev_year,
+        'next_month': next_month,
+        'next_year': next_year,
+        'calendar_weeks': calendar_weeks,
+        'today': today,
+    }
+
+    return render(request, 'transactions/calendar.html', context)

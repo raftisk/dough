@@ -6,6 +6,9 @@ __pycache__
 db.sqlite3
 media
 
+# Virtual Environments #
+env/
+
 # Backup files # 
 *.bak 
 
@@ -76,6 +79,14 @@ celerybeat-schedule.*
 !.vscode/launch.json 
 !.vscode/extensions.json 
 .history
+
+# React / Node #
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
 
 # miscellaneous #
 ideas.md

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from decimal import Decimal
-from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction
+from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem
 
 
 class WalletSerializer(serializers.ModelSerializer):
@@ -42,8 +42,8 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
+            'type',
             'icon',
-            'color',
             'is_active',
             'transaction_count',
             'created_at',
@@ -68,6 +68,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         source='get_signed_amount',
         help_text='Amount with sign based on type (negative for expenses)'
     )
+    description = serializers.CharField(source='desc', required=False, allow_blank=True)
 
     class Meta:
         model = Transaction
@@ -82,6 +83,8 @@ class TransactionSerializer(serializers.ModelSerializer):
             'signed_amount',
             'description',
             'date',
+            'recurrence',
+            'recurrence_parent',
             'created_at',
             'updated_at'
         ]
@@ -93,23 +96,20 @@ class BudgetSerializer(serializers.ModelSerializer):
         max_digits=12,
         decimal_places=2,
         read_only=True,
-        source='get_spent_amount'
+        source='spent_amount'
     )
     remaining_amount = serializers.DecimalField(
         max_digits=12,
         decimal_places=2,
         read_only=True,
-        source='get_remaining_amount'
+        source='remaining_amount'
     )
     category_name = serializers.CharField(
         source='category.name',
         read_only=True
     )
-    wallet_name = serializers.CharField(
-        source='wallet.name',
-        read_only=True,
-        allow_null=True
-    )
+    start_date = serializers.DateField(source='start_date', read_only=True)
+    end_date = serializers.DateField(read_only=True)
 
     class Meta:
         model = Budget
@@ -117,29 +117,19 @@ class BudgetSerializer(serializers.ModelSerializer):
             'id',
             'category',
             'category_name',
-            'wallet',
-            'wallet_name',
             'amount',
             'spent_amount',
             'remaining_amount',
+            'period',
+            'start_month',
             'start_date',
             'end_date',
+            'reset',
+            'rollover',
             'created_at',
             'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
-
-    def validate(self, data):
-        """Validate date range"""
-        start_date = data.get('start_date')
-        end_date = data.get('end_date')
-
-        if start_date and end_date and start_date > end_date:
-            raise serializers.ValidationError({
-                'end_date': 'End date must be after start date.'
-            })
-
-        return data
+        read_only_fields = ['created_at', 'updated_at', 'start_date', 'end_date']
 
 
 class UpcomingTransactionSerializer(serializers.ModelSerializer):
@@ -151,6 +141,7 @@ class UpcomingTransactionSerializer(serializers.ModelSerializer):
         source='wallet.name',
         read_only=True
     )
+    description = serializers.CharField(source='desc', required=False, allow_blank=True)
 
     class Meta:
         model = UpcomingTransaction
@@ -163,9 +154,62 @@ class UpcomingTransactionSerializer(serializers.ModelSerializer):
             'category_name',
             'amount',
             'description',
-            'next_date',
-            'frequency',
-            'is_active',
+            'date',
+            'recurrence',
+            'recurrence_parent',
+            'auto_post',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class TransferSerializer(serializers.ModelSerializer):
+    from_wallet_name = serializers.CharField(
+        source='from_wallet.name',
+        read_only=True
+    )
+    to_wallet_name = serializers.CharField(
+        source='to_wallet.name',
+        read_only=True
+    )
+    description = serializers.CharField(source='desc', required=False, allow_blank=True)
+
+    class Meta:
+        model = Transfer
+        fields = [
+            'id',
+            'from_wallet',
+            'from_wallet_name',
+            'to_wallet',
+            'to_wallet_name',
+            'amount',
+            'description',
+            'date',
+            'created_at',
+            'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class WishlistItemSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(
+        source='category.name',
+        read_only=True
+    )
+    description = serializers.CharField(source='desc')
+
+    class Meta:
+        model = WishlistItem
+        fields = [
+            'id',
+            'description',
+            'amount',
+            'category',
+            'category_name',
+            'priority',
+            'target',
+            'is_completed',
             'created_at',
             'updated_at'
         ]

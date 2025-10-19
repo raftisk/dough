@@ -1,32 +1,34 @@
+from datetime import date
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from month.models import MonthField
+from month import Month
+from .constants import (
+    WALLET_TYPES, CURRENCIES, DEFAULT_CURRENCY, CATEGORY_TYPES,
+    TRANSACTION_TYPES, RECURRENCE_CHOICES, PERIOD_CHOICES, PRIORITY_CHOICES,
+    MONEY_FIELD_CONFIG
+)
 
+def get_current_month():
+    return Month.from_date(date.today())
 
 class Wallet(models.Model):
-    SAVING = 'saving'
-    SPENDING = 'spending'
-    CASH = 'cash'
-    INVESTMENT = 'investment'
-    WALLET_TYPES = [
-        (SPENDING, 'Spending'),
-        (SAVING, 'Saving'),
-        (CASH, 'Cash'),
-        (INVESTMENT, 'Investment'),
-    ]
-
     name = models.CharField(max_length=100)
     type = models.CharField(
         max_length=15,
         choices=WALLET_TYPES,
-        default=SPENDING
+        default='spending'
     )
     initial_balance = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
+        **MONEY_FIELD_CONFIG,
         default=Decimal('0.00')
     )
-    currency = models.CharField(max_length=3, default='USD')
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCIES,
+        default=DEFAULT_CURRENCY
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -44,7 +46,7 @@ class Wallet(models.Model):
         transactions_sum = self.transactions.aggregate(
             total=models.Sum(
                 Case(
-                    When(type=Transaction.EXPENSE, then=-F('amount')),
+                    When(type='expense', then=-F('amount')),
                     default=F('amount')
                 )
             )
@@ -69,21 +71,14 @@ class Category(models.Model):
     Examples: 'Eating out', 'Transportation', 'Salary', 'Investments'
     Categories are user-configurable.
     """
-    INCOME = 'income'
-    EXPENSE = 'expense'
-    CATEGORY_TYPES = [
-        (INCOME, 'Income'),
-        (EXPENSE, 'Expense'),
-    ]
-
     name = models.CharField(max_length=100, unique=True)
     type = models.CharField(
         max_length=10,
         choices=CATEGORY_TYPES,
-        default=EXPENSE
+        default='expense'
     )
     icon = models.CharField(max_length=50, blank=True)
-    color = models.CharField(max_length=7, blank=True)
+    color = models.CharField(max_length=7, default='#9E9E9E', help_text='Hex color code')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -108,13 +103,7 @@ class Category(models.Model):
 
 
 class Transaction(models.Model):
-    INCOME = 'income'
-    EXPENSE = 'expense'
-    TRANSACTION_TYPES = [
-        (INCOME, 'Income'),
-        (EXPENSE, 'Expense'),
-    ]
-
+    desc = models.TextField(blank=True)
     wallet = models.ForeignKey(
         Wallet,
         on_delete=models.CASCADE,
@@ -130,13 +119,26 @@ class Transaction(models.Model):
         related_name='transactions'
     )
     amount = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
+        **MONEY_FIELD_CONFIG,
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text='Always positive, type determines if income or expense'
     )
-    description = models.TextField(blank=True)
     date = models.DateField()
+    recurrence = models.CharField(
+        max_length=10,
+        choices=RECURRENCE_CHOICES,
+        blank=True,
+        default='',
+        help_text='Recurrence pattern for recurring transactions'
+    )
+    recurrence_parent = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recurrence_children',
+        help_text='Parent transaction for recurring transactions'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -153,43 +155,46 @@ class Transaction(models.Model):
 
     def get_signed_amount(self):
         """Return amount with appropriate sign based on transaction type"""
-        if self.type == self.EXPENSE:
+        if self.type == 'expense':
             return -abs(self.amount)
         return abs(self.amount)
+
+    def is_recurring(self):
+        """Check if this transaction is recurring"""
+        return bool(self.recurrence)
+
+    @property
+    def description(self):
+        """Alias for desc to maintain backward compatibility"""
+        return self.desc
+
+    @description.setter
+    def description(self, value):
+        """Alias setter for desc to maintain backward compatibility"""
+        self.desc = value
 
 
 class Budget(models.Model):
     """Budgets are only for expense tracking"""
-    MONTHLY = 'monthly'
-    QUARTERLY = 'quarterly'
-    SIX_MONTH = '6-month'
-    YEARLY = 'yearly'
-
-    PERIOD_CHOICES = [
-        (MONTHLY, 'Monthly'),
-        (QUARTERLY, 'Quarterly'),
-        (SIX_MONTH, '6-Month'),
-        (YEARLY, 'Yearly'),
-    ]
-
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE,
         related_name='budgets'
     )
     amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
+        **MONEY_FIELD_CONFIG,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
     period = models.CharField(
         max_length=15,
         choices=PERIOD_CHOICES,
-        default=MONTHLY
+        default='monthly'
     )
-    start_date = models.DateField()
+    start_month = MonthField(
+        default=get_current_month
+    )
     reset = models.BooleanField(
-        default=False,
+        default=True,
         help_text='True for recurring budgets'
     )
     rollover = models.BooleanField(
@@ -200,39 +205,47 @@ class Budget(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-start_date']
+        ordering = ['-start_month']
 
     def __str__(self):
         return f"{self.category.name} - {self.get_period_display()} budget"
 
     @property
-    def end_date(self):
-        """Calculate end date based on start_date and period"""
-        from dateutil.relativedelta import relativedelta
+    def start_date(self):
+        """Get the first day of the start month"""
+        return self.start_month.first_day()
 
-        if self.period == self.MONTHLY:
-            # End of the month containing start_date
-            next_month = self.start_date + relativedelta(months=1)
-            return next_month.replace(day=1) - relativedelta(days=1)
-        elif self.period == self.QUARTERLY:
-            # 3 months from start_date
-            end = self.start_date + relativedelta(months=3)
-            return end - relativedelta(days=1)
-        elif self.period == self.SIX_MONTH:
-            # 6 months from start_date
-            end = self.start_date + relativedelta(months=6)
-            return end - relativedelta(days=1)
-        elif self.period == self.YEARLY:
-            # 1 year from start_date
-            end = self.start_date + relativedelta(years=1)
-            return end - relativedelta(days=1)
+    @property
+    def end_date(self):
+        """Calculate end date based on start_month and period"""
+        from dateutil.relativedelta import relativedelta
+        from calendar import monthrange
+
+        if self.period == 'monthly':
+            # Last day of start_month
+            year = self.start_month.year
+            month = self.start_month.month
+            last_day = monthrange(year, month)[1]
+            return self.start_month.replace(day=last_day)
+        elif self.period == 'quarterly':
+            # 3 months from start_month, last day of that month
+            end_month = self.start_month.first_day() + relativedelta(months=3) - relativedelta(days=1)
+            return end_month
+        elif self.period == '6-month':
+            # 6 months from start_month, last day of that month
+            end_month = self.start_month.first_day() + relativedelta(months=6) - relativedelta(days=1)
+            return end_month
+        elif self.period == 'yearly':
+            # 12 months from start_month, last day of that month
+            end_month = self.start_month.first_day() + relativedelta(months=12) - relativedelta(days=1)
+            return end_month
 
         return self.start_date
 
     def spent_amount(self):
         """Calculate total spent in this budget period"""
         filters = {
-            'type': Transaction.EXPENSE,
+            'type': 'expense',
             'category': self.category,
             'date__gte': self.start_date,
             'date__lte': self.end_date,
@@ -270,19 +283,18 @@ class Budget(models.Model):
             })
 
         # Prevent duplicate budgets for same category and overlapping periods
-        if self.category and self.start_date:
+        if self.category and self.start_month:
             end = self.end_date
 
             # Find overlapping budgets for the same category
             overlapping = Budget.objects.filter(
                 category=self.category,
-                start_date__lte=end,
             ).exclude(pk=self.pk)
 
             for budget in overlapping:
-                if budget.end_date >= self.start_date:
+                if budget.end_date >= self.start_date and budget.start_date <= end:
                     raise ValidationError({
-                        'start_date': f'A budget for {self.category.name} already exists for this period.'
+                        'start_month': f'A budget for {self.category.name} already exists for this period.'
                     })
 
         # Validate rollover only works with reset
@@ -292,62 +304,27 @@ class Budget(models.Model):
             })
 
 
-class UpcomingTransaction(models.Model):
-    INCOME = 'income'
-    EXPENSE = 'expense'
-    TRANSACTION_TYPES = [
-        (INCOME, 'Income'),
-        (EXPENSE, 'Expense'),
-    ]
-
-    FREQUENCY_CHOICES = [
-        ('daily', 'Daily'),
-        ('weekly', 'Weekly'),
-        ('monthly', 'Monthly'),
-        ('yearly', 'Yearly'),
-        ('once', 'One-time'),
-    ]
-
-    wallet = models.ForeignKey(
-        Wallet,
-        on_delete=models.CASCADE,
-        related_name='upcoming_transactions'
+class UpcomingTransaction(Transaction):
+    """
+    UpcomingTransaction extends Transaction for scheduled future transactions.
+    Uses multi-table inheritance to inherit all Transaction fields.
+    """
+    auto_post = models.BooleanField(
+        default=False,
+        help_text='If True, automatically convert to Transaction on scheduled date'
     )
-    type = models.CharField(
-        max_length=10,
-        choices=TRANSACTION_TYPES
-    )
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.PROTECT,
-        related_name='upcoming_transactions'
-    )
-    amount = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'))],
-        help_text='Always positive, type determines if income or expense'
-    )
-    description = models.TextField(blank=True)
-    next_date = models.DateField(help_text='Next occurrence date')
-    frequency = models.CharField(
-        max_length=10,
-        choices=FREQUENCY_CHOICES,
-        default='monthly'
-    )
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['next_date']
+        ordering = ['date', '-created_at']
 
     def __str__(self):
-        return f"{self.get_type_display()}: {self.category.name} - {self.amount} on {self.next_date}"
+        recurring = " (Recurring)" if self.is_recurring() else ""
+        return f"Upcoming: {self.get_type_display()} - {self.category.name} - {self.amount} on {self.date}{recurring}"
 
 
 class Transfer(models.Model):
     """Transfer money between wallets"""
+    desc = models.TextField(blank=True)
     from_wallet = models.ForeignKey(
         Wallet,
         on_delete=models.CASCADE,
@@ -359,14 +336,13 @@ class Transfer(models.Model):
         related_name='transfers_in'
     )
     amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
+        **MONEY_FIELD_CONFIG,
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text='Must be positive'
     )
-    date = models.DateField(auto_now_add=False)
-    description = models.TextField(blank=True)
+    date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-date', '-created_at']
@@ -402,6 +378,60 @@ class Transfer(models.Model):
                     'amount': f'Insufficient balance. Current balance: {current_balance}'
                 })
 
+    @property
+    def description(self):
+        """Alias for desc to maintain backward compatibility"""
+        return self.desc
+
+    @description.setter
+    def description(self, value):
+        """Alias setter for desc to maintain backward compatibility"""
+        self.desc = value
+
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+class WishlistItem(models.Model):
+    """Wishlist items for tracking savings goals"""
+    desc = models.TextField()
+    amount = models.DecimalField(
+        **MONEY_FIELD_CONFIG,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.PROTECT,
+        related_name='wishlist_items'
+    )
+    priority = models.CharField(
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default='medium'
+    )
+    target = MonthField(
+        default=get_current_month,
+        help_text='Target month to purchase this item'
+    )
+    is_completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['target', '-priority', '-created_at']
+
+    def __str__(self):
+        return f"{self.desc} - {self.amount} (Target: {self.target})"
+
+    @property
+    def description(self):
+        """Alias for desc to maintain backward compatibility"""
+        return self.desc
+
+    @description.setter
+    def description(self, value):
+        """Alias setter for desc to maintain backward compatibility"""
+        self.desc = value
+
+

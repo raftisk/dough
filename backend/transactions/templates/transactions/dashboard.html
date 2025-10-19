@@ -21,7 +21,7 @@
                 + Add Transfer
             </a>
             <a href="/admin/" class="p-2 hover:bg-notion-secondary rounded-md transition-colors" title="Settings">
-                <svg class="w-5 h-5 text-notion-textLight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
@@ -126,21 +126,32 @@
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
                                 <div class="flex items-center gap-2">
-                                    <span class="px-2 py-1 text-xs font-medium rounded {% if transaction.type == 'income' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                                        {{ transaction.get_type_display }}
-                                    </span>
-                                    <span class="text-sm font-medium text-notion-text">{{ transaction.category.name }}</span>
+                                    <!-- Icon indicator instead of text badge -->
+                                    {% if transaction.type == 'income' %}
+                                    <div class="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-white font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                    </div>
+                                    {% else %}
+                                    <div class="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-white font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"></path>
+                                        </svg>
+                                    </div>
+                                    {% endif %}
+                                    <span class="text-sm font-medium text-gray-900">{{ transaction.category.name }}</span>
                                 </div>
-                                <p class="text-sm text-notion-textLight mt-1">{{ transaction.wallet.name }}</p>
+                                <p class="text-sm text-gray-600 mt-1 ml-8">{{ transaction.wallet.name }}</p>
                                 {% if transaction.description %}
-                                <p class="text-xs text-notion-textLight mt-1">{{ transaction.description|truncatewords:10 }}</p>
+                                <p class="text-xs text-gray-500 mt-1 ml-8">{{ transaction.description|truncatewords:10 }}</p>
                                 {% endif %}
                             </div>
                             <div class="text-right">
-                                <p class="text-lg font-semibold {% if transaction.type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
-                                    {% if transaction.type == 'income' %}+{% else %}-{% endif %}€{{ transaction.amount|floatformat:2 }}
+                                <p class="text-lg font-semibold text-gray-900">
+                                    €{{ transaction.amount|floatformat:2 }}
                                 </p>
-                                <p class="text-xs text-notion-textLight mt-1">{{ transaction.date|date:"M d, Y" }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ transaction.date|date:"M d, Y" }}</p>
                             </div>
                         </div>
                     </div>

@@ -1,17 +1,27 @@
 from django import forms
-from .models import Transaction, Category, Wallet, Transfer, Budget
+from .models import Transaction, Category, Wallet, Transfer, Budget, WishlistItem
 from datetime import date
 from .suggested_categories import SUGGESTED_CATEGORIES
 
 
 class TransactionForm(forms.ModelForm):
-    """Base form for transactions"""
+    """Base form for transactions with recurrence support"""
+
+    auto_post = forms.BooleanField(
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'rounded border-notion-border focus:ring-2 focus:ring-blue-500',
+            'id': 'id_auto_post'
+        }),
+        help_text='Automatically post this transaction on the scheduled date'
+    )
 
     class Meta:
         model = Transaction
-        fields = ['description', 'category', 'amount', 'wallet', 'date']
+        fields = ['desc', 'category', 'amount', 'wallet', 'date', 'recurrence', 'recurrence_parent']
         widgets = {
-            'description': forms.TextInput(attrs={
+            'desc': forms.TextInput(attrs={
                 'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'Enter description'
             }),
@@ -30,7 +40,13 @@ class TransactionForm(forms.ModelForm):
             'date': forms.DateInput(attrs={
                 'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'type': 'date'
-            })
+            }),
+            'recurrence': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            }),
+            'recurrence_parent': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -56,12 +72,12 @@ class ExpenseForm(TransactionForm):
         # Filter categories to only show expense categories
         self.fields['category'].queryset = Category.objects.filter(
             is_active=True,
-            type=Category.EXPENSE
+            type='expense'
         )
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.type = Transaction.EXPENSE
+        instance.type = 'expense'
         if commit:
             instance.save()
         return instance
@@ -76,12 +92,12 @@ class IncomeForm(TransactionForm):
         # Filter categories to only show income categories
         self.fields['category'].queryset = Category.objects.filter(
             is_active=True,
-            type=Category.INCOME
+            type='income'
         )
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.type = Transaction.INCOME
+        instance.type = 'income'
         if commit:
             instance.save()
         return instance
@@ -165,9 +181,8 @@ class WalletForm(forms.ModelForm):
                 'placeholder': '0.00',
                 'step': '0.01'
             }),
-            'currency': forms.TextInput(attrs={
-                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'placeholder': 'USD'
+            'currency': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
             }),
         }
 
@@ -177,7 +192,7 @@ class TransferForm(forms.ModelForm):
 
     class Meta:
         model = Transfer
-        fields = ['from_wallet', 'to_wallet', 'amount', 'date', 'description']
+        fields = ['from_wallet', 'to_wallet', 'amount', 'date', 'desc']
         widgets = {
             'from_wallet': forms.Select(attrs={
                 'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -195,7 +210,7 @@ class TransferForm(forms.ModelForm):
                 'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'type': 'date'
             }),
-            'description': forms.Textarea(attrs={
+            'desc': forms.Textarea(attrs={
                 'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'Enter description (optional)',
                 'rows': 3
@@ -217,16 +232,17 @@ class BudgetForm(forms.ModelForm):
         # Filter categories to only show expense categories for budgets
         self.fields['category'].queryset = Category.objects.filter(
             is_active=True,
-            type=Category.EXPENSE
+            type='expense'
         )
-        # Set default start date to first day of current month
+        # Set default start month to current month
         if not self.instance.pk:
-            self.initial['start_date'] = date.today().replace(day=1)
-            self.initial['period'] = Budget.MONTHLY
+            from monthfield import MonthField as Month
+            self.initial['start_month'] = Month.from_date(date.today())
+            self.initial['period'] = 'monthly'
 
     class Meta:
         model = Budget
-        fields = ['category', 'amount', 'period', 'start_date', 'reset', 'rollover']
+        fields = ['category', 'amount', 'period', 'start_month', 'reset', 'rollover']
         widgets = {
             'category': forms.Select(attrs={
                 'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -240,9 +256,10 @@ class BudgetForm(forms.ModelForm):
             'period': forms.Select(attrs={
                 'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
             }),
-            'start_date': forms.DateInput(attrs={
+            'start_month': forms.TextInput(attrs={
                 'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
-                'type': 'date'
+                'type': 'month',
+                'placeholder': 'YYYY-MM'
             }),
             'reset': forms.CheckboxInput(attrs={
                 'class': 'rounded border-notion-border focus:ring-2 focus:ring-blue-500',
@@ -251,5 +268,40 @@ class BudgetForm(forms.ModelForm):
             'rollover': forms.CheckboxInput(attrs={
                 'class': 'rounded border-notion-border focus:ring-2 focus:ring-blue-500',
                 'id': 'id_rollover'
+            })
+        }
+
+
+class WishlistItemForm(forms.ModelForm):
+    """Form for creating/editing wishlist items"""
+
+    class Meta:
+        model = WishlistItem
+        fields = ['desc', 'amount', 'category', 'priority', 'target', 'is_completed']
+        widgets = {
+            'desc': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Enter wishlist item description',
+                'rows': 3
+            }),
+            'amount': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': '0.00',
+                'step': '0.01',
+                'min': '0.01'
+            }),
+            'category': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            }),
+            'priority': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            }),
+            'target': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-notion-border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'type': 'month',
+                'placeholder': 'YYYY-MM'
+            }),
+            'is_completed': forms.CheckboxInput(attrs={
+                'class': 'rounded border-notion-border focus:ring-2 focus:ring-blue-500'
             })
         }

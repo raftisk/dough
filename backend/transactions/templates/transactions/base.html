@@ -45,6 +45,12 @@
                         <a href="{% url 'transactions_log' %}" class="{% if request.resolver_match.url_name == 'transaction_list' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Transactions
                         </a>
+                        <a href="{% url 'upcoming_transactions' %}" class="{% if request.resolver_match.url_name == 'upcoming_transactions' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Upcoming
+                        </a>
+                        <a href="{% url 'calendar' %}" class="{% if request.resolver_match.url_name == 'calendar' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Calendar
+                        </a>
                         <a href="{% url 'categories_log' %}" class="{% if request.resolver_match.url_name == 'category_list' %}bg-notion-secondary{% endif %} text-notion-text hover:bg-notion-secondary px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Categories
                         </a>
