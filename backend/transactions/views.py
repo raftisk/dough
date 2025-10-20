@@ -18,7 +18,7 @@ from .serializers import (
     WishlistItemSerializer
 )
 from .forms import ExpenseForm, IncomeForm, CategoryForm, WalletForm, TransferForm, BudgetForm, WishlistItemForm
-from .suggested_categories import SUGGESTED_CATEGORIES
+#from .suggested_categories import SUGGESTED_CATEGORIES
 
 
 def dashboard(request):

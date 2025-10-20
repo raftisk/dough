@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from decimal import Decimal
 from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem
+from .constants import get_currency_symbol
 
 
 class WalletSerializer(serializers.ModelSerializer):
@@ -14,6 +15,10 @@ class WalletSerializer(serializers.ModelSerializer):
         read_only=True,
         source='transactions.count'
     )
+    currency_symbol = serializers.SerializerMethodField()
+
+    def get_currency_symbol(self, obj):
+        return get_currency_symbol(obj.currency)
 
     class Meta:
         model = Wallet
@@ -24,6 +29,7 @@ class WalletSerializer(serializers.ModelSerializer):
             'initial_balance',
             'current_balance',
             'currency',
+            'currency_symbol',
             'transaction_count',
             'created_at',
             'updated_at'
@@ -57,10 +63,15 @@ class TransactionSerializer(serializers.ModelSerializer):
         source='category.name',
         read_only=True
     )
+    category_icon = serializers.CharField(
+        source='category.icon',
+        read_only=True
+    )
     wallet_name = serializers.CharField(
         source='wallet.name',
         read_only=True
     )
+    currency_symbol = serializers.SerializerMethodField()
     signed_amount = serializers.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -69,6 +80,9 @@ class TransactionSerializer(serializers.ModelSerializer):
         help_text='Amount with sign based on type (negative for expenses)'
     )
     description = serializers.CharField(source='desc', required=False, allow_blank=True)
+
+    def get_currency_symbol(self, obj):
+        return get_currency_symbol(obj.wallet.currency)
 
     class Meta:
         model = Transaction
@@ -79,8 +93,10 @@ class TransactionSerializer(serializers.ModelSerializer):
             'type',
             'category',
             'category_name',
+            'category_icon',
             'amount',
             'signed_amount',
+            'currency_symbol',
             'description',
             'date',
             'recurrence',
@@ -104,6 +120,12 @@ class BudgetSerializer(serializers.ModelSerializer):
         read_only=True,
         source='remaining_amount'
     )
+    percentage_used = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        read_only=True,
+        source='percentage_used'
+    )
     category_name = serializers.CharField(
         source='category.name',
         read_only=True
@@ -120,6 +142,7 @@ class BudgetSerializer(serializers.ModelSerializer):
             'amount',
             'spent_amount',
             'remaining_amount',
+            'percentage_used',
             'period',
             'start_month',
             'start_date',

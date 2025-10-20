@@ -106,3 +106,27 @@ MONEY_FIELD_CONFIG = {
     'max_digits': 12,
     'decimal_places': 2,
 }
+
+# Currency symbols mapping
+CURRENCY_SYMBOLS = {
+    'EUR': '€',
+    'USD': '$',
+    'GBP': '£',
+    'JPY': '¥',
+    'CHF': 'CHF',
+    'CAD': 'C$',
+    'AUD': 'A$',
+    'CNY': '¥',
+    'INR': '₹',
+    'SEK': 'kr',
+    'NOK': 'kr',
+    'DKK': 'kr',
+    'PLN': 'zł',
+    'CZK': 'Kč',
+    'HUF': 'Ft',
+}
+
+
+def get_currency_symbol(currency_code):
+    """Get currency symbol for a given currency code."""
+    return CURRENCY_SYMBOLS.get(currency_code, currency_code)

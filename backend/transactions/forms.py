@@ -1,7 +1,8 @@
 from django import forms
 from .models import Transaction, Category, Wallet, Transfer, Budget, WishlistItem
 from datetime import date
-from .suggested_categories import SUGGESTED_CATEGORIES
+from .constants import PRESET_EXPENSE_CATEGORIES, PRESET_INCOME_CATEGORIES
+#from .suggested_categories import SUGGESTED_CATEGORIES
 
 
 class TransactionForm(forms.ModelForm):

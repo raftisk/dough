@@ -17,6 +17,7 @@ from .views import (
     BudgetViewSet,
     UpcomingTransactionViewSet
 )
+from .api_views import DashboardAPIView
 
 router = DefaultRouter()
 router.register(r'wallets', WalletViewSet, basename='wallet')
@@ -26,6 +27,9 @@ router.register(r'budgets', BudgetViewSet, basename='budget')
 router.register(r'upcoming-transactions', UpcomingTransactionViewSet, basename='upcoming-transaction')
 
 urlpatterns = [
+    # Dashboard API
+    path('dashboard/', DashboardAPIView.as_view(), name='api-dashboard'),
+
     # API routes
     path('', include(router.urls)),
 ]
