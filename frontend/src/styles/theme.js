@@ -9,7 +9,7 @@ export const theme = {
       page: '#ffffff',
       pageAlt: '#f9fafb', // gray-50
       card: '#ffffff',
-      cardHover: '#f9fafb',
+      cardHover: '#f2f3f4',
     },
 
     // Text colors

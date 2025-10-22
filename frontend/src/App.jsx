@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
+import Categories from './pages/Categories';
+import Transactions from './pages/Transactions';
 
 // Placeholder components for future pages
 const PlaceholderPage = ({ title }) => (
@@ -16,8 +18,8 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/wallets" element={<PlaceholderPage title="Wallets" />} />
-        <Route path="/transactions" element={<PlaceholderPage title="Transactions" />} />
-        <Route path="/categories" element={<PlaceholderPage title="Categories" />} />
+        <Route path="/transactions" element={<Transactions />} />
+        <Route path="/categories" element={<Categories />} />
         <Route path="/budgets" element={<PlaceholderPage title="Budgets" />} />
         <Route path="/wishlist" element={<PlaceholderPage title="Wishlist" />} />
         <Route path="/insights" element={<PlaceholderPage title="Insights" />} />

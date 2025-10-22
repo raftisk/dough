@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import { Edit2 } from 'lucide-react';
 import { theme } from '../styles/theme';
 
 const WalletCard = ({ wallet, onClick, onEdit }) => {
@@ -54,44 +53,12 @@ const WalletCard = ({ wallet, onClick, onEdit }) => {
         }
       }}
     >
-      {/* Edit button */}
-      {onEdit && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(wallet);
-          }}
-          style={{
-            position: 'absolute',
-            top: theme.spacing[3],
-            right: theme.spacing[3],
-            padding: theme.spacing[2],
-            backgroundColor: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            borderRadius: theme.border.radius.base,
-            display: 'flex',
-            alignItems: 'center',
-            transition: theme.transitions.fast,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          <Edit2 size={14} color={theme.colors.text.secondary} />
-        </button>
-      )}
-
       {/* Wallet name */}
       <h3
         style={{
           fontSize: theme.typography.fontSize.lg,
           fontWeight: theme.typography.fontWeight.semibold,
           color: theme.colors.text.primary,
-          marginTop: onEdit ? theme.spacing[2] : 0,
         }}
       >
         {wallet.name}

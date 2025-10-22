@@ -6,6 +6,7 @@ import BudgetCard from '../components/BudgetCard';
 import TransactionListItem from '../components/TransactionListItem';
 import WalletCard from '../components/WalletCard';
 import CategoryCard from '../components/CategoryCard';
+import FloatingActionButton from '../components/FloatingActionButton';
 import { theme } from '../styles/theme';
 import { getCurrentMonthYear } from '../utils/date';
 
@@ -206,8 +207,9 @@ const mockCategories = [
 ];
 
 function Dashboard() {
-  const handleAddClick = () => {
-    console.log('Add button clicked');
+  const handleAddTransaction = (type) => {
+    console.log('Add transaction type:', type);
+    // TODO: Open TransactionForm modal with the selected type
   };
 
   const handleEditTransaction = (transaction) => {
@@ -264,8 +266,6 @@ function Dashboard() {
         <PageHeader
           title={getCurrentMonthYear()}
           subtitle="Overview of your finances"
-          actionLabel="Add Transaction"
-          onAction={handleAddClick}
         />
 
         {/* Metric Cards Section */}
@@ -404,6 +404,9 @@ function Dashboard() {
           </div>
         </section>
       </div>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton onSelectType={handleAddTransaction} />
     </div>
   );
 }

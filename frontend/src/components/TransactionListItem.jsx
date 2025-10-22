@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
-import { Plus, Minus, ArrowRightLeft, Edit2, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Minus, ArrowRightLeft, Trash2, RefreshCw } from 'lucide-react';
 import { theme, getTypeColor } from '../styles/theme';
 
-const TransactionListItem = ({ transaction, onEdit, onDelete }) => {
+const TransactionListItem = ({ transaction, onClick, onDelete }) => {
   // Determine icon based on transaction type
   const getTypeIcon = (type) => {
     switch (type?.toLowerCase()) {
@@ -37,11 +37,12 @@ const TransactionListItem = ({ transaction, onEdit, onDelete }) => {
 
   return (
     <div
+      onClick={onClick}
       style={{
         backgroundColor: theme.colors.background.card,
         border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
         borderRadius: theme.border.radius.base,
-        padding: theme.spacing[4],
+        padding: theme.spacing[2],
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -143,7 +144,11 @@ const TransactionListItem = ({ transaction, onEdit, onDelete }) => {
           }}
         >
           <span style={{ color: getTypeColor(transaction.type) }}>
-            {transaction.type?.toLowerCase() === 'income' ? '+' : '-'}
+            {transaction.type?.toLowerCase() === 'income'
+              ? '+'
+              : transaction.type?.toLowerCase() === 'expense'
+              ? '-'
+              : ''}
           </span>
           {transaction.currency_symbol || '$'}
           {formatAmount(transaction.amount)}
@@ -151,32 +156,6 @@ const TransactionListItem = ({ transaction, onEdit, onDelete }) => {
 
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: theme.spacing[2] }}>
-          {onEdit && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(transaction);
-              }}
-              style={{
-                padding: theme.spacing[2],
-                borderRadius: theme.border.radius.base,
-                backgroundColor: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                transition: theme.transitions.fast,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              <Edit2 size={16} color={theme.colors.text.primary} />
-            </button>
-          )}
           {onDelete && (
             <button
               onClick={(e) => {
@@ -222,7 +201,7 @@ TransactionListItem.propTypes = {
     currency_symbol: PropTypes.string,
     recurrence: PropTypes.string,
   }).isRequired,
-  onEdit: PropTypes.func,
+  onClick: PropTypes.func,
   onDelete: PropTypes.func,
 };
 

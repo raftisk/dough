@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import { Edit2 } from 'lucide-react';
 import { theme, getTypeBackgroundColor } from '../styles/theme';
 
 const CategoryCard = ({ category, onClick, onEdit }) => {
@@ -62,37 +61,6 @@ const CategoryCard = ({ category, onClick, onEdit }) => {
         }
       }}
     >
-      {/* Edit button */}
-      {onEdit && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(category);
-          }}
-          style={{
-            position: 'absolute',
-            top: theme.spacing[2],
-            right: theme.spacing[2],
-            padding: theme.spacing[1],
-            backgroundColor: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            borderRadius: theme.border.radius.base,
-            display: 'flex',
-            alignItems: 'center',
-            transition: theme.transitions.fast,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.background.pageAlt;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          <Edit2 size={12} color={theme.colors.text.secondary} />
-        </button>
-      )}
-
       {/* Icon */}
       <div
         style={{
