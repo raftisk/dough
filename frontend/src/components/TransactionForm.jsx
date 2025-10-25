@@ -20,7 +20,7 @@ const TransactionForm = ({
   const [categoryId, setCategoryId] = useState('');
   const [walletId, setWalletId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [recurrence, setRecurrence] = useState('none');
+  const [recurrence, setRecurrence] = useState('');
   const [errors, setErrors] = useState({});
 
   // Pre-fill form when editing
@@ -29,10 +29,10 @@ const TransactionForm = ({
       setType(initialData.type || transactionType);
       setDescription(initialData.description || '');
       setAmount(initialData.amount?.toString() || '');
-      setCategoryId(initialData.category_id?.toString() || '');
-      setWalletId(initialData.wallet_id?.toString() || '');
+      setCategoryId(initialData.category?.toString() || '');
+      setWalletId(initialData.wallet?.toString() || '');
       setDate(initialData.date || new Date().toISOString().split('T')[0]);
-      setRecurrence(initialData.recurrence || 'none');
+      setRecurrence(initialData.recurrence || '');
     } else {
       // Reset form for new transaction
       setType(transactionType);
@@ -41,7 +41,7 @@ const TransactionForm = ({
       setCategoryId('');
       setWalletId(wallets.length > 0 ? wallets[0].id.toString() : '');
       setDate(new Date().toISOString().split('T')[0]);
-      setRecurrence('none');
+      setRecurrence('');
     }
     setErrors({});
   }, [initialData, transactionType, wallets, isOpen]);
@@ -111,10 +111,10 @@ const TransactionForm = ({
       type,
       description: description.trim(),
       amount: parseFloat(amount),
-      category_id: categoryId,
-      wallet_id: walletId,
+      category: parseInt(categoryId, 10),
+      wallet: parseInt(walletId, 10),
       date,
-      recurrence: recurrence === 'none' ? null : recurrence,
+      recurrence, // Send the actual recurrence value (including 'None')
     };
 
     onSubmit(formData);
@@ -397,7 +397,7 @@ const TransactionForm = ({
                   <option value="">Select category</option>
                   {filteredCategories.map((category) => (
                     <option key={category.id || category.name} value={category.id || category.name}>
-                      {category.icon} {category.name}
+                      {category.name}
                     </option>
                   ))}
                 </select>

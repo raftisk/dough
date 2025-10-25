@@ -1,14 +1,33 @@
 import PropTypes from 'prop-types';
+import { getIconComponent } from '../constants';
+import { theme } from '../styles/theme';
 
 const CategoryLabel = ({ category, showIcon = true, className = '' }) => {
   if (!category) return null;
 
+  const IconComponent = getIconComponent(category.icon);
+
   return (
-    <div className={`inline-flex items-center gap-2 ${className}`}>
+    <div
+      className={className}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: theme.spacing[2],
+      }}
+    >
       {showIcon && category.icon && (
-        <span className="text-xl">{category.icon}</span>
+        <IconComponent size={20} color={theme.colors.text.primary} />
       )}
-      <span className="text-sm font-medium text-gray-900">{category.name}</span>
+      <span
+        style={{
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.medium,
+          color: theme.colors.text.primary,
+        }}
+      >
+        {category.name}
+      </span>
     </div>
   );
 };

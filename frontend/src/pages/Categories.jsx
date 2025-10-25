@@ -7,30 +7,13 @@ import EmptyState from '../components/EmptyState';
 import NavigationBar from '../components/NavigationBar';
 import CategoryForm from '../components/CategoryForm';
 import { PRESET_CATEGORIES } from '../constants';
-
-// Mock active categories
-const mockActiveCategories = [
-  { id: 1, name: 'Groceries', icon: '🛒', type: 'expense', is_active: true },
-  { id: 2, name: 'Transportation', icon: '🚗', type: 'expense', is_active: true },
-  { id: 3, name: 'Entertainment', icon: '🎬', type: 'expense', is_active: true },
-  { id: 4, name: 'Utilities', icon: '⚡', type: 'expense', is_active: true },
-  { id: 5, name: 'Rent', icon: '🏠', type: 'expense', is_active: true },
-  { id: 6, name: 'Healthcare', icon: '⚕️', type: 'expense', is_active: true },
-  { id: 7, name: 'Salary', icon: '💰', type: 'income', is_active: true },
-  { id: 8, name: 'Freelance', icon: '💼', type: 'income', is_active: true },
-  { id: 9, name: 'Investments', icon: '📈', type: 'income', is_active: true },
-];
-
-// Mock inactive categories
-const mockInactiveCategories = [
-  { id: 10, name: 'Gaming', icon: '🎮', type: 'expense', is_active: false },
-  { id: 11, name: 'Theater', icon: '🎭', type: 'expense', is_active: false },
-  { id: 12, name: 'Lottery', icon: '🎰', type: 'income', is_active: false },
-];
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/api';
 
 const Categories = () => {
-  // State for categories data (using mock data instead of API)
-  const [categories, setCategories] = useState([...mockActiveCategories, ...mockInactiveCategories]);
+  // State for categories data (fetched from API)
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // State for type toggles (separate for each section)
   const [activeType, setActiveType] = useState('expense');
@@ -42,6 +25,25 @@ const Categories = () => {
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const menuRef = useRef(null);
   const fabRef = useRef(null);
+
+  // Fetch categories from API on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getCategories();
+      setCategories(data);
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+      setError(err.message || 'Failed to load categories');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -91,18 +93,25 @@ const Categories = () => {
   };
 
   // Handle category form submission
-  const handleCategorySubmit = (formData) => {
-    // Create new category
-    const newCategory = {
-      id: Date.now(), // Simple ID generation for mock
-      ...formData,
-    };
+  const handleCategorySubmit = async (formData) => {
+    try {
+      // Create new category via API
+      await createCategory({
+        name: formData.name,
+        icon: formData.iconName, // Store icon NAME (string), not component
+        type: formData.type,
+        is_active: true,
+      });
 
-    // Add to local state
-    setCategories([...categories, newCategory]);
+      // Refresh categories list
+      await fetchCategories();
 
-    // Close form
-    setShowCategoryForm(false);
+      // Close form
+      setShowCategoryForm(false);
+    } catch (err) {
+      console.error('Failed to create category:', err);
+      alert(err.message || 'Failed to create category');
+    }
   };
 
   // Handle category menu actions
@@ -129,50 +138,70 @@ const Categories = () => {
   };
 
   const handleEdit = (category) => {
-    alert(`Edit category: ${category.name}`);
+    alert(`Edit category: ${category.name} - Edit functionality coming soon`);
   };
 
-  const handleDelete = (category) => {
+  const handleDelete = async (category) => {
     const confirmed = window.confirm(
       'Are you sure you want to delete this category? This action cannot be undone.'
     );
 
     if (!confirmed) return;
 
-    // Remove from local state
-    setCategories(categories.filter((cat) => cat.id !== category.id));
+    try {
+      // Delete via API
+      await deleteCategory(category.id);
+
+      // Refresh categories list
+      await fetchCategories();
+    } catch (err) {
+      console.error('Failed to delete category:', err);
+      alert(err.message || 'Failed to delete category');
+    }
   };
 
-  const handleActivate = (category) => {
-    // Update local state
-    setCategories(
-      categories.map((cat) =>
-        cat.id === category.id ? { ...cat, is_active: true } : cat
-      )
-    );
+  const handleActivate = async (category) => {
+    try {
+      // Update via API
+      await updateCategory(category.id, { is_active: true });
+
+      // Refresh categories list
+      await fetchCategories();
+    } catch (err) {
+      console.error('Failed to activate category:', err);
+      alert(err.message || 'Failed to activate category');
+    }
   };
 
-  const handleDeactivate = (category) => {
-    // Update local state
-    setCategories(
-      categories.map((cat) =>
-        cat.id === category.id ? { ...cat, is_active: false } : cat
-      )
-    );
+  const handleDeactivate = async (category) => {
+    try {
+      // Update via API
+      await updateCategory(category.id, { is_active: false });
+
+      // Refresh categories list
+      await fetchCategories();
+    } catch (err) {
+      console.error('Failed to deactivate category:', err);
+      alert(err.message || 'Failed to deactivate category');
+    }
   };
 
-  const handleAddPreset = (presetCategory) => {
-    // Create new category from preset
-    const newCategory = {
-      id: Date.now(), // Simple ID generation for mock
-      name: presetCategory.name,
-      icon: presetCategory.icon,
-      type: presetType,
-      is_active: true,
-    };
+  const handleAddPreset = async (presetCategory) => {
+    try {
+      // Create new category from preset via API
+      await createCategory({
+        name: presetCategory.name,
+        icon: presetCategory.iconName, // Use iconName (string) not icon (component)
+        type: presetType,
+        is_active: true,
+      });
 
-    // Add to local state
-    setCategories([...categories, newCategory]);
+      // Refresh categories list
+      await fetchCategories();
+    } catch (err) {
+      console.error('Failed to add preset category:', err);
+      alert(err.message || 'Failed to add preset category');
+    }
   };
 
   // Render type toggle buttons
@@ -232,6 +261,98 @@ const Categories = () => {
   const inactiveCategories = getFilteredCategories(false, inactiveType);
   const presetCategories = PRESET_CATEGORIES[presetType] || [];
 
+  // Loading state
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: theme.colors.background.pageAlt,
+        }}
+      >
+        <NavigationBar />
+        <div
+          style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: theme.spacing[6],
+          }}
+        >
+          <PageHeader
+            title="Categories"
+            subtitle="Manage your income and expense categories"
+          />
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: theme.spacing[8],
+              color: theme.colors.text.secondary,
+            }}
+          >
+            Loading categories...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: theme.colors.background.pageAlt,
+        }}
+      >
+        <NavigationBar />
+        <div
+          style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: theme.spacing[6],
+          }}
+        >
+          <PageHeader
+            title="Categories"
+            subtitle="Manage your income and expense categories"
+          />
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: theme.spacing[8],
+              gap: theme.spacing[4],
+            }}
+          >
+            <div style={{ color: theme.colors.semantic.expense }}>
+              {error}
+            </div>
+            <button
+              onClick={fetchCategories}
+              style={{
+                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
+                backgroundColor: theme.colors.action.primary,
+                color: theme.colors.text.inverse,
+                border: 'none',
+                borderRadius: theme.border.radius.sm,
+                cursor: 'pointer',
+                fontSize: theme.typography.fontSize.base,
+                fontWeight: theme.typography.fontWeight.medium,
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -290,7 +411,7 @@ const Categories = () => {
                     { label: 'Delete', action: 'delete', icon: 'Trash2' },
                   ]}
                   onMenuAction={handleMenuAction}
-                  transactionCount={34}
+                  transactionCount={category.transaction_count || 0}
                 />
               ))
             ) : (
@@ -335,7 +456,7 @@ const Categories = () => {
                     { label: 'Delete', action: 'delete', icon: 'Trash2' },
                   ]}
                   onMenuAction={handleMenuAction}
-                  transactionCount={12}
+                  transactionCount={category.transaction_count || 0}
                 />
               ))
             ) : (
@@ -383,7 +504,11 @@ const Categories = () => {
               return (
                 <CategoryListItem
                   key={index}
-                  category={{ ...preset, type: presetType }}
+                  category={{
+                    name: preset.name,
+                    icon: preset.iconName, // Use iconName string, not icon component
+                    type: presetType
+                  }}
                   statusDot="preset"
                   menuOptions={
                     alreadyAdded

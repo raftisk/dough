@@ -78,7 +78,6 @@ class Category(models.Model):
         default='expense'
     )
     icon = models.CharField(max_length=50, blank=True)
-    color = models.CharField(max_length=7, default='#9E9E9E', help_text='Hex color code')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -103,7 +102,7 @@ class Category(models.Model):
 
 
 class Transaction(models.Model):
-    desc = models.TextField(blank=True)
+    description = models.TextField(blank=True)
     wallet = models.ForeignKey(
         Wallet,
         on_delete=models.CASCADE,
@@ -128,7 +127,8 @@ class Transaction(models.Model):
         max_length=10,
         choices=RECURRENCE_CHOICES,
         blank=True,
-        default='',
+        null=True,
+        default='None',
         help_text='Recurrence pattern for recurring transactions'
     )
     recurrence_parent = models.ForeignKey(
@@ -161,17 +161,17 @@ class Transaction(models.Model):
 
     def is_recurring(self):
         """Check if this transaction is recurring"""
-        return bool(self.recurrence)
+        return bool(self.recurrence and self.recurrence != 'None')
 
-    @property
-    def description(self):
-        """Alias for desc to maintain backward compatibility"""
-        return self.desc
+    # @property
+    # def description(self):
+    #     """Alias for description to maintain backward compatibility"""
+    #     return self.description
 
-    @description.setter
-    def description(self, value):
-        """Alias setter for desc to maintain backward compatibility"""
-        self.desc = value
+    # @description.setter
+    # def description(self, value):
+    #     """Alias setter for description to maintain backward compatibility"""
+    #     self.description = value
 
 
 class Budget(models.Model):
@@ -324,7 +324,7 @@ class UpcomingTransaction(Transaction):
 
 class Transfer(models.Model):
     """Transfer money between wallets"""
-    desc = models.TextField(blank=True)
+    description = models.TextField(blank=True)
     from_wallet = models.ForeignKey(
         Wallet,
         on_delete=models.CASCADE,
@@ -378,24 +378,24 @@ class Transfer(models.Model):
                     'amount': f'Insufficient balance. Current balance: {current_balance}'
                 })
 
-    @property
-    def description(self):
-        """Alias for desc to maintain backward compatibility"""
-        return self.desc
+    # @property
+    # def description(self):
+    #     """Alias for description to maintain backward compatibility"""
+    #     return self.description
 
-    @description.setter
-    def description(self, value):
-        """Alias setter for desc to maintain backward compatibility"""
-        self.desc = value
+    # @description.setter
+    # def description(self, value):
+    #     """Alias setter for description to maintain backward compatibility"""
+    #     self.description = value
 
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     self.full_clean()
+    #     super().save(*args, **kwargs)
 
 
 class WishlistItem(models.Model):
     """Wishlist items for tracking savings goals"""
-    desc = models.TextField()
+    description = models.TextField()
     amount = models.DecimalField(
         **MONEY_FIELD_CONFIG,
         validators=[MinValueValidator(Decimal('0.01'))]
@@ -422,16 +422,16 @@ class WishlistItem(models.Model):
         ordering = ['target', '-priority', '-created_at']
 
     def __str__(self):
-        return f"{self.desc} - {self.amount} (Target: {self.target})"
+        return f"{self.description} - {self.amount} (Target: {self.target})"
 
-    @property
-    def description(self):
-        """Alias for desc to maintain backward compatibility"""
-        return self.desc
+    # @property
+    # def description(self):
+    #     """Alias for description to maintain backward compatibility"""
+    #     return self.description
 
-    @description.setter
-    def description(self, value):
-        """Alias setter for desc to maintain backward compatibility"""
-        self.desc = value
+    # @description.setter
+    # def description(self, value):
+    #     """Alias setter for description to maintain backward compatibility"""
+    #     self.description = value
 
 

@@ -38,10 +38,11 @@ class WalletSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    transaction_count = serializers.IntegerField(
-        read_only=True,
-        source='transactions.count'
-    )
+    transaction_count = serializers.SerializerMethodField()
+
+    def get_transaction_count(self, obj):
+        """Calculate the number of transactions using this category"""
+        return Transaction.objects.filter(category=obj).count()
 
     class Meta:
         model = Category
@@ -79,7 +80,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         source='get_signed_amount',
         help_text='Amount with sign based on type (negative for expenses)'
     )
-    description = serializers.CharField(source='desc', required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
 
     def get_currency_symbol(self, obj):
         return get_currency_symbol(obj.wallet.currency)
@@ -164,7 +165,21 @@ class UpcomingTransactionSerializer(serializers.ModelSerializer):
         source='wallet.name',
         read_only=True
     )
-    description = serializers.CharField(source='desc', required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Convert empty string recurrence to 'None' for consistency
+        if data.get('recurrence') == '':
+            data['recurrence'] = 'None'
+        return data
+
+    def to_internal_value(self, data):
+        # Convert empty string recurrence to 'None' for consistency
+        if 'recurrence' in data and data['recurrence'] == '':
+            data = data.copy()
+            data['recurrence'] = 'None'
+        return super().to_internal_value(data)
 
     class Meta:
         model = UpcomingTransaction
@@ -196,7 +211,7 @@ class TransferSerializer(serializers.ModelSerializer):
         source='to_wallet.name',
         read_only=True
     )
-    description = serializers.CharField(source='desc', required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = Transfer
@@ -220,7 +235,7 @@ class WishlistItemSerializer(serializers.ModelSerializer):
         source='category.name',
         read_only=True
     )
-    description = serializers.CharField(source='desc')
+    description = serializers.CharField()
 
     class Meta:
         model = WishlistItem

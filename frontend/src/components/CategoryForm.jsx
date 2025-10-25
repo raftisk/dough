@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { X, Plus, Minus, ChevronDown, Search } from 'lucide-react';
 import { theme } from '../styles/theme';
 import IconPicker from './IconPicker';
+import { getIconComponent } from '../constants';
 
 const CategoryForm = ({
   isOpen,
@@ -75,9 +76,9 @@ const CategoryForm = ({
     onClose();
   };
 
-  // Handle icon selection
-  const handleIconSelect = (iconComponent) => {
-    setSelectedIcon(iconComponent);
+  // Handle icon selection - now receives icon name string
+  const handleIconSelect = (iconName) => {
+    setSelectedIcon(iconName);
     setShowIconPicker(false);
   };
 
@@ -317,7 +318,7 @@ const CategoryForm = ({
                   {/* Icon */}
                   {selectedIcon ? (
                     (() => {
-                      const IconComponent = selectedIcon;
+                      const IconComponent = getIconComponent(selectedIcon);
                       return <IconComponent size={20} color={theme.colors.text.primary} />;
                     })()
                   ) : (
@@ -327,10 +328,10 @@ const CategoryForm = ({
                   <span
                     style={{
                       fontSize: theme.typography.fontSize.base,
-                      color: selectedIcon ? theme.colors.text.muted : theme.colors.text.muted,
+                      color: selectedIcon ? theme.colors.text.primary : theme.colors.text.muted,
                     }}
                   >
-                    Choose Icon
+                    {selectedIcon ? 'Icon Selected' : 'Choose Icon'}
                   </span>
                 </div>
                 {errors.icon && (

@@ -1,102 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import {
-  // Food & Dining
-  Utensils, Coffee, Pizza, Wine, Soup,
-  // Transportation
-  Car, Fuel, Train, Plane, Bike,
-  // Home & Utilities
-  Home, Lightbulb, Wifi, Smartphone, Tv,
-  // Shopping
-  ShoppingBag, ShoppingCart, Gift, Shirt,
-  // Health & Fitness
-  Heart, Activity, Dumbbell, Pill,
-  // Work & Finance
-  Briefcase, TrendingUp, DollarSign, CreditCard, Wallet,
-  // Entertainment
-  Music, Film, Gamepad2, Camera,
-  // Education
-  BookOpen, GraduationCap, Pencil,
-  // Other
-  Wrench, PawPrint, Sparkles, Star, Package, Folder, Calendar, Clock,
-  // Additional useful icons
-  Users, MapPin, Phone, Mail, Bell, Settings, Download, Upload,
-  // Search icon
-  Search,
-} from 'lucide-react';
+import { Search } from 'lucide-react';
 import { theme } from '../styles/theme';
+import { ICON_MAP } from '../constants';
 
-// Icon catalog with names and components
-const ICON_CATALOG = [
-  // Food & Dining
-  { name: 'Utensils', component: Utensils, keywords: ['food', 'dining', 'eat', 'restaurant'] },
-  { name: 'Coffee', component: Coffee, keywords: ['coffee', 'drink', 'cafe', 'beverage'] },
-  { name: 'Pizza', component: Pizza, keywords: ['pizza', 'food', 'fast food'] },
-  { name: 'Wine', component: Wine, keywords: ['wine', 'alcohol', 'drink', 'bar'] },
-  { name: 'Soup', component: Soup, keywords: ['soup', 'food', 'meal'] },
-
-  // Transportation
-  { name: 'Car', component: Car, keywords: ['car', 'vehicle', 'transport', 'auto'] },
-  { name: 'Fuel', component: Fuel, keywords: ['fuel', 'gas', 'petrol', 'gasoline'] },
-  { name: 'Train', component: Train, keywords: ['train', 'railway', 'transport', 'metro'] },
-  { name: 'Plane', component: Plane, keywords: ['plane', 'flight', 'travel', 'airport'] },
-  { name: 'Bike', component: Bike, keywords: ['bike', 'bicycle', 'cycling'] },
-
-  // Home & Utilities
-  { name: 'Home', component: Home, keywords: ['home', 'house', 'rent', 'mortgage'] },
-  { name: 'Lightbulb', component: Lightbulb, keywords: ['light', 'electricity', 'utilities', 'power'] },
-  { name: 'Wifi', component: Wifi, keywords: ['wifi', 'internet', 'network', 'connection'] },
-  { name: 'Smartphone', component: Smartphone, keywords: ['phone', 'mobile', 'smartphone', 'cell'] },
-  { name: 'Tv', component: Tv, keywords: ['tv', 'television', 'entertainment', 'streaming'] },
-
-  // Shopping
-  { name: 'ShoppingBag', component: ShoppingBag, keywords: ['shopping', 'bag', 'retail', 'store'] },
-  { name: 'ShoppingCart', component: ShoppingCart, keywords: ['cart', 'shopping', 'groceries', 'supermarket'] },
-  { name: 'Gift', component: Gift, keywords: ['gift', 'present', 'celebration'] },
-  { name: 'Shirt', component: Shirt, keywords: ['shirt', 'clothing', 'apparel', 'fashion'] },
-
-  // Health & Fitness
-  { name: 'Heart', component: Heart, keywords: ['heart', 'health', 'medical', 'wellness'] },
-  { name: 'Activity', component: Activity, keywords: ['activity', 'fitness', 'exercise', 'health'] },
-  { name: 'Dumbbell', component: Dumbbell, keywords: ['dumbbell', 'gym', 'fitness', 'workout'] },
-  { name: 'Pill', component: Pill, keywords: ['pill', 'medicine', 'medication', 'pharmacy'] },
-
-  // Work & Finance
-  { name: 'Briefcase', component: Briefcase, keywords: ['briefcase', 'work', 'business', 'office'] },
-  { name: 'TrendingUp', component: TrendingUp, keywords: ['trending', 'growth', 'investment', 'stock'] },
-  { name: 'DollarSign', component: DollarSign, keywords: ['dollar', 'money', 'currency', 'finance'] },
-  { name: 'CreditCard', component: CreditCard, keywords: ['credit card', 'payment', 'card', 'banking'] },
-  { name: 'Wallet', component: Wallet, keywords: ['wallet', 'money', 'cash', 'finance'] },
-
-  // Entertainment
-  { name: 'Music', component: Music, keywords: ['music', 'audio', 'song', 'entertainment'] },
-  { name: 'Film', component: Film, keywords: ['film', 'movie', 'cinema', 'entertainment'] },
-  { name: 'Gamepad2', component: Gamepad2, keywords: ['gamepad', 'gaming', 'game', 'entertainment'] },
-  { name: 'Camera', component: Camera, keywords: ['camera', 'photo', 'photography'] },
-
-  // Education
-  { name: 'BookOpen', component: BookOpen, keywords: ['book', 'education', 'learning', 'school'] },
-  { name: 'GraduationCap', component: GraduationCap, keywords: ['graduation', 'education', 'university', 'school'] },
-  { name: 'Pencil', component: Pencil, keywords: ['pencil', 'write', 'education', 'school'] },
-
-  // Other
-  { name: 'Wrench', component: Wrench, keywords: ['wrench', 'tool', 'maintenance', 'repair'] },
-  { name: 'PawPrint', component: PawPrint, keywords: ['paw', 'pet', 'animal', 'dog', 'cat'] },
-  { name: 'Sparkles', component: Sparkles, keywords: ['sparkles', 'magic', 'special', 'premium'] },
-  { name: 'Star', component: Star, keywords: ['star', 'favorite', 'important', 'premium'] },
-  { name: 'Package', component: Package, keywords: ['package', 'box', 'delivery', 'shipping'] },
-  { name: 'Folder', component: Folder, keywords: ['folder', 'file', 'documents', 'storage'] },
-  { name: 'Calendar', component: Calendar, keywords: ['calendar', 'date', 'schedule', 'appointment'] },
-  { name: 'Clock', component: Clock, keywords: ['clock', 'time', 'schedule'] },
-  { name: 'Users', component: Users, keywords: ['users', 'people', 'group', 'team'] },
-  { name: 'MapPin', component: MapPin, keywords: ['map', 'location', 'pin', 'place'] },
-  { name: 'Phone', component: Phone, keywords: ['phone', 'call', 'telephone'] },
-  { name: 'Mail', component: Mail, keywords: ['mail', 'email', 'message'] },
-  { name: 'Bell', component: Bell, keywords: ['bell', 'notification', 'alert'] },
-  { name: 'Settings', component: Settings, keywords: ['settings', 'config', 'options'] },
-  { name: 'Download', component: Download, keywords: ['download', 'save', 'get'] },
-  { name: 'Upload', component: Upload, keywords: ['upload', 'send', 'share'] },
-];
+// Convert ICON_MAP to array format for the picker with search keywords
+const ICON_CATALOG = Object.entries(ICON_MAP).map(([name, component]) => {
+  // Generate keywords based on icon name
+  const keywords = name.toLowerCase().split(/(?=[A-Z])/).join(' ').split(' ');
+  return { name, component, keywords };
+});
 
 const IconPicker = ({ isOpen, onClose, onSelectIcon, selectedIcon }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -147,15 +60,15 @@ const IconPicker = ({ isOpen, onClose, onSelectIcon, selectedIcon }) => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  // Handle icon selection
-  const handleIconClick = (iconComponent) => {
-    onSelectIcon(iconComponent);
+  // Handle icon selection - return icon name string
+  const handleIconClick = (iconName) => {
+    onSelectIcon(iconName);
     onClose();
   };
 
   // Check if an icon is selected
-  const isIconSelected = (iconComponent) => {
-    return selectedIcon === iconComponent;
+  const isIconSelected = (iconName) => {
+    return selectedIcon === iconName;
   };
 
   if (!isOpen) return null;
@@ -261,11 +174,11 @@ const IconPicker = ({ isOpen, onClose, onSelectIcon, selectedIcon }) => {
             >
               {filteredIcons.map((icon) => {
                 const IconComponent = icon.component;
-                const selected = isIconSelected(IconComponent);
+                const selected = isIconSelected(icon.name);
                 return (
                   <button
                     key={icon.name}
-                    onClick={() => handleIconClick(IconComponent)}
+                    onClick={() => handleIconClick(icon.name)}
                     style={{
                       padding: theme.spacing[3],
                       borderRadius: theme.border.radius.base,

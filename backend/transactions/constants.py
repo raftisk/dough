@@ -46,7 +46,7 @@ TRANSACTION_TYPES = [
 
 # Recurrence choices for transactions
 RECURRENCE_CHOICES = [
-    ('', 'No Recurrence'),
+    ('none', 'None'),
     ('daily', 'Daily'),
     ('weekly', 'Weekly'),
     ('monthly', 'Monthly'),

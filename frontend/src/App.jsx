@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Categories from './pages/Categories';
 import Transactions from './pages/Transactions';
+import Wallets from './pages/Wallets';
 
 // Placeholder components for future pages
 const PlaceholderPage = ({ title }) => (
@@ -17,7 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/wallets" element={<PlaceholderPage title="Wallets" />} />
+        <Route path="/wallets" element={<Wallets />} />
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/budgets" element={<PlaceholderPage title="Budgets" />} />

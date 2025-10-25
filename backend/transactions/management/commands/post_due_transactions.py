@@ -57,7 +57,7 @@ class Command(BaseCommand):
                             category=transaction.category,
                             amount=transaction.amount,
                             posted_transaction__isnull=True,
-                            recurrence_pattern=transaction.recurrence_pattern
+                            recurrence=transaction.recurrence
                         ).exclude(pk=upcoming.pk).order_by('-date').first()
 
                         if new_upcoming:

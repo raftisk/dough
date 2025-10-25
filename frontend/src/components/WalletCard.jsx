@@ -31,8 +31,8 @@ const WalletCard = ({ wallet, onClick, onEdit }) => {
         backgroundColor: theme.colors.background.card,
         border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
         borderRadius: theme.border.radius.lg,
-        padding: theme.spacing[5],
-        minWidth: '200px',
+        padding: theme.spacing[4],
+        minWidth: '180px',
         display: 'flex',
         flexDirection: 'column',
         gap: theme.spacing[3],
@@ -56,7 +56,7 @@ const WalletCard = ({ wallet, onClick, onEdit }) => {
       {/* Wallet name */}
       <h3
         style={{
-          fontSize: theme.typography.fontSize.lg,
+          fontSize: theme.typography.fontSize.base,
           fontWeight: theme.typography.fontWeight.semibold,
           color: theme.colors.text.primary,
         }}
@@ -75,7 +75,7 @@ const WalletCard = ({ wallet, onClick, onEdit }) => {
       <div style={{ marginTop: 'auto' }}>
         <div
           style={{
-            fontSize: theme.typography.fontSize['3xl'],
+            fontSize: theme.typography.fontSize['2xl'],
             fontWeight: theme.typography.fontWeight.bold,
             color: theme.colors.text.primary,
             marginBottom: theme.spacing[1],

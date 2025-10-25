@@ -22,14 +22,14 @@ class CategoryAdmin(admin.ModelAdmin):
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ['date', 'type', 'wallet', 'category', 'amount', 'get_description']
     list_filter = ['type', 'wallet', 'category', 'date', 'recurrence']
-    search_fields = ['desc', 'wallet__name', 'category__name']
+    search_fields = ['description', 'wallet__name', 'category__name']
     readonly_fields = ['created_at', 'updated_at']
     date_hierarchy = 'date'
     ordering = ['-date', '-created_at']
 
     def get_description(self, obj):
-        """Display description (desc field)"""
-        return obj.desc[:50] if obj.desc else ''
+        """Display description (description field)"""
+        return obj.description[:50] if obj.description else ''
     get_description.short_description = 'Description'
 
 
@@ -70,7 +70,7 @@ class BudgetAdmin(admin.ModelAdmin):
 class UpcomingTransactionAdmin(admin.ModelAdmin):
     list_display = ['date', 'type', 'wallet', 'category', 'amount', 'auto_post', 'get_recurring_status']
     list_filter = ['type', 'wallet', 'category', 'auto_post', 'recurrence']
-    search_fields = ['desc', 'wallet__name', 'category__name']
+    search_fields = ['description', 'wallet__name', 'category__name']
     readonly_fields = ['created_at', 'updated_at']
     date_hierarchy = 'date'
 
@@ -85,14 +85,14 @@ class UpcomingTransactionAdmin(admin.ModelAdmin):
 class TransferAdmin(admin.ModelAdmin):
     list_display = ['date', 'from_wallet', 'to_wallet', 'amount', 'get_description']
     list_filter = ['from_wallet', 'to_wallet', 'date']
-    search_fields = ['desc', 'from_wallet__name', 'to_wallet__name']
+    search_fields = ['description', 'from_wallet__name', 'to_wallet__name']
     readonly_fields = ['created_at', 'updated_at']
     date_hierarchy = 'date'
     ordering = ['-date', '-created_at']
 
     def get_description(self, obj):
-        """Display description (desc field)"""
-        return obj.desc[:50] if obj.desc else ''
+        """Display description (description field)"""
+        return obj.description[:50] if obj.description else ''
     get_description.short_description = 'Description'
 
 
@@ -100,11 +100,11 @@ class TransferAdmin(admin.ModelAdmin):
 class WishlistItemAdmin(admin.ModelAdmin):
     list_display = ['get_description', 'amount', 'category', 'priority', 'target', 'is_completed', 'created_at']
     list_filter = ['category', 'priority', 'is_completed', 'target']
-    search_fields = ['desc', 'category__name']
+    search_fields = ['description', 'category__name']
     readonly_fields = ['created_at', 'updated_at']
     ordering = ['target', '-priority', '-created_at']
 
     def get_description(self, obj):
-        """Display description (desc field)"""
-        return obj.desc[:50] if obj.desc else ''
+        """Display description (description field)"""
+        return obj.description[:50] if obj.description else ''
     get_description.short_description = 'Description'

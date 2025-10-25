@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { theme, getTypeBackgroundColor } from '../styles/theme';
+import { getIconComponent } from '../constants';
 
 const CategoryCard = ({ category, onClick, onEdit }) => {
   // Get badge color based on category type
@@ -64,11 +65,13 @@ const CategoryCard = ({ category, onClick, onEdit }) => {
       {/* Icon */}
       <div
         style={{
-          fontSize: theme.typography.fontSize['4xl'],
           lineHeight: 1,
         }}
       >
-        {category.icon || '📁'}
+        {(() => {
+          const IconComponent = getIconComponent(category.icon);
+          return <IconComponent size={48} color={theme.colors.text.primary} />;
+        })()}
       </div>
 
       {/* Category name */}

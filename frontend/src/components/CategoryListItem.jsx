@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { MoreVertical, Edit, Trash2, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { theme } from '../styles/theme';
+import { getIconComponent } from '../constants';
 
 const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, transactionCount, isAlreadyAdded }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -108,12 +109,14 @@ const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, tran
         {/* Category Icon */}
         <div
           style={{
-            fontSize: theme.typography.fontSize.xl,
             lineHeight: 1,
             flexShrink: 0,
           }}
         >
-          {category.icon || '📁'}
+          {(() => {
+            const IconComponent = getIconComponent(category.icon);
+            return <IconComponent size={24} color={theme.colors.text.primary} />;
+          })()}
         </div>
 
         {/* Category Name and Transaction Count */}
