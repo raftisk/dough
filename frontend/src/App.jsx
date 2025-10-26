@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import Categories from './pages/Categories';
 import Transactions from './pages/Transactions';
 import Wallets from './pages/Wallets';
+import Budgets from './pages/Budgets';
 
 // Placeholder components for future pages
 const PlaceholderPage = ({ title }) => (
@@ -21,7 +22,7 @@ function App() {
         <Route path="/wallets" element={<Wallets />} />
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/categories" element={<Categories />} />
-        <Route path="/budgets" element={<PlaceholderPage title="Budgets" />} />
+        <Route path="/budgets" element={<Budgets />} />
         <Route path="/wishlist" element={<PlaceholderPage title="Wishlist" />} />
         <Route path="/insights" element={<PlaceholderPage title="Insights" />} />
       </Routes>

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { MoreVertical } from 'lucide-react';
 import { theme } from '../styles/theme';
+import { getIconComponent } from '../constants';
 
 const BudgetCard = ({ budget, onEdit, onDelete }) => {
   const {
@@ -69,9 +70,12 @@ const BudgetCard = ({ budget, onEdit, onDelete }) => {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing[2], flex: 1 }}>
           {/* Category Icon */}
-          <span style={{ fontSize: theme.typography.fontSize.xl }}>
-            {category.icon || '📁'}
-          </span>
+          <div style={{ lineHeight: 1 }}>
+            {(() => {
+              const CategoryIcon = getIconComponent(category.icon);
+              return <CategoryIcon size={24} color={theme.colors.text.primary} />;
+            })()}
+          </div>
 
           {/* Category Name */}
           <span

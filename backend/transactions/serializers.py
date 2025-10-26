@@ -109,45 +109,86 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class BudgetSerializer(serializers.ModelSerializer):
-    spent_amount = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        read_only=True,
-        source='spent_amount'
-    )
-    remaining_amount = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        read_only=True,
-        source='remaining_amount'
-    )
-    percentage_used = serializers.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        read_only=True,
-        source='percentage_used'
-    )
-    category_name = serializers.CharField(
-        source='category.name',
-        read_only=True
-    )
-    start_date = serializers.DateField(source='start_date', read_only=True)
+    spent_amount = serializers.SerializerMethodField()
+    remaining_amount = serializers.SerializerMethodField()
+    percentage_spent = serializers.SerializerMethodField()
+    period_start_date = serializers.SerializerMethodField()
+    period_end_date = serializers.SerializerMethodField()
+    period_display = serializers.SerializerMethodField()
+    category_data = serializers.SerializerMethodField()
+    # Keep legacy fields for backward compatibility
+    percentage_used = serializers.SerializerMethodField()
+    start_date = serializers.DateField(read_only=True)
     end_date = serializers.DateField(read_only=True)
+
+    def get_spent_amount(self, obj):
+        """Return spent amount as float"""
+        return float(obj.spent_amount())
+
+    def get_remaining_amount(self, obj):
+        """Return remaining amount as float"""
+        return float(obj.remaining_amount())
+
+    def get_percentage_spent(self, obj):
+        """Return percentage spent rounded to 1 decimal as float"""
+        percentage = obj.percentage_used()
+        return round(float(percentage), 1)
+
+    def get_percentage_used(self, obj):
+        """Legacy field - same as percentage_spent"""
+        return self.get_percentage_spent(obj)
+
+    def get_period_start_date(self, obj):
+        """Return start date of current period as ISO string"""
+        return obj.start_date.isoformat()
+
+    def get_period_end_date(self, obj):
+        """Return end date of current period as ISO string"""
+        return obj.end_date.isoformat()
+
+    def get_period_display(self, obj):
+        """Return formatted period string for display"""
+        from calendar import month_name
+
+        start_date = obj.start_date
+        end_date = obj.end_date
+
+        if obj.period == 'monthly':
+            # Format: "Oct 2025"
+            return f"{month_name[start_date.month]} {start_date.year}"
+        else:
+            # Format: "Aug 2025 - Oct 2025"
+            start_str = f"{month_name[start_date.month]} {start_date.year}"
+            end_str = f"{month_name[end_date.month]} {end_date.year}"
+            return f"{start_str} - {end_str}"
+
+    def get_category_data(self, obj):
+        """Return nested category data with name and icon"""
+        return {
+            'id': obj.category.id,
+            'name': obj.category.name,
+            'icon': obj.category.icon,
+            'type': obj.category.type
+        }
 
     class Meta:
         model = Budget
         fields = [
             'id',
             'category',
-            'category_name',
+            'category_data',
             'amount',
             'spent_amount',
             'remaining_amount',
-            'percentage_used',
+            'percentage_spent',
+            'percentage_used',  # Legacy field
             'period',
+            'period_start_date',
+            'period_end_date',
+            'period_display',
             'start_month',
-            'start_date',
-            'end_date',
+            'start_date',  # Legacy field
+            'end_date',  # Legacy field
             'reset',
             'rollover',
             'created_at',

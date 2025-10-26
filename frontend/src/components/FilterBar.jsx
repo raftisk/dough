@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown, X, CalendarDays } from 'lucide-react';
 import { theme } from '../styles/theme';
 import DatePicker from './DatePicker';
+import { getIconComponent } from '../constants';
 
 const FilterBar = ({
   selectedTypes,
@@ -17,26 +18,44 @@ const FilterBar = ({
   wallets = [],
 }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [activeDatePicker, setActiveDatePicker] = useState(null); // 'start' or 'end'
   const dropdownRefs = {
     type: useRef(null),
     categories: useRef(null),
     wallets: useRef(null),
     date: useRef(null),
   };
+  const datePickerRef = useRef(null);
+  const startButtonRef = useRef(null);
+  const endButtonRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close DatePicker if clicking outside it
+      if (activeDatePicker && datePickerRef.current) {
+        if (!datePickerRef.current.contains(event.target)) {
+          setActiveDatePicker(null);
+        }
+      }
+
+      // Close dropdown if clicking outside (but not in DatePicker or date buttons)
       if (openDropdown && dropdownRefs[openDropdown].current) {
-        if (!dropdownRefs[openDropdown].current.contains(event.target)) {
+        const isInsideDatePicker = datePickerRef.current && datePickerRef.current.contains(event.target);
+        const isDateButton =
+          (startButtonRef.current && startButtonRef.current.contains(event.target)) ||
+          (endButtonRef.current && endButtonRef.current.contains(event.target));
+
+        if (!dropdownRefs[openDropdown].current.contains(event.target) && !isInsideDatePicker && !isDateButton) {
           setOpenDropdown(null);
+          setActiveDatePicker(null);
         }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openDropdown]);
+  }, [openDropdown, activeDatePicker]);
 
   // Type filter handlers
   const handleTypeToggle = (type) => {
@@ -57,32 +76,32 @@ const FilterBar = ({
   };
 
   // Category filter handlers
-  const handleCategoryToggle = (categoryName) => {
-    if (selectedCategories.includes(categoryName)) {
-      setSelectedCategories(selectedCategories.filter((c) => c !== categoryName));
+  const handleCategoryToggle = (categoryId) => {
+    if (selectedCategories.includes(categoryId)) {
+      setSelectedCategories(selectedCategories.filter((c) => c !== categoryId));
     } else {
-      setSelectedCategories([...selectedCategories, categoryName]);
+      setSelectedCategories([...selectedCategories, categoryId]);
     }
   };
 
   const handleCategoryToggleAll = (categoryType) => {
     const typeCategories = categories
       .filter((cat) => cat.type === categoryType)
-      .map((cat) => cat.name);
+      .map((cat) => cat.id);
 
-    const allSelected = typeCategories.every((name) =>
-      selectedCategories.includes(name)
+    const allSelected = typeCategories.every((id) =>
+      selectedCategories.includes(id)
     );
 
     if (allSelected) {
       setSelectedCategories(
-        selectedCategories.filter((name) => !typeCategories.includes(name))
+        selectedCategories.filter((id) => !typeCategories.includes(id))
       );
     } else {
       const newSelected = [...selectedCategories];
-      typeCategories.forEach((name) => {
-        if (!newSelected.includes(name)) {
-          newSelected.push(name);
+      typeCategories.forEach((id) => {
+        if (!newSelected.includes(id)) {
+          newSelected.push(id);
         }
       });
       setSelectedCategories(newSelected);
@@ -90,11 +109,11 @@ const FilterBar = ({
   };
 
   // Wallet filter handlers
-  const handleWalletToggle = (walletName) => {
-    if (selectedWallets.includes(walletName)) {
-      setSelectedWallets(selectedWallets.filter((w) => w !== walletName));
+  const handleWalletToggle = (walletId) => {
+    if (selectedWallets.includes(walletId)) {
+      setSelectedWallets(selectedWallets.filter((w) => w !== walletId));
     } else {
-      setSelectedWallets([...selectedWallets, walletName]);
+      setSelectedWallets([...selectedWallets, walletId]);
     }
   };
 
@@ -102,8 +121,16 @@ const FilterBar = ({
     if (selectedWallets.length === wallets.length) {
       setSelectedWallets([]);
     } else {
-      setSelectedWallets(wallets.map((w) => w.name));
+      setSelectedWallets(wallets.map((w) => w.id));
     }
+  };
+
+  // Helper to format date as YYYY-MM-DD in local timezone
+  const formatDateToLocal = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   // Date range presets
@@ -115,23 +142,23 @@ const FilterBar = ({
     switch (preset) {
       case 'thisMonth':
         return {
-          start: new Date(year, month, 1).toISOString().split('T')[0],
-          end: new Date(year, month + 1, 0).toISOString().split('T')[0],
+          start: formatDateToLocal(new Date(year, month, 1)),
+          end: formatDateToLocal(new Date(year, month + 1, 0)),
         };
       case 'lastMonth':
         return {
-          start: new Date(year, month - 1, 1).toISOString().split('T')[0],
-          end: new Date(year, month, 0).toISOString().split('T')[0],
+          start: formatDateToLocal(new Date(year, month - 1, 1)),
+          end: formatDateToLocal(new Date(year, month, 0)),
         };
       case 'last3Months':
         return {
-          start: new Date(year, month - 2, 1).toISOString().split('T')[0],
-          end: new Date(year, month + 1, 0).toISOString().split('T')[0],
+          start: formatDateToLocal(new Date(year, month - 2, 1)),
+          end: formatDateToLocal(new Date(year, month + 1, 0)),
         };
       case 'thisYear':
         return {
-          start: new Date(year, 0, 1).toISOString().split('T')[0],
-          end: new Date(year, 11, 31).toISOString().split('T')[0],
+          start: formatDateToLocal(new Date(year, 0, 1)),
+          end: formatDateToLocal(new Date(year, 11, 31)),
         };
       default:
         return dateRange;
@@ -142,8 +169,9 @@ const FilterBar = ({
   const formatDateRangeDisplay = () => {
     if (!dateRange.start || !dateRange.end) return 'Date Range';
 
-    const start = new Date(dateRange.start);
-    const end = new Date(dateRange.end);
+    // Parse dates in local timezone by adding 'T00:00:00' to ensure local interpretation
+    const start = new Date(dateRange.start + 'T00:00:00');
+    const end = new Date(dateRange.end + 'T00:00:00');
 
     const formatOptions = { month: 'short', day: 'numeric' };
     const startStr = start.toLocaleDateString('en-US', formatOptions);
@@ -159,8 +187,8 @@ const FilterBar = ({
     setSelectedWallets([]);
     const today = new Date();
     setDateRange({
-      start: new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0],
-      end: new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0],
+      start: formatDateToLocal(new Date(today.getFullYear(), today.getMonth(), 1)),
+      end: formatDateToLocal(new Date(today.getFullYear(), today.getMonth() + 1, 0)),
     });
   };
 
@@ -174,7 +202,7 @@ const FilterBar = ({
   };
 
   // Filter button component
-  const FilterButton = ({ label, count, isActive, onClick, dropdownKey }) => (
+  const FilterButton = ({ label, count, isActive, dropdownKey, children }) => (
     <div style={{ position: 'relative' }} ref={dropdownRefs[dropdownKey]}>
       <button
         onClick={() => {
@@ -210,6 +238,7 @@ const FilterBar = ({
         </span>
         <ChevronDown size={16} />
       </button>
+      {children}
     </div>
   );
 
@@ -261,10 +290,10 @@ const FilterBar = ({
           borderRadius: theme.border.radius.lg,
           boxShadow: theme.shadows.lg,
           padding: theme.spacing[2],
-          minWidth: '200px',
+          minWidth: '280px',
           maxHeight: '300px',
           overflowY: 'auto',
-          zIndex: theme.zIndex.dropdown,
+          zIndex: theme.zIndex.popover,
         }}
       >
         {children}
@@ -311,30 +340,31 @@ const FilterBar = ({
           count={0}
           isActive={selectedTypes.length < 3}
           dropdownKey="type"
-        />
-        <DropdownMenu isOpen={openDropdown === 'type'}>
-          <Checkbox
-            checked={selectedTypes.length === 3}
-            onChange={handleTypeToggleAll}
-            label="All"
-          />
-          <div style={{ height: '1px', backgroundColor: theme.colors.border.light, margin: `${theme.spacing[1]} 0` }} />
-          <Checkbox
-            checked={selectedTypes.includes('expense')}
-            onChange={() => handleTypeToggle('expense')}
-            label="Expense"
-          />
-          <Checkbox
-            checked={selectedTypes.includes('income')}
-            onChange={() => handleTypeToggle('income')}
-            label="Income"
-          />
-          <Checkbox
-            checked={selectedTypes.includes('transfer')}
-            onChange={() => handleTypeToggle('transfer')}
-            label="Transfer"
-          />
-        </DropdownMenu>
+        >
+          <DropdownMenu isOpen={openDropdown === 'type'}>
+            <Checkbox
+              checked={selectedTypes.length === 3}
+              onChange={handleTypeToggleAll}
+              label="All"
+            />
+            <div style={{ height: '1px', backgroundColor: theme.colors.border.light, margin: `${theme.spacing[1]} 0` }} />
+            <Checkbox
+              checked={selectedTypes.includes('expense')}
+              onChange={() => handleTypeToggle('expense')}
+              label="Expense"
+            />
+            <Checkbox
+              checked={selectedTypes.includes('income')}
+              onChange={() => handleTypeToggle('income')}
+              label="Income"
+            />
+            <Checkbox
+              checked={selectedTypes.includes('transfer')}
+              onChange={() => handleTypeToggle('transfer')}
+              label="Transfer"
+            />
+          </DropdownMenu>
+        </FilterButton>
 
         {/* Categories Filter */}
         <FilterButton
@@ -342,61 +372,118 @@ const FilterBar = ({
           count={selectedCategories.length}
           isActive={selectedCategories.length > 0}
           dropdownKey="categories"
-        />
-        <DropdownMenu isOpen={openDropdown === 'categories'}>
-          {filteredCategories.income.length > 0 && (
-            <>
-              <div style={{ padding: `${theme.spacing[2]} ${theme.spacing[3]}`, fontSize: theme.typography.fontSize.xs, fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.text.muted }}>
-                INCOME CATEGORIES
-              </div>
-              <Checkbox
-                checked={filteredCategories.income.every((cat) =>
-                  selectedCategories.includes(cat.name)
-                )}
-                onChange={() => handleCategoryToggleAll('income')}
-                label="All Income"
-              />
-              {filteredCategories.income.map((category) => (
+        >
+          <DropdownMenu isOpen={openDropdown === 'categories'}>
+            {filteredCategories.income.length > 0 && (
+              <>
+                <div style={{ padding: `${theme.spacing[2]} ${theme.spacing[3]}`, fontSize: theme.typography.fontSize.xs, fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.text.muted }}>
+                  INCOME CATEGORIES
+                </div>
                 <Checkbox
-                  key={category.name}
-                  checked={selectedCategories.includes(category.name)}
-                  onChange={() => handleCategoryToggle(category.name)}
-                  label={`${category.icon} ${category.name}`}
+                  checked={filteredCategories.income.every((cat) =>
+                    selectedCategories.includes(cat.id)
+                  )}
+                  onChange={() => handleCategoryToggleAll('income')}
+                  label="All Income"
                 />
-              ))}
-              {filteredCategories.expense.length > 0 && (
-                <div style={{ height: '1px', backgroundColor: theme.colors.border.light, margin: `${theme.spacing[2]} 0` }} />
-              )}
-            </>
-          )}
-          {filteredCategories.expense.length > 0 && (
-            <>
-              <div style={{ padding: `${theme.spacing[2]} ${theme.spacing[3]}`, fontSize: theme.typography.fontSize.xs, fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.text.muted }}>
-                EXPENSE CATEGORIES
-              </div>
-              <Checkbox
-                checked={filteredCategories.expense.every((cat) =>
-                  selectedCategories.includes(cat.name)
+                {filteredCategories.income.map((category) => {
+                  const IconComponent = getIconComponent(category.icon);
+                  return (
+                    <label
+                      key={category.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: theme.spacing[2],
+                        padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                        cursor: 'pointer',
+                        borderRadius: theme.border.radius.base,
+                        transition: theme.transitions.fast,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(category.id)}
+                        onChange={() => handleCategoryToggle(category.id)}
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <IconComponent size={16} color={theme.colors.text.primary} />
+                      <span style={{ fontSize: theme.typography.fontSize.sm }}>{category.name}</span>
+                    </label>
+                  );
+                })}
+                {filteredCategories.expense.length > 0 && (
+                  <div style={{ height: '1px', backgroundColor: theme.colors.border.light, margin: `${theme.spacing[2]} 0` }} />
                 )}
-                onChange={() => handleCategoryToggleAll('expense')}
-                label="All Expenses"
-              />
-              {filteredCategories.expense.map((category) => (
+              </>
+            )}
+            {filteredCategories.expense.length > 0 && (
+              <>
+                <div style={{ padding: `${theme.spacing[2]} ${theme.spacing[3]}`, fontSize: theme.typography.fontSize.xs, fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.text.muted }}>
+                  EXPENSE CATEGORIES
+                </div>
                 <Checkbox
-                  key={category.name}
-                  checked={selectedCategories.includes(category.name)}
-                  onChange={() => handleCategoryToggle(category.name)}
-                  label={`${category.icon} ${category.name}`}
+                  checked={filteredCategories.expense.every((cat) =>
+                    selectedCategories.includes(cat.id)
+                  )}
+                  onChange={() => handleCategoryToggleAll('expense')}
+                  label="All Expenses"
                 />
-              ))}
-            </>
-          )}
-          {filteredCategories.income.length === 0 && filteredCategories.expense.length === 0 && (
-            <div style={{ padding: theme.spacing[3], fontSize: theme.typography.fontSize.sm, color: theme.colors.text.muted, textAlign: 'center' }}>
-              No categories available
-            </div>
-          )}
-        </DropdownMenu>
+                {filteredCategories.expense.map((category) => {
+                  const IconComponent = getIconComponent(category.icon);
+                  return (
+                    <label
+                      key={category.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: theme.spacing[2],
+                        padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                        cursor: 'pointer',
+                        borderRadius: theme.border.radius.base,
+                        transition: theme.transitions.fast,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(category.id)}
+                        onChange={() => handleCategoryToggle(category.id)}
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          cursor: 'pointer',
+                        }}
+                      />
+                      <IconComponent size={16} color={theme.colors.text.primary} />
+                      <span style={{ fontSize: theme.typography.fontSize.sm }}>{category.name}</span>
+                    </label>
+                  );
+                })}
+              </>
+            )}
+            {filteredCategories.income.length === 0 && filteredCategories.expense.length === 0 && (
+              <div style={{ padding: theme.spacing[3], fontSize: theme.typography.fontSize.sm, color: theme.colors.text.muted, textAlign: 'center' }}>
+                No categories available
+              </div>
+            )}
+          </DropdownMenu>
+        </FilterButton>
 
         {/* Wallets Filter */}
         <FilterButton
@@ -404,23 +491,62 @@ const FilterBar = ({
           count={selectedWallets.length}
           isActive={selectedWallets.length > 0 && selectedWallets.length < wallets.length}
           dropdownKey="wallets"
-        />
-        <DropdownMenu isOpen={openDropdown === 'wallets'}>
-          <Checkbox
-            checked={selectedWallets.length === wallets.length}
-            onChange={handleWalletToggleAll}
-            label="All"
-          />
-          <div style={{ height: '1px', backgroundColor: theme.colors.border.light, margin: `${theme.spacing[1]} 0` }} />
-          {wallets.map((wallet) => (
+        >
+          <DropdownMenu isOpen={openDropdown === 'wallets'}>
             <Checkbox
-              key={wallet.name}
-              checked={selectedWallets.includes(wallet.name)}
-              onChange={() => handleWalletToggle(wallet.name)}
-              label={wallet.name}
+              checked={selectedWallets.length === wallets.length}
+              onChange={handleWalletToggleAll}
+              label="All"
             />
-          ))}
-        </DropdownMenu>
+            <div style={{ height: '1px', backgroundColor: theme.colors.border.light, margin: `${theme.spacing[1]} 0` }} />
+            {wallets.map((wallet) => (
+              <label
+                key={wallet.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing[2],
+                  padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                  cursor: 'pointer',
+                  borderRadius: theme.border.radius.base,
+                  transition: theme.transitions.fast,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedWallets.includes(wallet.id)}
+                  onChange={() => handleWalletToggle(wallet.id)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    cursor: 'pointer',
+                  }}
+                />
+                <span style={{ fontSize: theme.typography.fontSize.sm, flex: 1 }}>{wallet.name}</span>
+                <span
+                  style={{
+                    fontSize: theme.typography.fontSize.xs,
+                    fontWeight: theme.typography.fontWeight.medium,
+                    color: theme.colors.text.secondary,
+                    backgroundColor: theme.colors.background.cardHover,
+                    padding: `${theme.spacing[1]} ${theme.spacing[2]}`,
+                    borderRadius: theme.border.radius.full,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {wallet.type}
+                </span>
+              </label>
+            ))}
+          </DropdownMenu>
+        </FilterButton>
 
         {/* Date Range Filter */}
         <FilterButton
@@ -428,8 +554,8 @@ const FilterBar = ({
           count={0}
           isActive={false}
           dropdownKey="date"
-        />
-        <DropdownMenu isOpen={openDropdown === 'date'}>
+        >
+          <DropdownMenu isOpen={openDropdown === 'date'}>
           <div style={{ padding: theme.spacing[2] }}>
             <div style={{ marginBottom: theme.spacing[3] }}>
               <div style={{ fontSize: theme.typography.fontSize.xs, fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.text.muted, marginBottom: theme.spacing[2] }}>
@@ -545,31 +671,78 @@ const FilterBar = ({
                 <label style={{ display: 'block', fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary, marginBottom: theme.spacing[1] }}>
                   Start Date
                 </label>
-                <DatePicker
-                  date={dateRange.start}
-                  onDateChange={(newDate) => {
-                    const dateStr = newDate ? newDate.toISOString().split('T')[0] : '';
-                    setDateRange({ ...dateRange, start: dateStr });
+                <button
+                  ref={startButtonRef}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveDatePicker(activeDatePicker === 'start' ? null : 'start');
                   }}
-                  placeholder="Start date"
-                />
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: theme.spacing[2],
+                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                    backgroundColor: theme.colors.background.card,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                    borderRadius: theme.border.radius.base,
+                    fontSize: theme.typography.fontSize.sm,
+                    color: dateRange.start ? theme.colors.text.primary : theme.colors.text.muted,
+                    cursor: 'pointer',
+                    transition: theme.transitions.fast,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.colors.background.card;
+                  }}
+                >
+                  <span>{dateRange.start ? new Date(dateRange.start + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Select start date'}</span>
+                  <CalendarDays size={16} color={theme.colors.text.secondary} />
+                </button>
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary, marginBottom: theme.spacing[1] }}>
                   End Date
                 </label>
-                <DatePicker
-                  date={dateRange.end}
-                  onDateChange={(newDate) => {
-                    const dateStr = newDate ? newDate.toISOString().split('T')[0] : '';
-                    setDateRange({ ...dateRange, end: dateStr });
+                <button
+                  ref={endButtonRef}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveDatePicker(activeDatePicker === 'end' ? null : 'end');
                   }}
-                  placeholder="End date"
-                />
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: theme.spacing[2],
+                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                    backgroundColor: theme.colors.background.card,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                    borderRadius: theme.border.radius.base,
+                    fontSize: theme.typography.fontSize.sm,
+                    color: dateRange.end ? theme.colors.text.primary : theme.colors.text.muted,
+                    cursor: 'pointer',
+                    transition: theme.transitions.fast,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.colors.background.card;
+                  }}
+                >
+                  <span>{dateRange.end ? new Date(dateRange.end + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Select end date'}</span>
+                  <CalendarDays size={16} color={theme.colors.text.secondary} />
+                </button>
               </div>
             </div>
           </div>
-        </DropdownMenu>
+          </DropdownMenu>
+        </FilterButton>
 
         {/* Clear All Filters Button */}
         {hasActiveFilters() && (
@@ -601,6 +774,41 @@ const FilterBar = ({
           </button>
         )}
       </div>
+
+      {/* Date Picker Popover */}
+      {activeDatePicker && (
+        <div
+          ref={datePickerRef}
+          style={{
+            position: 'absolute',
+            top: activeDatePicker === 'start' && startButtonRef.current
+              ? startButtonRef.current.getBoundingClientRect().bottom + window.scrollY + 4
+              : endButtonRef.current
+              ? endButtonRef.current.getBoundingClientRect().bottom + window.scrollY + 4
+              : 0,
+            left: activeDatePicker === 'start' && startButtonRef.current
+              ? startButtonRef.current.getBoundingClientRect().left + window.scrollX
+              : endButtonRef.current
+              ? endButtonRef.current.getBoundingClientRect().left + window.scrollX
+              : 0,
+            zIndex: theme.zIndex.popover + 10,
+          }}
+        >
+          <DatePicker
+            date={activeDatePicker === 'start' ? dateRange.start : dateRange.end}
+            onDateChange={(newDate) => {
+              const dateStr = newDate ? formatDateToLocal(newDate) : '';
+              if (activeDatePicker === 'start') {
+                setDateRange({ ...dateRange, start: dateStr });
+              } else {
+                setDateRange({ ...dateRange, end: dateStr });
+              }
+              setActiveDatePicker(null);
+            }}
+            placeholder={activeDatePicker === 'start' ? 'Start date' : 'End date'}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -608,9 +816,9 @@ const FilterBar = ({
 FilterBar.propTypes = {
   selectedTypes: PropTypes.arrayOf(PropTypes.string).isRequired,
   setSelectedTypes: PropTypes.func.isRequired,
-  selectedCategories: PropTypes.arrayOf(PropTypes.string).isRequired,
+  selectedCategories: PropTypes.arrayOf(PropTypes.number).isRequired,
   setSelectedCategories: PropTypes.func.isRequired,
-  selectedWallets: PropTypes.arrayOf(PropTypes.string).isRequired,
+  selectedWallets: PropTypes.arrayOf(PropTypes.number).isRequired,
   setSelectedWallets: PropTypes.func.isRequired,
   dateRange: PropTypes.shape({
     start: PropTypes.string.isRequired,
@@ -619,6 +827,7 @@ FilterBar.propTypes = {
   setDateRange: PropTypes.func.isRequired,
   categories: PropTypes.arrayOf(
     PropTypes.shape({
+      id: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
       type: PropTypes.string.isRequired,
       icon: PropTypes.string,
@@ -626,7 +835,9 @@ FilterBar.propTypes = {
   ),
   wallets: PropTypes.arrayOf(
     PropTypes.shape({
+      id: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
     })
   ),
 };

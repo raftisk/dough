@@ -76,13 +76,22 @@ const Transactions = () => {
         // Filter by category (if any selected)
         if (selectedCategories.length > 0) {
           if (transaction.type === 'transfer') return true; // Transfers have no category
-          if (!selectedCategories.includes(transaction.category_name)) return false;
+          if (!selectedCategories.includes(transaction.category)) return false;
         }
 
         // Filter by wallet (if any selected)
         if (selectedWallets.length > 0) {
-          const walletName = transaction.wallet_name || transaction.from_wallet;
-          if (!selectedWallets.includes(walletName)) return false;
+          // For transfers, check both from_wallet and to_wallet
+          if (transaction.type === 'transfer') {
+            const fromWalletId = transaction.from_wallet;
+            const toWalletId = transaction.to_wallet;
+            if (!selectedWallets.includes(fromWalletId) && !selectedWallets.includes(toWalletId)) {
+              return false;
+            }
+          } else {
+            // For regular transactions, check wallet
+            if (!selectedWallets.includes(transaction.wallet)) return false;
+          }
         }
 
         // Filter by date range
@@ -303,14 +312,9 @@ const Transactions = () => {
         {/* Transaction List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[3] }}>
           {filteredTransactions.length === 0 ? (
-            <EmptyState message="No transactions found" icon="📭" />
+            <EmptyState message="No transactions found" />
           ) : (
             filteredTransactions.map((transaction) => {
-              // Convert icon string to component for display
-              const CategoryIcon = transaction.category_icon
-                ? getIconComponent(transaction.category_icon)
-                : null;
-
               return (
                 <TransactionListItem
                   key={transaction.id}
@@ -319,7 +323,7 @@ const Transactions = () => {
                     // Map API fields to component expected fields
                     description: transaction.description,
                     category: transaction.category_name,
-                    category_icon: CategoryIcon,
+                    category_icon: transaction.category_icon,
                     wallet: transaction.wallet_name,
                   }}
                   onClick={() => handleEditTransaction(transaction)}

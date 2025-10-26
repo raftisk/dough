@@ -140,7 +140,7 @@ const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, tran
                 marginTop: theme.spacing[1],
               }}
             >
-              {transactionCount !== undefined ? `${transactionCount} transactions` : '0 transactions'}
+              {transactionCount !== undefined ? `${transactionCount} transaction${transactionCount !== 1 ? 's' : ''}` : '0 transactions'}
             </div>
           )}
         </div>

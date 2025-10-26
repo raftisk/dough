@@ -226,7 +226,7 @@ class Budget(models.Model):
             year = self.start_month.year
             month = self.start_month.month
             last_day = monthrange(year, month)[1]
-            return self.start_month.replace(day=last_day)
+            return date(year, month, last_day)
         elif self.period == 'quarterly':
             # 3 months from start_month, last day of that month
             end_month = self.start_month.first_day() + relativedelta(months=3) - relativedelta(days=1)

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { Plus, Minus, ArrowRightLeft, Trash2, RefreshCw } from 'lucide-react';
 import { theme, getTypeColor } from '../styles/theme';
+import { getIconComponent } from '../constants';
 
 const TransactionListItem = ({ transaction, onClick, onDelete }) => {
   // Determine icon based on transaction type
@@ -98,9 +99,9 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
               gap: theme.spacing[2],
             }}
           >
-            <span>{transaction.wallet}</span>
-            <span>•</span>
             <span>{formatDate(transaction.date)}</span>
+            <span>•</span>
+            <span>{transaction.wallet}</span>
           </div>
         </div>
       </div>
@@ -117,9 +118,10 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
             borderRadius: theme.border.radius.full,
           }}
         >
-          <span style={{ fontSize: theme.typography.fontSize.lg }}>
-            {transaction.category_icon || '📁'}
-          </span>
+          {(() => {
+            const CategoryIcon = getIconComponent(transaction.category_icon);
+            return <CategoryIcon size={20} color={theme.colors.text.primary} />;
+          })()}
           <span
             style={{
               fontSize: theme.typography.fontSize.sm,
@@ -179,7 +181,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
-              <Trash2 size={16} color={theme.colors.semantic.expense} />
+              <Trash2 size={16} color={theme.colors.text.primary} />
             </button>
           )}
         </div>

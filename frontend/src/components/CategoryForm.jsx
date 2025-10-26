@@ -383,6 +383,7 @@ const CategoryForm = ({
               </button>
               <button
                 type="submit"
+                onClick={handleSubmit} 
                 style={{
                   padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
                   borderRadius: theme.border.radius.base,

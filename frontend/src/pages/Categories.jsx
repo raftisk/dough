@@ -98,7 +98,7 @@ const Categories = () => {
       // Create new category via API
       await createCategory({
         name: formData.name,
-        icon: formData.iconName, // Store icon NAME (string), not component
+        icon: formData.icon,
         type: formData.type,
         is_active: true,
       });
@@ -191,7 +191,7 @@ const Categories = () => {
       // Create new category from preset via API
       await createCategory({
         name: presetCategory.name,
-        icon: presetCategory.iconName, // Use iconName (string) not icon (component)
+        icon: presetCategory.icon, 
         type: presetType,
         is_active: true,
       });
@@ -417,7 +417,6 @@ const Categories = () => {
             ) : (
               <EmptyState
                 message={`No active ${activeType} categories`}
-                icon="📂"
               />
             )}
           </div>
@@ -462,7 +461,6 @@ const Categories = () => {
             ) : (
               <EmptyState
                 message={`No inactive ${inactiveType} categories`}
-                icon="📂"
               />
             )}
           </div>

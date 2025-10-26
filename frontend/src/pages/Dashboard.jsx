@@ -9,6 +9,7 @@ import WalletCard from '../components/WalletCard';
 import CategoryCard from '../components/CategoryCard';
 import FloatingActionButton from '../components/FloatingActionButton';
 import TransactionForm from '../components/TransactionForm';
+import CalendarView from '../components/CalendarView';
 import { theme } from '../styles/theme';
 import { getCurrentMonthYear } from '../utils/date';
 import { getDashboardData, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction } from '../services/api';
@@ -140,6 +141,18 @@ function Dashboard() {
 
   const handleDeleteBudget = (budget) => {
     console.log('Delete budget:', budget);
+  };
+
+  const handleCalendarTransactionClick = (transaction) => {
+    console.log('Calendar transaction clicked:', transaction);
+    setFormType(transaction.type);
+    // Map transaction fields for form
+    setSelectedTransaction({
+      ...transaction,
+      category_id: transaction.category,
+      wallet_id: transaction.wallet,
+    });
+    setIsFormOpen(true);
   };
 
   // Loading state
@@ -277,14 +290,14 @@ function Dashboard() {
               value={`€${parseFloat(dashboardData.current_month_income).toFixed(2)}`}
               icon={TrendingUp}
               iconColor={theme.colors.semantic.income}
-              subtitle={`${dashboardData.transaction_count} transactions this month`}
+              subtitle={`${dashboardData.transaction_count} transaction${dashboardData.transaction_count !== 1 ? 's' : ''} this month`}
             />
             <MetricCard
               label="Total Expenses"
               value={`€${parseFloat(dashboardData.current_month_expenses).toFixed(2)}`}
               icon={TrendingDown}
               iconColor={theme.colors.semantic.expense}
-              subtitle={`${dashboardData.transaction_count} transactions this month`}
+              subtitle={`${dashboardData.transaction_count} transaction${dashboardData.transaction_count !== 1 ? 's' : ''} this month`}
             />
             <MetricCard
               label="Net Savings"
@@ -299,7 +312,7 @@ function Dashboard() {
             />
             <MetricCard
               label="Total Wealth"
-              value={`€${parseFloat(dashboardData.total_balance).toFixed(2)}`}
+              value={`€${parseFloat(dashboardData.total_balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               icon={Wallet}
               iconColor={theme.colors.text.secondary}
               subtitle={`Across ${dashboardData.wallet_count} wallets`}
@@ -365,11 +378,6 @@ function Dashboard() {
           >
             {dashboardData.recent_transactions && dashboardData.recent_transactions.length > 0 ? (
               dashboardData.recent_transactions.map((transaction) => {
-                // Convert icon string to component for display
-                const CategoryIcon = transaction.category_icon
-                  ? getIconComponent(transaction.category_icon)
-                  : null;
-
                 return (
                   <TransactionListItem
                     key={transaction.id}
@@ -377,7 +385,7 @@ function Dashboard() {
                       ...transaction,
                       description: transaction.description,
                       category: transaction.category_name,
-                      category_icon: CategoryIcon,
+                      category_icon: transaction.category_icon,
                       wallet: transaction.wallet_name,
                     }}
                     onEdit={handleEditTransaction}
@@ -392,6 +400,14 @@ function Dashboard() {
             )}
           </div>
         </section>
+
+        {/* Calendar View Section */}
+        {dashboardData.recent_transactions && dashboardData.recent_transactions.length > 0 && (
+          <CalendarView
+            transactions={dashboardData.recent_transactions}
+            onTransactionClick={handleCalendarTransactionClick}
+          />
+        )}
 
       </div>
 
