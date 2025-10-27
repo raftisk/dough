@@ -1,9 +1,10 @@
-from datetime import date
+from datetime import date, timedelta
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from month.models import MonthField
 from month import Month
+from dateutil.relativedelta import relativedelta
 from .constants import (
     WALLET_TYPES, CURRENCIES, DEFAULT_CURRENCY, CATEGORY_TYPES,
     TRANSACTION_TYPES, RECURRENCE_CHOICES, PERIOD_CHOICES, PRIORITY_CHOICES,
@@ -128,7 +129,7 @@ class Transaction(models.Model):
         choices=RECURRENCE_CHOICES,
         blank=True,
         null=True,
-        default='None',
+        default='none',
         help_text='Recurrence pattern for recurring transactions'
     )
     recurrence_parent = models.ForeignKey(
@@ -161,7 +162,23 @@ class Transaction(models.Model):
 
     def is_recurring(self):
         """Check if this transaction is recurring"""
-        return bool(self.recurrence and self.recurrence != 'None')
+        return bool(self.recurrence and self.recurrence != 'none')
+
+    def calculate_next_date(self):
+        """Calculate next recurrence date based on current date and recurrence pattern"""
+        if not self.recurrence or self.recurrence == 'none':
+            return None
+
+        if self.recurrence == 'daily':
+            return self.date + timedelta(days=1)
+        elif self.recurrence == 'weekly':
+            return self.date + timedelta(weeks=1)
+        elif self.recurrence == 'monthly':
+            return self.date + relativedelta(months=1)
+        elif self.recurrence == 'yearly':
+            return self.date + relativedelta(years=1)
+
+        return None
 
     # @property
     # def description(self):
@@ -316,10 +333,71 @@ class UpcomingTransaction(Transaction):
 
     class Meta:
         ordering = ['date', '-created_at']
+        verbose_name = 'Upcoming Transaction'
+        verbose_name_plural = 'Upcoming Transactions'
 
     def __str__(self):
         recurring = " (Recurring)" if self.is_recurring() else ""
         return f"Upcoming: {self.get_type_display()} - {self.category.name} - {self.amount} on {self.date}{recurring}"
+
+    def post_transaction(self):
+        """Convert upcoming transaction to regular transaction and create next if recurring"""
+        # Create regular transaction with same data
+        transaction = Transaction.objects.create(
+            description=self.description,
+            amount=self.amount,
+            type=self.type,
+            category=self.category,
+            wallet=self.wallet,
+            date=self.date,
+            recurrence=self.recurrence,
+            recurrence_parent=self.recurrence_parent,
+        )
+
+        # If recurring, create next upcoming transaction
+        if self.recurrence and self.recurrence != 'none':
+            next_date = self.calculate_next_date()
+            if next_date:
+                UpcomingTransaction.objects.create(
+                    description=self.description,
+                    amount=self.amount,
+                    type=self.type,
+                    category=self.category,
+                    wallet=self.wallet,
+                    date=next_date,
+                    recurrence=self.recurrence,
+                    recurrence_parent=self.recurrence_parent or transaction,
+                    auto_post=self.auto_post,
+                )
+
+        # Delete this upcoming transaction
+        self.delete()
+
+        return transaction
+
+    def skip_occurrence(self):
+        """Skip this occurrence and create next if recurring"""
+        # Store recurrence_parent before deletion
+        parent = self.recurrence_parent
+
+        # Create next if recurring
+        if self.recurrence and self.recurrence != 'none':
+            next_date = self.calculate_next_date()
+            if next_date:
+                UpcomingTransaction.objects.create(
+                    description=self.description,
+                    amount=self.amount,
+                    type=self.type,
+                    category=self.category,
+                    wallet=self.wallet,
+                    date=next_date,
+                    recurrence=self.recurrence,
+                    recurrence_parent=parent,
+                    auto_post=self.auto_post,
+                )
+
+        # Delete current upcoming
+        self.delete()
 
 
 class Transfer(models.Model):

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { X, Plus, Minus, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
 import DatePicker from './DatePicker';
+import { formatDateToLocal } from '../utils/format';
 
 const TransactionForm = ({
   isOpen,
@@ -21,6 +22,7 @@ const TransactionForm = ({
   const [walletId, setWalletId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [recurrence, setRecurrence] = useState('');
+  const [autoPost, setAutoPost] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Pre-fill form when editing
@@ -33,6 +35,7 @@ const TransactionForm = ({
       setWalletId(initialData.wallet?.toString() || '');
       setDate(initialData.date || new Date().toISOString().split('T')[0]);
       setRecurrence(initialData.recurrence || '');
+      setAutoPost(initialData.auto_post || false);
     } else {
       // Reset form for new transaction
       setType(transactionType);
@@ -42,6 +45,7 @@ const TransactionForm = ({
       setWalletId(wallets.length > 0 ? wallets[0].id.toString() : '');
       setDate(new Date().toISOString().split('T')[0]);
       setRecurrence('');
+      setAutoPost(false);
     }
     setErrors({});
   }, [initialData, transactionType, wallets, isOpen]);
@@ -115,6 +119,7 @@ const TransactionForm = ({
       wallet: parseInt(walletId, 10),
       date,
       recurrence, // Send the actual recurrence value (including 'None')
+      auto_post: autoPost, // Include auto_post in payload
     };
 
     onSubmit(formData);
@@ -493,7 +498,7 @@ const TransactionForm = ({
               <DatePicker
                 date={date}
                 onDateChange={(newDate) => {
-                  const dateStr = newDate ? newDate.toISOString().split('T')[0] : '';
+                  const dateStr = newDate ? formatDateToLocal(newDate) : '';
                   setDate(dateStr);
                 }}
                 placeholder="Select date"
@@ -554,6 +559,58 @@ const TransactionForm = ({
                 />
               </div>
             </div>
+
+            {/* Auto-post checkbox (only show for future dates) */}
+            {new Date(date) > new Date() && (
+              <div
+                style={{
+                  padding: theme.spacing[3],
+                  backgroundColor: theme.colors.background.page,
+                  borderRadius: theme.border.radius.base,
+                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+                }}
+              >
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: theme.spacing[2],
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={autoPost}
+                    onChange={(e) => setAutoPost(e.target.checked)}
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: theme.typography.fontSize.sm,
+                      fontWeight: theme.typography.fontWeight.medium,
+                      color: theme.colors.text.primary,
+                    }}
+                  >
+                    Auto-post when date arrives
+                  </span>
+                </label>
+                <p
+                  style={{
+                    fontSize: theme.typography.fontSize.xs,
+                    color: theme.colors.text.secondary,
+                    marginTop: theme.spacing[1],
+                    marginLeft: '24px',
+                    marginBottom: 0,
+                  }}
+                >
+                  Transaction will be posted automatically without confirmation
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Modal Footer */}

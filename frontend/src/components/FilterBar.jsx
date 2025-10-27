@@ -4,6 +4,7 @@ import { ChevronDown, X, CalendarDays } from 'lucide-react';
 import { theme } from '../styles/theme';
 import DatePicker from './DatePicker';
 import { getIconComponent } from '../constants';
+import { formatDateToLocal } from '../utils/format';
 
 const FilterBar = ({
   selectedTypes,
@@ -125,13 +126,6 @@ const FilterBar = ({
     }
   };
 
-  // Helper to format date as YYYY-MM-DD in local timezone
-  const formatDateToLocal = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
 
   // Date range presets
   const getDateRangePreset = (preset) => {

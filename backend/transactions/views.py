@@ -60,6 +60,60 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def create(self, request, *args, **kwargs):
+        """Override create to handle future-dated transactions"""
+        from datetime import datetime
+
+        data = request.data.copy()
+
+        # Parse transaction date
+        transaction_date_str = data.get('date')
+        if not transaction_date_str:
+            return Response(
+                {'error': 'Date is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            transaction_date = datetime.strptime(transaction_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        today = date.today()
+
+        # If date is in future, create UpcomingTransaction
+        if transaction_date > today:
+            serializer = UpcomingTransactionSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            upcoming = serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        # Otherwise, create regular Transaction
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        transaction = serializer.save()
+
+        # If has recurrence, create first upcoming transaction
+        if transaction.recurrence and transaction.recurrence != 'none':
+            next_date = transaction.calculate_next_date()
+            if next_date:
+                UpcomingTransaction.objects.create(
+                    description=transaction.description,
+                    amount=transaction.amount,
+                    type=transaction.type,
+                    category=transaction.category,
+                    wallet=transaction.wallet,
+                    date=next_date,
+                    recurrence=transaction.recurrence,
+                    recurrence_parent=transaction,
+                    auto_post=data.get('auto_post', False),
+                )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """
@@ -178,6 +232,38 @@ class UpcomingTransactionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(wallet_id=wallet_id)
 
         return queryset
+
+    @action(detail=True, methods=['post'])
+    def post_now(self, request, pk=None):
+        """Post this upcoming transaction immediately"""
+        upcoming = self.get_object()
+        transaction = upcoming.post_transaction()
+        serializer = TransactionSerializer(transaction)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def skip(self, request, pk=None):
+        """Skip this occurrence and create next if recurring"""
+        upcoming = self.get_object()
+        upcoming.skip_occurrence()
+        return Response({'message': 'Skipped successfully'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def skip_all(self, request, pk=None):
+        """Skip this and all future occurrences in recurrence chain"""
+        upcoming = self.get_object()
+        parent = upcoming.recurrence_parent
+
+        # If this has a parent, delete all siblings with same parent
+        if parent:
+            UpcomingTransaction.objects.filter(
+                recurrence_parent=parent
+            ).delete()
+
+        # Delete current one too
+        upcoming.delete()
+
+        return Response({'message': 'All future occurrences skipped'}, status=status.HTTP_200_OK)
 
 
 class TransferViewSet(viewsets.ModelViewSet):

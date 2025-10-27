@@ -278,4 +278,89 @@ export const deleteBudget = async (id) => {
   }
 };
 
+// ============ UPCOMING TRANSACTION OPERATIONS ============
+
+/**
+ * Fetch all upcoming transactions
+ * @returns {Promise<Array>} Array of upcoming transaction objects
+ */
+export const getUpcomingTransactions = async () => {
+  try {
+    const response = await api.get('/upcoming-transactions/');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch upcoming transactions');
+  }
+};
+
+/**
+ * Post an upcoming transaction immediately
+ * @param {number} id - Upcoming transaction ID
+ * @returns {Promise<Object>} Created transaction object
+ */
+export const postUpcomingTransaction = async (id) => {
+  try {
+    const response = await api.post(`/upcoming-transactions/${id}/post_now/`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to post upcoming transaction');
+  }
+};
+
+/**
+ * Skip an upcoming transaction occurrence
+ * @param {number} id - Upcoming transaction ID
+ * @returns {Promise<Object>} Response message
+ */
+export const skipUpcomingTransaction = async (id) => {
+  try {
+    const response = await api.post(`/upcoming-transactions/${id}/skip/`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to skip upcoming transaction');
+  }
+};
+
+/**
+ * Skip all future occurrences of an upcoming transaction
+ * @param {number} id - Upcoming transaction ID
+ * @returns {Promise<Object>} Response message
+ */
+export const skipAllUpcomingTransactions = async (id) => {
+  try {
+    const response = await api.post(`/upcoming-transactions/${id}/skip_all/`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to skip all upcoming transactions');
+  }
+};
+
+/**
+ * Update an upcoming transaction
+ * @param {number} id - Upcoming transaction ID
+ * @param {Object} transactionData - Updated transaction data
+ * @returns {Promise<Object>} Updated upcoming transaction object
+ */
+export const updateUpcomingTransaction = async (id, transactionData) => {
+  try {
+    const response = await api.patch(`/upcoming-transactions/${id}/`, transactionData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to update upcoming transaction');
+  }
+};
+
+/**
+ * Delete an upcoming transaction
+ * @param {number} id - Upcoming transaction ID
+ * @returns {Promise<void>}
+ */
+export const deleteUpcomingTransaction = async (id) => {
+  try {
+    await api.delete(`/upcoming-transactions/${id}/`);
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to delete upcoming transaction');
+  }
+};
+
 export default api;

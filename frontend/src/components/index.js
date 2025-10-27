@@ -19,3 +19,4 @@ export { default as IconPicker } from './IconPicker';
 export { default as CategoryForm } from './CategoryForm';
 export { default as CurrencyPicker } from './CurrencyPicker';
 export { default as WalletForm } from './WalletForm';
+export { default as UpcomingTransactionsList } from './UpcomingTransactionsList';

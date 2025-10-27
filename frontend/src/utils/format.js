@@ -119,3 +119,17 @@ export const getBudgetColor = (percentage) => {
   if (percentage >= 50) return 'text-yellow-500';
   return 'text-green-600';
 };
+
+/**
+ * Format Date object to YYYY-MM-DD string in local timezone
+ * Avoids timezone conversion issues with toISOString()
+ * @param {Date} date - Date object to format
+ * @returns {string} Formatted date string (YYYY-MM-DD)
+ */
+export const formatDateToLocal = (date) => {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};

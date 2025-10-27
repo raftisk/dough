@@ -1,20 +1,32 @@
 import { useState, useEffect } from 'react';
 import {
   NavigationBar,
+  PageHeader,
   FilterBar,
   TransactionSummary,
   TransactionListItem,
   EmptyState,
   FloatingActionButton,
   TransactionForm,
+  UpcomingTransactionsList,
 } from '../components';
 import { theme } from '../styles/theme';
-import { getTransactions, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction } from '../services/api';
+import {
+  getTransactions,
+  getCategories,
+  getWallets,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+  getUpcomingTransactions,
+  updateUpcomingTransaction,
+} from '../services/api';
 import { getIconComponent } from '../constants';
 
 const Transactions = () => {
   // Data state
   const [transactions, setTransactions] = useState([]);
+  const [upcomingTransactions, setUpcomingTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +53,9 @@ const Transactions = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [formType, setFormType] = useState('expense');
 
+  // Upcoming transactions modal state
+  const [showUpcomingModal, setShowUpcomingModal] = useState(false);
+
   // Fetch all data from API on mount
   useEffect(() => {
     fetchData();
@@ -50,12 +65,14 @@ const Transactions = () => {
     try {
       setLoading(true);
       setError(null);
-      const [transactionsData, categoriesData, walletsData] = await Promise.all([
+      const [transactionsData, upcomingData, categoriesData, walletsData] = await Promise.all([
         getTransactions(),
+        getUpcomingTransactions(),
         getCategories(),
         getWallets(),
       ]);
       setTransactions(transactionsData);
+      setUpcomingTransactions(upcomingData);
       setCategories(categoriesData.filter(c => c.is_active)); // Only active categories for forms
       setWallets(walletsData);
     } catch (err) {
@@ -139,6 +156,21 @@ const Transactions = () => {
     setIsFormOpen(true);
   };
 
+  // Handle edit upcoming transaction
+  const handleEditUpcoming = (upcoming) => {
+    console.log('Edit upcoming transaction:', upcoming);
+    setFormType(upcoming.type);
+    // Mark as upcoming for proper endpoint routing
+    setSelectedTransaction({
+      ...upcoming,
+      category_id: upcoming.category,
+      wallet_id: upcoming.wallet,
+      _isUpcoming: true,
+    });
+    setShowUpcomingModal(false); // Close upcoming modal
+    setIsFormOpen(true);
+  };
+
   // Handle delete transaction
   const handleDelete = async (transaction) => {
     const confirmed = window.confirm(
@@ -164,16 +196,23 @@ const Transactions = () => {
         type: formData.type,
         category: formData.category,
         amount: formData.amount,
-        description: formData.description, 
+        description: formData.description,
         date: formData.date,
         recurrence: formData.recurrence, // Send as is from form (empty string for "None")
+        auto_post: formData.auto_post, // Include auto_post field
       };
 
       if (selectedTransaction) {
-        // Update existing transaction
-        await updateTransaction(selectedTransaction.id, transactionData);
+        // Check if editing upcoming transaction
+        if (selectedTransaction._isUpcoming) {
+          // Update upcoming transaction
+          await updateUpcomingTransaction(selectedTransaction.id, transactionData);
+        } else {
+          // Update regular transaction
+          await updateTransaction(selectedTransaction.id, transactionData);
+        }
       } else {
-        // Create new transaction
+        // Create new transaction (backend will route to upcoming if future date)
         await createTransaction(transactionData);
       }
 
@@ -284,6 +323,43 @@ const Transactions = () => {
       {/* Navigation Bar */}
       <NavigationBar />
 
+      {/* Page Header */}
+      <div
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: `${theme.spacing[6]} ${theme.spacing[6]} 0`,
+        }}
+      >
+        <PageHeader
+          title="Transactions"
+          action={
+            <button
+              onClick={() => setShowUpcomingModal(true)}
+              style={{
+                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
+                border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                borderRadius: theme.border.radius.base,
+                fontSize: theme.typography.fontSize.sm,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.text.primary,
+                backgroundColor: theme.colors.background.card,
+                cursor: 'pointer',
+                transition: theme.transitions.fast,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme.colors.background.card;
+              }}
+            >
+              Manage Future Transactions
+            </button>
+          }
+        />
+      </div>
+
       {/* Filter Bar - Sticky */}
       <FilterBar
         selectedTypes={selectedTypes}
@@ -347,6 +423,15 @@ const Transactions = () => {
         transactionType={formType}
         categories={categories}
         wallets={wallets}
+      />
+
+      {/* Upcoming Transactions Modal */}
+      <UpcomingTransactionsList
+        isOpen={showUpcomingModal}
+        onClose={() => setShowUpcomingModal(false)}
+        upcomingTransactions={upcomingTransactions}
+        onEdit={handleEditUpcoming}
+        onRefresh={fetchData}
       />
     </div>
   );

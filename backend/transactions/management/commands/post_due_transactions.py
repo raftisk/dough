@@ -4,7 +4,7 @@ from transactions.models import UpcomingTransaction
 
 
 class Command(BaseCommand):
-    help = 'Post all due upcoming transactions with auto_post enabled'
+    help = 'Post upcoming transactions that are due and have auto_post enabled'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -17,10 +17,9 @@ class Command(BaseCommand):
         dry_run = options['dry_run']
         today = timezone.now().date()
 
-        # Find all due transactions with auto_post enabled that haven't been posted yet
+        # Find due transactions with auto_post enabled
         due_transactions = UpcomingTransaction.objects.filter(
             date__lte=today,
-            posted_transaction__isnull=True,
             auto_post=True
         )
 
@@ -38,41 +37,19 @@ class Command(BaseCommand):
 
         # Post each transaction
         posted_count = 0
-        recurring_created = 0
 
         for upcoming in due_transactions:
             try:
-                transaction = upcoming.post_now()
-                if transaction:
-                    posted_count += 1
-                    self.stdout.write(
-                        self.style.SUCCESS(f'Posted: {transaction}')
-                    )
-
-                    # Check if a new recurrence was created (for recurring transactions)
-                    if transaction.is_recurring():
-                        # Count newly created upcoming transactions
-                        new_upcoming = UpcomingTransaction.objects.filter(
-                            wallet=transaction.wallet,
-                            category=transaction.category,
-                            amount=transaction.amount,
-                            posted_transaction__isnull=True,
-                            recurrence=transaction.recurrence
-                        ).exclude(pk=upcoming.pk).order_by('-date').first()
-
-                        if new_upcoming:
-                            recurring_created += 1
-                            self.stdout.write(
-                                self.style.SUCCESS(f'  → Created next recurrence: {new_upcoming}')
-                            )
+                transaction = upcoming.post_transaction()
+                self.stdout.write(
+                    self.style.SUCCESS(f'Posted: {transaction.description} - {transaction.amount} on {transaction.date}')
+                )
+                posted_count += 1
             except Exception as e:
                 self.stdout.write(
-                    self.style.ERROR(f'Failed to post {upcoming}: {str(e)}')
+                    self.style.ERROR(f'Failed to post {upcoming.description}: {str(e)}')
                 )
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f'\nSummary: Posted {posted_count} transaction(s), '
-                f'created {recurring_created} recurring transaction(s).'
-            )
+            self.style.SUCCESS(f'Successfully posted {posted_count} transaction(s)')
         )

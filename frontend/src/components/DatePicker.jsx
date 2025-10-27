@@ -183,7 +183,11 @@ const DatePicker = ({ date, onDateChange, placeholder = 'Select date' }) => {
           >
             <button
               type="button"
-              onClick={goToPreviousMonth}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                goToPreviousMonth();
+              }}
               style={{
                 padding: theme.spacing[1],
                 backgroundColor: 'transparent',
@@ -217,7 +221,11 @@ const DatePicker = ({ date, onDateChange, placeholder = 'Select date' }) => {
 
             <button
               type="button"
-              onClick={goToNextMonth}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                goToNextMonth();
+              }}
               style={{
                 padding: theme.spacing[1],
                 backgroundColor: 'transparent',

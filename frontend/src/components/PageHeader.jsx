@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { Plus } from 'lucide-react';
 import { theme } from '../styles/theme';
 
-const PageHeader = ({ title, subtitle, actionLabel, onAction }) => {
+const PageHeader = ({ title, subtitle, actionLabel, onAction, action }) => {
   return (
     <div
       style={{
@@ -36,8 +36,10 @@ const PageHeader = ({ title, subtitle, actionLabel, onAction }) => {
         )}
       </div>
 
-      {/* Action button section */}
-      {actionLabel && onAction && (
+      {/* Action section - either custom component or default button */}
+      {action ? (
+        action
+      ) : actionLabel && onAction ? (
         <button
           onClick={onAction}
           style={{
@@ -64,7 +66,7 @@ const PageHeader = ({ title, subtitle, actionLabel, onAction }) => {
           <Plus size={20} />
           {actionLabel}
         </button>
-      )}
+      ) : null}
     </div>
   );
 };
@@ -74,6 +76,7 @@ PageHeader.propTypes = {
   subtitle: PropTypes.string,
   actionLabel: PropTypes.string,
   onAction: PropTypes.func,
+  action: PropTypes.node,
 };
 
 export default PageHeader;

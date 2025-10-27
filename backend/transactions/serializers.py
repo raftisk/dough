@@ -202,24 +202,32 @@ class UpcomingTransactionSerializer(serializers.ModelSerializer):
         source='category.name',
         read_only=True
     )
+    category_icon = serializers.CharField(
+        source='category.icon',
+        read_only=True
+    )
     wallet_name = serializers.CharField(
         source='wallet.name',
         read_only=True
     )
+    currency_symbol = serializers.SerializerMethodField()
     description = serializers.CharField(required=False, allow_blank=True)
+
+    def get_currency_symbol(self, obj):
+        return get_currency_symbol(obj.wallet.currency)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        # Convert empty string recurrence to 'None' for consistency
+        # Convert empty string recurrence to 'none' for consistency
         if data.get('recurrence') == '':
-            data['recurrence'] = 'None'
+            data['recurrence'] = 'none'
         return data
 
     def to_internal_value(self, data):
-        # Convert empty string recurrence to 'None' for consistency
+        # Convert empty string recurrence to 'none' for consistency
         if 'recurrence' in data and data['recurrence'] == '':
             data = data.copy()
-            data['recurrence'] = 'None'
+            data['recurrence'] = 'none'
         return super().to_internal_value(data)
 
     class Meta:
@@ -231,7 +239,9 @@ class UpcomingTransactionSerializer(serializers.ModelSerializer):
             'type',
             'category',
             'category_name',
+            'category_icon',
             'amount',
+            'currency_symbol',
             'description',
             'date',
             'recurrence',
@@ -240,7 +250,7 @@ class UpcomingTransactionSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at', 'recurrence_parent']
 
 
 class TransferSerializer(serializers.ModelSerializer):
