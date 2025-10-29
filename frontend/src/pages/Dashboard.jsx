@@ -9,10 +9,11 @@ import WalletCard from '../components/WalletCard';
 import CategoryCard from '../components/CategoryCard';
 import FloatingActionButton from '../components/FloatingActionButton';
 import TransactionForm from '../components/TransactionForm';
+import TransferForm from '../components/TransferForm';
 import CalendarView from '../components/CalendarView';
 import { theme } from '../styles/theme';
 import { getCurrentMonthYear } from '../utils/date';
-import { getDashboardData, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction } from '../services/api';
+import { getDashboardData, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction, createTransfer, updateTransfer, deleteTransfer } from '../services/api';
 import { getIconComponent } from '../constants';
 
 function Dashboard() {
@@ -26,6 +27,9 @@ function Dashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [formType, setFormType] = useState('expense');
+  // Transfer form states
+  const [isTransferFormOpen, setIsTransferFormOpen] = useState(false);
+  const [selectedTransfer, setSelectedTransfer] = useState(null);
 
   // Fetch dashboard data on mount
   useEffect(() => {
@@ -54,21 +58,35 @@ function Dashboard() {
 
   const handleAddTransaction = (type) => {
     console.log('Add transaction type:', type);
-    setFormType(type);
-    setSelectedTransaction(null);
-    setIsFormOpen(true);
+    if (type === 'transfer') {
+      setSelectedTransfer(null);
+      setIsTransferFormOpen(true);
+    } else {
+      setFormType(type);
+      setSelectedTransaction(null);
+      setIsFormOpen(true);
+    }
   };
 
   const handleEditTransaction = (transaction) => {
     console.log('Edit transaction:', transaction);
-    setFormType(transaction.type);
-    // Map API response fields to form expected fields
-    setSelectedTransaction({
-      ...transaction,
-      category_id: transaction.category,
-      wallet_id: transaction.wallet,
-    });
-    setIsFormOpen(true);
+    if (transaction.type === 'transfer') {
+      setSelectedTransfer({
+        ...transaction,
+        from_wallet: transaction.from_wallet || transaction.from_wallet_id,
+        to_wallet: transaction.to_wallet || transaction.to_wallet_id,
+      });
+      setIsTransferFormOpen(true);
+    } else {
+      setFormType(transaction.type);
+      // Map API response fields to form expected fields
+      setSelectedTransaction({
+        ...transaction,
+        category_id: transaction.category,
+        wallet_id: transaction.wallet,
+      });
+      setIsFormOpen(true);
+    }
   };
 
   const handleDeleteTransaction = async (transaction) => {
@@ -79,7 +97,11 @@ function Dashboard() {
     if (!confirmed) return;
 
     try {
-      await deleteTransaction(transaction.id);
+      if (transaction.type === 'transfer') {
+        await deleteTransfer(transaction.id);
+      } else {
+        await deleteTransaction(transaction.id);
+      }
       await fetchDashboardData(); // Refresh dashboard
     } catch (err) {
       console.error('Failed to delete transaction:', err);
@@ -116,6 +138,36 @@ function Dashboard() {
     } catch (err) {
       console.error('Failed to save transaction:', err);
       alert(err.message || 'Failed to save transaction');
+    }
+  };
+
+  const handleTransferFormSubmit = async (formData) => {
+    try {
+      const transferData = {
+        from_wallet: formData.from_wallet,
+        to_wallet: formData.to_wallet,
+        amount: formData.amount,
+        description: formData.description,
+        date: formData.date,
+      };
+
+      if (selectedTransfer) {
+        // Update existing transfer
+        await updateTransfer(selectedTransfer.id, transferData);
+      } else {
+        // Create new transfer
+        await createTransfer(transferData);
+      }
+
+      // Refresh dashboard
+      await fetchDashboardData();
+
+      // Close form
+      setIsTransferFormOpen(false);
+      setSelectedTransfer(null);
+    } catch (err) {
+      console.error('Failed to save transfer:', err);
+      alert(err.message || 'Failed to save transfer');
     }
   };
 
@@ -422,6 +474,15 @@ function Dashboard() {
         initialData={selectedTransaction}
         transactionType={formType}
         categories={categories}
+        wallets={wallets}
+      />
+
+      {/* Transfer Form Modal */}
+      <TransferForm
+        isOpen={isTransferFormOpen}
+        onClose={() => setIsTransferFormOpen(false)}
+        onSubmit={handleTransferFormSubmit}
+        initialData={selectedTransfer}
         wallets={wallets}
       />
     </div>

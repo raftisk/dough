@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { MoreVertical, Edit, Trash2, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Eye, EyeOff, CheckCircle, XCircle} from 'lucide-react';
 import { theme } from '../styles/theme';
 import { getIconComponent } from '../constants';
 
-const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, transactionCount, isAlreadyAdded }) => {
+const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, transactionCount, isAlreadyAdded, isActivated }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -27,6 +27,11 @@ const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, tran
 
   // Get status dot color based on status
   const getStatusDotColor = () => {
+    // If preset and activated, show green dot
+    if (statusDot === 'preset' && isActivated) {
+      return '#10b981'; // green
+    }
+
     switch (statusDot) {
       case 'active':
         return '#10b981'; // green
@@ -115,7 +120,7 @@ const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, tran
         >
           {(() => {
             const IconComponent = getIconComponent(category.icon);
-            return <IconComponent size={24} color={theme.colors.text.primary} />;
+            return <IconComponent size={22} color={theme.colors.text.primary} />;
           })()}
         </div>
 
@@ -146,18 +151,23 @@ const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, tran
         </div>
       </div>
 
-      {/* Right section: "Added" label or Menu button */}
+      {/* Right section: Green checkmark, "Added" label, or Menu button */}
       <div ref={menuRef} style={{ flexShrink: 0 }}>
-        {isAlreadyAdded ? (
-          <span
+        {isActivated ? (
+          <button
             style={{
-              fontSize: theme.typography.fontSize.xs,
-              color: theme.colors.semantic.income,
-              fontWeight: theme.typography.fontWeight.medium,
+              padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+              borderRadius: theme.border.radius.base,
+              backgroundColor: 'transparent',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'default'
             }}
           >
-            Added
-          </span>
+            <CheckCircle size={18} color="#10b981" />
+          </button>
         ) : (
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -258,6 +268,7 @@ CategoryListItem.propTypes = {
   onMenuAction: PropTypes.func,
   transactionCount: PropTypes.number,
   isAlreadyAdded: PropTypes.bool,
+  isActivated: PropTypes.bool,
 };
 
 export default CategoryListItem;

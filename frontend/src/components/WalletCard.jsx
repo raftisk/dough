@@ -42,7 +42,7 @@ const WalletCard = ({ wallet, onClick, onEdit }) => {
       }}
       onMouseEnter={(e) => {
         if (onClick) {
-          e.currentTarget.style.boxShadow = theme.shadows.lg;
+          e.currentTarget.style.boxShadow = theme.shadows.md;
           e.currentTarget.style.transform = 'translateY(-2px)';
         }
       }}

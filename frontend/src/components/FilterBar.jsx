@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { ChevronDown, X, CalendarDays } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { theme } from '../styles/theme';
-import DatePicker from './DatePicker';
 import { getIconComponent } from '../constants';
 import { formatDateToLocal } from '../utils/format';
 
@@ -19,44 +18,26 @@ const FilterBar = ({
   wallets = [],
 }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [activeDatePicker, setActiveDatePicker] = useState(null); // 'start' or 'end'
   const dropdownRefs = {
     type: useRef(null),
     categories: useRef(null),
     wallets: useRef(null),
     date: useRef(null),
   };
-  const datePickerRef = useRef(null);
-  const startButtonRef = useRef(null);
-  const endButtonRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Close DatePicker if clicking outside it
-      if (activeDatePicker && datePickerRef.current) {
-        if (!datePickerRef.current.contains(event.target)) {
-          setActiveDatePicker(null);
-        }
-      }
-
-      // Close dropdown if clicking outside (but not in DatePicker or date buttons)
       if (openDropdown && dropdownRefs[openDropdown].current) {
-        const isInsideDatePicker = datePickerRef.current && datePickerRef.current.contains(event.target);
-        const isDateButton =
-          (startButtonRef.current && startButtonRef.current.contains(event.target)) ||
-          (endButtonRef.current && endButtonRef.current.contains(event.target));
-
-        if (!dropdownRefs[openDropdown].current.contains(event.target) && !isInsideDatePicker && !isDateButton) {
+        if (!dropdownRefs[openDropdown].current.contains(event.target)) {
           setOpenDropdown(null);
-          setActiveDatePicker(null);
         }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [openDropdown, activeDatePicker]);
+  }, [openDropdown]);
 
   // Type filter handlers
   const handleTypeToggle = (type) => {
@@ -311,12 +292,10 @@ const FilterBar = ({
   return (
     <div
       style={{
-        position: 'sticky',
-        top: '64px',
         backgroundColor: theme.colors.background.card,
         borderBottom: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
         padding: theme.spacing[4],
-        zIndex: theme.zIndex.sticky,
+        borderRadius: theme.border.radius.base,
         boxShadow: theme.shadows.sm,
       }}
     >
@@ -659,79 +638,43 @@ const FilterBar = ({
             <div style={{ height: '1px', backgroundColor: theme.colors.border.light, margin: `${theme.spacing[2]} 0` }} />
             <div>
               <div style={{ fontSize: theme.typography.fontSize.xs, fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.text.muted, marginBottom: theme.spacing[2] }}>
-                CUSTOM RANGE
+                CURRENT RANGE
               </div>
               <div style={{ marginBottom: theme.spacing[2] }}>
                 <label style={{ display: 'block', fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary, marginBottom: theme.spacing[1] }}>
                   Start Date
                 </label>
-                <button
-                  ref={startButtonRef}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveDatePicker(activeDatePicker === 'start' ? null : 'start');
-                  }}
+                <div
                   style={{
                     width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: theme.spacing[2],
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    backgroundColor: theme.colors.background.card,
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                    backgroundColor: theme.colors.background.cardHover,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
                     borderRadius: theme.border.radius.base,
                     fontSize: theme.typography.fontSize.sm,
-                    color: dateRange.start ? theme.colors.text.primary : theme.colors.text.muted,
-                    cursor: 'pointer',
-                    transition: theme.transitions.fast,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.colors.background.card;
+                    color: theme.colors.text.primary,
                   }}
                 >
-                  <span>{dateRange.start ? new Date(dateRange.start + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Select start date'}</span>
-                  <CalendarDays size={16} color={theme.colors.text.secondary} />
-                </button>
+                  {dateRange.start ? new Date(dateRange.start + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No start date'}
+                </div>
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary, marginBottom: theme.spacing[1] }}>
                   End Date
                 </label>
-                <button
-                  ref={endButtonRef}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveDatePicker(activeDatePicker === 'end' ? null : 'end');
-                  }}
+                <div
                   style={{
                     width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: theme.spacing[2],
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    backgroundColor: theme.colors.background.card,
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                    backgroundColor: theme.colors.background.cardHover,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
                     borderRadius: theme.border.radius.base,
                     fontSize: theme.typography.fontSize.sm,
-                    color: dateRange.end ? theme.colors.text.primary : theme.colors.text.muted,
-                    cursor: 'pointer',
-                    transition: theme.transitions.fast,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.colors.background.card;
+                    color: theme.colors.text.primary,
                   }}
                 >
-                  <span>{dateRange.end ? new Date(dateRange.end + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Select end date'}</span>
-                  <CalendarDays size={16} color={theme.colors.text.secondary} />
-                </button>
+                  {dateRange.end ? new Date(dateRange.end + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No end date'}
+                </div>
               </div>
             </div>
           </div>
@@ -768,41 +711,6 @@ const FilterBar = ({
           </button>
         )}
       </div>
-
-      {/* Date Picker Popover */}
-      {activeDatePicker && (
-        <div
-          ref={datePickerRef}
-          style={{
-            position: 'absolute',
-            top: activeDatePicker === 'start' && startButtonRef.current
-              ? startButtonRef.current.getBoundingClientRect().bottom + window.scrollY + 4
-              : endButtonRef.current
-              ? endButtonRef.current.getBoundingClientRect().bottom + window.scrollY + 4
-              : 0,
-            left: activeDatePicker === 'start' && startButtonRef.current
-              ? startButtonRef.current.getBoundingClientRect().left + window.scrollX
-              : endButtonRef.current
-              ? endButtonRef.current.getBoundingClientRect().left + window.scrollX
-              : 0,
-            zIndex: theme.zIndex.popover + 10,
-          }}
-        >
-          <DatePicker
-            date={activeDatePicker === 'start' ? dateRange.start : dateRange.end}
-            onDateChange={(newDate) => {
-              const dateStr = newDate ? formatDateToLocal(newDate) : '';
-              if (activeDatePicker === 'start') {
-                setDateRange({ ...dateRange, start: dateStr });
-              } else {
-                setDateRange({ ...dateRange, end: dateStr });
-              }
-              setActiveDatePicker(null);
-            }}
-            placeholder={activeDatePicker === 'start' ? 'Start date' : 'End date'}
-          />
-        </div>
-      )}
     </div>
   );
 };

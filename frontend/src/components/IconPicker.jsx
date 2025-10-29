@@ -207,7 +207,7 @@ const IconPicker = ({ isOpen, onClose, onSelectIcon, selectedIcon }) => {
                     }}
                     title={icon.name}
                   >
-                    <IconComponent size={25} color={theme.colors.text.primary} />
+                    <IconComponent size={22} color={theme.colors.text.primary} />
                   </button>
                 );
               })}

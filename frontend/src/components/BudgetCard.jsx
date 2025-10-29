@@ -51,11 +51,13 @@ const BudgetCard = ({ budget, onEdit, onDelete }) => {
       onMouseEnter={(e) => {
         if (is_active) {
           e.currentTarget.style.boxShadow = theme.shadows.md;
+          e.currentTarget.style.transform = 'translateY(-2px)';
         }
       }}
       onMouseLeave={(e) => {
         if (is_active) {
           e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.transform = 'translateY(0)';
         }
       }}
     >

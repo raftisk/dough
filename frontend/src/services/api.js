@@ -363,4 +363,78 @@ export const deleteUpcomingTransaction = async (id) => {
   }
 };
 
+// ============ TRANSFER CRUD OPERATIONS ============
+
+/**
+ * Fetch all transfers
+ * @returns {Promise<Array>} Array of transfer objects
+ */
+export const getTransfers = async () => {
+  try {
+    const response = await api.get('/transfers/');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch transfers');
+  }
+};
+
+/**
+ * Create a new transfer
+ * @param {Object} transferData - Transfer data to create
+ * @returns {Promise<Object>} Created transfer object
+ */
+export const createTransfer = async (transferData) => {
+  try {
+    const response = await api.post('/transfers/', transferData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to create transfer');
+  }
+};
+
+/**
+ * Update an existing transfer
+ * @param {number} id - Transfer ID
+ * @param {Object} transferData - Transfer data to update
+ * @returns {Promise<Object>} Updated transfer object
+ */
+export const updateTransfer = async (id, transferData) => {
+  try {
+    const response = await api.patch(`/transfers/${id}/`, transferData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to update transfer');
+  }
+};
+
+/**
+ * Delete a transfer
+ * @param {number} id - Transfer ID
+ * @returns {Promise<void>}
+ */
+export const deleteTransfer = async (id) => {
+  try {
+    await api.delete(`/transfers/${id}/`);
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to delete transfer');
+  }
+};
+
+// ============ INSIGHTS OPERATIONS ============
+
+/**
+ * Fetch monthly summary data for insights
+ * @param {number} year - Year to fetch data for (optional, defaults to current year)
+ * @returns {Promise<Array>} Array of monthly summary objects
+ */
+export const getMonthlySummary = async (year = null) => {
+  try {
+    const params = year ? { year } : {};
+    const response = await api.get('/insights/monthly-summary/', { params });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch monthly summary');
+  }
+};
+
 export default api;

@@ -101,13 +101,17 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
           >
             <span>{formatDate(transaction.date)}</span>
             <span>•</span>
-            <span>{transaction.wallet}</span>
+            <span>
+              {transaction.type?.toLowerCase() === 'transfer'
+                ? `${transaction.from_wallet_name} → ${transaction.to_wallet_name}`
+                : transaction.wallet}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Center section: Category */}
-      {transaction.category && (
+      {/* Center section: Category (only shown for non-transfers) */}
+      {transaction.type?.toLowerCase() !== 'transfer' && transaction.category && (
         <div
           style={{
             display: 'flex',
@@ -120,7 +124,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
         >
           {(() => {
             const CategoryIcon = getIconComponent(transaction.category_icon);
-            return <CategoryIcon size={20} color={theme.colors.text.primary} />;
+            return <CategoryIcon size={18} color={theme.colors.text.primary} />;
           })()}
           <span
             style={{
@@ -175,7 +179,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
                 transition: theme.transitions.fast,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = theme.colors.semantic.expenseLight;
+                e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
@@ -199,7 +203,9 @@ TransactionListItem.propTypes = {
     date: PropTypes.string.isRequired,
     category: PropTypes.string,
     category_icon: PropTypes.string,
-    wallet: PropTypes.string.isRequired,
+    wallet: PropTypes.string,
+    from_wallet_name: PropTypes.string,
+    to_wallet_name: PropTypes.string,
     currency_symbol: PropTypes.string,
     recurrence: PropTypes.string,
   }).isRequired,

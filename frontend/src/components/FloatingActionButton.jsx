@@ -80,7 +80,6 @@ const FloatingActionButton = ({ onSelectType }) => {
               <button
                 key={option.type}
                 onClick={() => handleTypeSelect(option.type)}
-                disabled={option.type === 'transfer'}
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -89,18 +88,15 @@ const FloatingActionButton = ({ onSelectType }) => {
                   padding: `${theme.spacing[3]} ${theme.spacing[4]}`,
                   backgroundColor: 'transparent',
                   border: 'none',
-                  cursor: option.type === 'transfer' ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   fontSize: theme.typography.fontSize.base,
                   fontWeight: theme.typography.fontWeight.medium,
-                  color: option.type === 'transfer' ? theme.colors.text.muted : theme.colors.text.primary,
+                  color: theme.colors.text.primary,
                   transition: theme.transitions.fast,
                   textAlign: 'left',
-                  opacity: option.type === 'transfer' ? 0.5 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (option.type !== 'transfer') {
-                    e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
-                  }
+                  e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';
@@ -108,11 +104,6 @@ const FloatingActionButton = ({ onSelectType }) => {
               >
                 <Icon size={20} color={option.color} />
                 <span>{option.label}</span>
-                {option.type === 'transfer' && (
-                  <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.text.muted, marginLeft: 'auto' }}>
-                    Soon
-                  </span>
-                )}
               </button>
             );
           })}

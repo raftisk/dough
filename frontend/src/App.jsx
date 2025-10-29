@@ -4,6 +4,7 @@ import Categories from './pages/Categories';
 import Transactions from './pages/Transactions';
 import Wallets from './pages/Wallets';
 import Budgets from './pages/Budgets';
+import Insights from './pages/Insights';
 
 // Placeholder components for future pages
 const PlaceholderPage = ({ title }) => (
@@ -24,7 +25,7 @@ function App() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/budgets" element={<Budgets />} />
         <Route path="/wishlist" element={<PlaceholderPage title="Wishlist" />} />
-        <Route path="/insights" element={<PlaceholderPage title="Insights" />} />
+        <Route path="/insights" element={<Insights />} />
       </Routes>
     </BrowserRouter>
   );

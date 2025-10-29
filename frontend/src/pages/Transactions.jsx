@@ -9,6 +9,7 @@ import {
   FloatingActionButton,
   TransactionForm,
   UpcomingTransactionsList,
+  TransferForm,
 } from '../components';
 import { theme } from '../styles/theme';
 import {
@@ -20,12 +21,17 @@ import {
   deleteTransaction,
   getUpcomingTransactions,
   updateUpcomingTransaction,
+  getTransfers,
+  createTransfer,
+  updateTransfer,
+  deleteTransfer,
 } from '../services/api';
 import { getIconComponent } from '../constants';
 
 const Transactions = () => {
   // Data state
   const [transactions, setTransactions] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [upcomingTransactions, setUpcomingTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [wallets, setWallets] = useState([]);
@@ -53,6 +59,10 @@ const Transactions = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [formType, setFormType] = useState('expense');
 
+  // Transfer form states
+  const [isTransferFormOpen, setIsTransferFormOpen] = useState(false);
+  const [selectedTransfer, setSelectedTransfer] = useState(null);
+
   // Upcoming transactions modal state
   const [showUpcomingModal, setShowUpcomingModal] = useState(false);
 
@@ -65,13 +75,15 @@ const Transactions = () => {
     try {
       setLoading(true);
       setError(null);
-      const [transactionsData, upcomingData, categoriesData, walletsData] = await Promise.all([
+      const [transactionsData, transfersData, upcomingData, categoriesData, walletsData] = await Promise.all([
         getTransactions(),
+        getTransfers(),
         getUpcomingTransactions(),
         getCategories(),
         getWallets(),
       ]);
       setTransactions(transactionsData);
+      setTransfers(transfersData.map(t => ({ ...t, type: 'transfer' }))); // Add type field for filtering
       setUpcomingTransactions(upcomingData);
       setCategories(categoriesData.filter(c => c.is_active)); // Only active categories for forms
       setWallets(walletsData);
@@ -85,7 +97,10 @@ const Transactions = () => {
 
   // Filtering logic
   const getFilteredTransactions = () => {
-    const filtered = transactions
+    // Merge transactions and transfers into one array
+    const allItems = [...transactions, ...transfers];
+
+    const filtered = allItems
       .filter((transaction) => {
         // Filter by type
         if (!selectedTypes.includes(transaction.type)) return false;
@@ -127,6 +142,7 @@ const Transactions = () => {
       selectedWallets,
       dateRange,
       totalTransactions: transactions.length,
+      totalTransfers: transfers.length,
       filteredCount: filtered.length,
     });
 
@@ -138,22 +154,36 @@ const Transactions = () => {
   // Handle add transaction from floating button
   const handleAddTransaction = (type) => {
     console.log('Add transaction type:', type);
-    setFormType(type);
-    setSelectedTransaction(null);
-    setIsFormOpen(true);
+    if (type === 'transfer') {
+      setSelectedTransfer(null);
+      setIsTransferFormOpen(true);
+    } else {
+      setFormType(type);
+      setSelectedTransaction(null);
+      setIsFormOpen(true);
+    }
   };
 
   // Handle edit transaction from clicking TransactionListItem
   const handleEditTransaction = (transaction) => {
     console.log('Edit transaction:', transaction);
-    setFormType(transaction.type);
-    // Map API response fields to form expected fields
-    setSelectedTransaction({
-      ...transaction,
-      category_id: transaction.category,
-      wallet_id: transaction.wallet,
-    });
-    setIsFormOpen(true);
+    if (transaction.type === 'transfer') {
+      setSelectedTransfer({
+        ...transaction,
+        from_wallet: transaction.from_wallet,
+        to_wallet: transaction.to_wallet,
+      });
+      setIsTransferFormOpen(true);
+    } else {
+      setFormType(transaction.type);
+      // Map API response fields to form expected fields
+      setSelectedTransaction({
+        ...transaction,
+        category_id: transaction.category,
+        wallet_id: transaction.wallet,
+      });
+      setIsFormOpen(true);
+    }
   };
 
   // Handle edit upcoming transaction
@@ -180,7 +210,11 @@ const Transactions = () => {
     if (!confirmed) return;
 
     try {
-      await deleteTransaction(transaction.id);
+      if (transaction.type === 'transfer') {
+        await deleteTransfer(transaction.id);
+      } else {
+        await deleteTransaction(transaction.id);
+      }
       await fetchData(); // Refresh data
     } catch (err) {
       console.error('Failed to delete transaction:', err);
@@ -225,6 +259,37 @@ const Transactions = () => {
     } catch (err) {
       console.error('Failed to save transaction:', err);
       alert(err.message || 'Failed to save transaction');
+    }
+  };
+
+  // Handle transfer form submission
+  const handleTransferFormSubmit = async (formData) => {
+    try {
+      const transferData = {
+        from_wallet: formData.from_wallet,
+        to_wallet: formData.to_wallet,
+        amount: formData.amount,
+        description: formData.description,
+        date: formData.date,
+      };
+
+      if (selectedTransfer) {
+        // Update existing transfer
+        await updateTransfer(selectedTransfer.id, transferData);
+      } else {
+        // Create new transfer
+        await createTransfer(transferData);
+      }
+
+      // Refresh data
+      await fetchData();
+
+      // Close form
+      setIsTransferFormOpen(false);
+      setSelectedTransfer(null);
+    } catch (err) {
+      console.error('Failed to save transfer:', err);
+      alert(err.message || 'Failed to save transfer');
     }
   };
 
@@ -333,6 +398,7 @@ const Transactions = () => {
       >
         <PageHeader
           title="Transactions"
+          subtitle="Track all your income, expenses, and transfers"
           action={
             <button
               onClick={() => setShowUpcomingModal(true)}
@@ -360,33 +426,44 @@ const Transactions = () => {
         />
       </div>
 
-      {/* Filter Bar - Sticky */}
-      <FilterBar
-        selectedTypes={selectedTypes}
-        setSelectedTypes={setSelectedTypes}
-        selectedCategories={selectedCategories}
-        setSelectedCategories={setSelectedCategories}
-        selectedWallets={selectedWallets}
-        setSelectedWallets={setSelectedWallets}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        categories={categories}
-        wallets={wallets}
-      />
-
-      {/* Main Content */}
+      {/* Main Content - Constrained width for FilterBar and TransactionList */}
       <div
         style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: theme.spacing[6],
+          padding: `0 ${theme.spacing[4]}`,
         }}
       >
+        {/* Filter Bar - Sticky */}
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: theme.zIndex.sticky,
+            backgroundColor: theme.colors.background.pageAlt,
+            paddingBottom: theme.spacing[4],
+            paddingTop: theme.spacing[4],
+          }}
+        >
+          <FilterBar
+            selectedTypes={selectedTypes}
+            setSelectedTypes={setSelectedTypes}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={setSelectedCategories}
+            selectedWallets={selectedWallets}
+            setSelectedWallets={setSelectedWallets}
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            categories={categories}
+            wallets={wallets}
+          />
+        </div>
+
         {/* Transaction Summary */}
         <TransactionSummary transactions={filteredTransactions} currency="EUR" />
 
         {/* Transaction List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[3] }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[2], paddingBottom: theme.spacing[6] }}>
           {filteredTransactions.length === 0 ? (
             <EmptyState message="No transactions found" />
           ) : (
@@ -401,6 +478,8 @@ const Transactions = () => {
                     category: transaction.category_name,
                     category_icon: transaction.category_icon,
                     wallet: transaction.wallet_name,
+                    from_wallet_name: transaction.from_wallet_name,
+                    to_wallet_name: transaction.to_wallet_name,
                   }}
                   onClick={() => handleEditTransaction(transaction)}
                   onDelete={() => handleDelete(transaction)}
@@ -432,6 +511,15 @@ const Transactions = () => {
         upcomingTransactions={upcomingTransactions}
         onEdit={handleEditUpcoming}
         onRefresh={fetchData}
+      />
+
+      {/* Transfer Form Modal */}
+      <TransferForm
+        isOpen={isTransferFormOpen}
+        onClose={() => setIsTransferFormOpen(false)}
+        onSubmit={handleTransferFormSubmit}
+        initialData={selectedTransfer}
+        wallets={wallets}
       />
     </div>
   );

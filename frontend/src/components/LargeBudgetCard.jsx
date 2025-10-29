@@ -30,10 +30,12 @@ const LargeBudgetCard = ({ budget, onClick }) => {
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = theme.shadows.md;
         e.currentTarget.style.borderColor = theme.colors.border.medium;
+        e.currentTarget.style.transform = 'translateY(-2px)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = theme.shadows.sm;
         e.currentTarget.style.borderColor = theme.colors.border.light;
+        e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
       {/* Left Section: Doughnut Chart (40%) */}
@@ -46,7 +48,7 @@ const LargeBudgetCard = ({ budget, onClick }) => {
         }}
       >
         <BudgetDoughnut percentage={budget.percentage_spent}>
-          <IconComponent size={36} color="#000000" strokeWidth={1.5} />
+          <IconComponent size={32} color="#000000" strokeWidth={1.5} />
         </BudgetDoughnut>
       </div>
 

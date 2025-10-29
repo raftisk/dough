@@ -54,7 +54,7 @@ const UpcomingTransactionsList = ({
 
   const isRecurring = selectedTransaction &&
     selectedTransaction.recurrence &&
-    selectedTransaction.recurrence !== 'None' &&
+    selectedTransaction.recurrence !== 'none' &&
     selectedTransaction.recurrence !== '';
 
   return (

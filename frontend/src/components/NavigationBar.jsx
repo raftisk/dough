@@ -124,7 +124,7 @@ const NavigationBar = () => {
           e.currentTarget.style.color = theme.colors.text.secondary;
         }}
       >
-        <Settings size={24} />
+        <Settings size={20} />
       </button>
     </nav>
   );

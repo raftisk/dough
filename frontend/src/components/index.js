@@ -20,3 +20,4 @@ export { default as CategoryForm } from './CategoryForm';
 export { default as CurrencyPicker } from './CurrencyPicker';
 export { default as WalletForm } from './WalletForm';
 export { default as UpcomingTransactionsList } from './UpcomingTransactionsList';
+export { default as TransferForm } from './TransferForm';

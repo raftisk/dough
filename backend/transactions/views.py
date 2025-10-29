@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.db.models import Sum, Q
 from django.utils import timezone
@@ -304,3 +304,90 @@ class WishlistItemViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_completed=is_completed.lower() == 'true')
 
         return queryset
+
+
+@api_view(['GET'])
+def monthly_summary(request):
+    """
+    Returns monthly financial summary for a given year.
+    For each month in the year, returns total income, total expenses, and net savings.
+
+    Query parameters:
+    - year (optional): Year to fetch data for (default: current year)
+
+    Response format:
+    [
+        {
+            "month": "2025-01",
+            "total_income": "3200.00",
+            "total_expenses": "2800.50",
+            "net_savings": "399.50"
+        },
+        ...
+    ]
+
+    Assumptions:
+    - Single-user app, no user filtering applied
+    - Transaction.type is either "income" or "expense"
+    - Transaction.amount is always positive (sign determined by type)
+    - All 12 months are included in response, even if no transactions exist
+    """
+    # Get year from query parameters, default to current year
+    year_param = request.query_params.get('year', None)
+
+    try:
+        year = int(year_param) if year_param else date.today().year
+    except (ValueError, TypeError):
+        return Response(
+            {'error': 'Invalid year parameter. Must be a valid integer.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Initialize result array with all 12 months
+    monthly_data = []
+
+    for month in range(1, 13):
+        # Format month as YYYY-MM
+        month_str = f"{year}-{month:02d}"
+
+        # Calculate date range for the month
+        start_date = date(year, month, 1)
+
+        # Calculate last day of month
+        if month == 12:
+            end_date = date(year + 1, 1, 1)
+        else:
+            end_date = date(year, month + 1, 1)
+
+        # Adjust end_date to be last day of current month
+        from datetime import timedelta
+        end_date = end_date - timedelta(days=1)
+
+        # Query transactions for this month
+        month_transactions = Transaction.objects.filter(
+            date__gte=start_date,
+            date__lte=end_date
+        )
+
+        # Calculate total income (sum of all income transactions)
+        total_income = month_transactions.filter(
+            type='income'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+        # Calculate total expenses (sum of all expense transactions)
+        # Amount is always positive, so we just sum it
+        total_expenses = month_transactions.filter(
+            type='expense'
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+        # Calculate net savings (income - expenses)
+        net_savings = total_income - total_expenses
+
+        monthly_data.append({
+            'month': month_str,
+            'total_income': str(total_income),
+            'total_expenses': str(total_expenses),
+            'net_savings': str(net_savings)
+        })
+
+    return Response(monthly_data)

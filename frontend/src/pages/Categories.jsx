@@ -6,7 +6,7 @@ import CategoryListItem from '../components/CategoryListItem';
 import EmptyState from '../components/EmptyState';
 import NavigationBar from '../components/NavigationBar';
 import CategoryForm from '../components/CategoryForm';
-import { PRESET_CATEGORIES } from '../constants';
+import PresetCategoriesList from '../components/PresetCategoriesList';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../services/api';
 
 const Categories = () => {
@@ -18,11 +18,11 @@ const Categories = () => {
   // State for type toggles (separate for each section)
   const [activeType, setActiveType] = useState('expense');
   const [inactiveType, setInactiveType] = useState('expense');
-  const [presetType, setPresetType] = useState('expense');
 
   // State for FloatingActionButton menu and CategoryForm
   const [showMenu, setShowMenu] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showPresetModal, setShowPresetModal] = useState(false);
   const menuRef = useRef(null);
   const fabRef = useRef(null);
 
@@ -74,20 +74,12 @@ const Categories = () => {
     );
   };
 
-  // Check if a preset category already exists in user's categories
-  const isPresetAdded = (presetCategory) => {
-    return categories.some(
-      (cat) => cat.name === presetCategory.name && cat.type === presetType
-    );
-  };
-
   // Handle FloatingActionButton menu actions
   const handleFabMenuAction = (action) => {
     if (action === 'create') {
       setShowCategoryForm(true);
     } else if (action === 'preset') {
-      // Placeholder - do nothing or show message
-      console.log('Add preset - coming soon');
+      setShowPresetModal(true);
     }
     setShowMenu(false);
   };
@@ -186,13 +178,13 @@ const Categories = () => {
     }
   };
 
-  const handleAddPreset = async (presetCategory) => {
+  const handleAddPreset = async (preset, type) => {
     try {
       // Create new category from preset via API
       await createCategory({
-        name: presetCategory.name,
-        icon: presetCategory.icon, 
-        type: presetType,
+        name: preset.name,
+        icon: preset.iconName,
+        type: type,
         is_active: true,
       });
 
@@ -200,7 +192,7 @@ const Categories = () => {
       await fetchCategories();
     } catch (err) {
       console.error('Failed to add preset category:', err);
-      alert(err.message || 'Failed to add preset category');
+      throw err; // Re-throw to allow modal to handle error
     }
   };
 
@@ -259,7 +251,6 @@ const Categories = () => {
   // Get active categories for current type
   const activeCategories = getFilteredCategories(true, activeType);
   const inactiveCategories = getFilteredCategories(false, inactiveType);
-  const presetCategories = PRESET_CATEGORIES[presetType] || [];
 
   // Loading state
   if (loading) {
@@ -396,7 +387,7 @@ const Categories = () => {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: theme.spacing[3],
+              gap: theme.spacing[2],
             }}
           >
             {activeCategories.length > 0 ? (
@@ -441,7 +432,7 @@ const Categories = () => {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: theme.spacing[3],
+              gap: theme.spacing[2],
             }}
           >
             {inactiveCategories.length > 0 ? (
@@ -463,61 +454,6 @@ const Categories = () => {
                 message={`No inactive ${inactiveType} categories`}
               />
             )}
-          </div>
-        </section>
-
-        {/* PRESET CATEGORIES SECTION */}
-        <section style={{ marginBottom: theme.spacing[10] }}>
-          <h2
-            style={{
-              fontSize: theme.typography.fontSize.xl,
-              fontWeight: theme.typography.fontWeight.semibold,
-              color: theme.colors.text.primary,
-              marginBottom: theme.spacing[1],
-            }}
-          >
-            Preset Categories
-          </h2>
-          <p
-            style={{
-              fontSize: theme.typography.fontSize.sm,
-              color: theme.colors.text.secondary,
-              marginBottom: theme.spacing[4],
-            }}
-          >
-            Add common categories to your list
-          </p>
-
-          <TypeToggle selectedType={presetType} onTypeChange={setPresetType} />
-
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: theme.spacing[3],
-            }}
-          >
-            {presetCategories.map((preset, index) => {
-              const alreadyAdded = isPresetAdded(preset);
-              return (
-                <CategoryListItem
-                  key={index}
-                  category={{
-                    name: preset.name,
-                    icon: preset.iconName, // Use iconName string, not icon component
-                    type: presetType
-                  }}
-                  statusDot="preset"
-                  menuOptions={
-                    alreadyAdded
-                      ? []
-                      : [{ label: 'Activate', action: 'add', icon: 'CheckCircle' }]
-                  }
-                  onMenuAction={handleMenuAction}
-                  isAlreadyAdded={alreadyAdded}
-                />
-              );
-            })}
           </div>
         </section>
       </div>
@@ -641,6 +577,15 @@ const Categories = () => {
         onClose={() => setShowCategoryForm(false)}
         onSubmit={handleCategorySubmit}
         mode="create"
+      />
+
+      {/* Preset Categories Modal */}
+      <PresetCategoriesList
+        isOpen={showPresetModal}
+        onClose={() => setShowPresetModal(false)}
+        categories={categories}
+        onActivate={handleAddPreset}
+        onRefresh={fetchCategories}
       />
     </div>
   );
