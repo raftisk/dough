@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Donut, Settings } from 'lucide-react';
+import { Donut, User } from 'lucide-react';
 import { theme } from '../styles/theme';
 
 const NavigationBar = () => {
@@ -16,10 +16,6 @@ const NavigationBar = () => {
   ];
 
   const isActive = (path) => location.pathname === path;
-
-  const handleSettingsClick = () => {
-    console.log('Settings clicked');
-  };
 
   return (
     <nav
@@ -100,9 +96,9 @@ const NavigationBar = () => {
         </div>
       </div>
 
-      {/* Right: Settings Icon */}
-      <button
-        onClick={handleSettingsClick}
+      {/* Right: User Settings Icon */}
+      <Link
+        to="/settings"
         style={{
           backgroundColor: 'transparent',
           border: 'none',
@@ -124,8 +120,8 @@ const NavigationBar = () => {
           e.currentTarget.style.color = theme.colors.text.secondary;
         }}
       >
-        <Settings size={20} />
-      </button>
+        <User size={20} />
+      </Link>
     </nav>
   );
 };

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
  * BudgetDoughnut - SVG-based doughnut chart component
  * Displays budget percentage as a circular progress indicator
  */
-const BudgetDoughnut = ({ percentage, size = 140, strokeWidth = 14, children }) => {
+const BudgetDoughnut = ({ percentage, size = 100, strokeWidth = 14, children }) => {
   // Calculate SVG dimensions and circle properties
   const center = size / 2;
   const radius = center - strokeWidth / 2;
@@ -73,7 +73,7 @@ const BudgetDoughnut = ({ percentage, size = 140, strokeWidth = 14, children }) 
         />
       </svg>
 
-      {/* Center content (icon and percentage) */}
+      {/* Center content (children - can be icon, percentage, or custom content) */}
       <div
         style={{
           position: 'relative',
@@ -82,33 +82,9 @@ const BudgetDoughnut = ({ percentage, size = 140, strokeWidth = 14, children }) 
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '4px',
         }}
       >
-        {/* Category Icon */}
-        {children && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {children}
-          </div>
-        )}
-
-        {/* Percentage Text */}
-        <div
-          style={{
-            fontSize: '18px',
-            fontWeight: '700',
-            color: color,
-            lineHeight: 1,
-          }}
-        >
-          {Math.round(percentage)}%
-        </div>
+        {children}
       </div>
     </div>
   );

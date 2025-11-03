@@ -2,15 +2,17 @@ import PropTypes from 'prop-types';
 import { RefreshCw } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { getIconComponent } from '../constants';
-import { formatCurrency } from '../utils/format';
+import { formatAmount } from '../utils/format';
+import { DEFAULT_CURRENCY } from '../constants';
 import BudgetDoughnut from './BudgetDoughnut';
+import CategoryTag from './CategoryTag';
 
 /**
  * LargeBudgetCard - Budget display card with doughnut visualization
  * Shows budget info with visual progress indicator
  */
 const LargeBudgetCard = ({ budget, onClick }) => {
-  const IconComponent = getIconComponent(budget.category_data.icon);
+  const currency = budget.currency_symbol || DEFAULT_CURRENCY;
 
   return (
     <div
@@ -38,21 +40,45 @@ const LargeBudgetCard = ({ budget, onClick }) => {
         e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
-      {/* Left Section: Doughnut Chart (40%) */}
+      {/* Left Section: Compact Doughnut Chart + Category Tags */}
       <div
         style={{
-          flex: '0 0 40%',
+          flex: '0 0 30%',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: theme.spacing[4],
         }}
       >
         <BudgetDoughnut percentage={budget.percentage_spent}>
-          <IconComponent size={32} color="#000000" strokeWidth={1.5} />
+          <span
+            style={{
+              fontSize: theme.typography.fontSize.xl,
+              fontWeight: theme.typography.fontWeight.semibold,
+              color: theme.colors.text.primary,
+            }}
+          >
+            {Math.round(budget.percentage_spent)}%
+          </span>
         </BudgetDoughnut>
+
+        {/* Category Tags below doughnut */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: theme.spacing[2],
+          }}
+        >
+          {budget.categories_data.map((cat) => (
+            <CategoryTag key={cat.id} category={{ icon: cat.icon, name: cat.name }} />
+          ))}
+        </div>
       </div>
 
-      {/* Right Section: Budget Information (60%) */}
+      {/* Right Section: Budget Information (70%) */}
       <div
         style={{
           flex: '1',
@@ -62,7 +88,7 @@ const LargeBudgetCard = ({ budget, onClick }) => {
           gap: theme.spacing[2],
         }}
       >
-        {/* Category Name */}
+        {/* Budget Name */}
         <h3
           style={{
             fontSize: theme.typography.fontSize.xl,
@@ -71,7 +97,7 @@ const LargeBudgetCard = ({ budget, onClick }) => {
             margin: 0,
           }}
         >
-          {budget.category_data.name}
+          {budget.name}
         </h3>
 
         {/* Period Display + Recurring Icon */}
@@ -108,11 +134,11 @@ const LargeBudgetCard = ({ budget, onClick }) => {
           }}
         >
           <span style={{ fontWeight: theme.typography.fontWeight.medium }}>
-            {formatCurrency(budget.spent_amount)}
+            {formatAmount(budget.spent_amount, currency)}
           </span>
           {' spent of '}
           <span style={{ fontWeight: theme.typography.fontWeight.medium }}>
-            {formatCurrency(budget.amount)}
+            {formatAmount(budget.amount, currency)}
           </span>
         </div>
 
@@ -123,7 +149,7 @@ const LargeBudgetCard = ({ budget, onClick }) => {
             color: theme.colors.text.secondary,
           }}
         >
-          {formatCurrency(budget.remaining_amount)} remaining
+          {formatAmount(budget.remaining_amount, currency)} remaining
         </div>
       </div>
     </div>
@@ -133,16 +159,20 @@ const LargeBudgetCard = ({ budget, onClick }) => {
 LargeBudgetCard.propTypes = {
   budget: PropTypes.shape({
     id: PropTypes.number.isRequired,
-    category_data: PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      icon: PropTypes.string.isRequired,
-    }).isRequired,
+    name: PropTypes.string.isRequired,
+    categories_data: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        name: PropTypes.string.isRequired,
+        icon: PropTypes.string.isRequired,
+      })
+    ).isRequired,
     amount: PropTypes.number.isRequired,
     spent_amount: PropTypes.number.isRequired,
     remaining_amount: PropTypes.number.isRequired,
     percentage_spent: PropTypes.number.isRequired,
     period_display: PropTypes.string.isRequired,
+    currency_symbol: PropTypes.string,
     reset: PropTypes.bool.isRequired,
   }).isRequired,
   onClick: PropTypes.func.isRequired,

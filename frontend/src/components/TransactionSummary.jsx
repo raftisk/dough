@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { theme } from '../styles/theme';
+import { formatAmount } from '../utils/format';
 
 const TransactionSummary = ({ transactions, currency = 'EUR' }) => {
   // Calculate totals
@@ -27,19 +28,6 @@ const TransactionSummary = ({ transactions, currency = 'EUR' }) => {
 
   const totals = calculateTotals();
 
-  // Format amount
-  const formatAmount = (amount) => {
-    const formatted = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Math.abs(amount));
-
-    // Get currency symbol
-    const currencySymbol = currency === 'EUR' ? '€' : '$';
-
-    return `${currencySymbol}${formatted}`;
-  };
-
   return (
     <div
       style={{
@@ -61,7 +49,7 @@ const TransactionSummary = ({ transactions, currency = 'EUR' }) => {
             color: theme.colors.semantic.income,
           }}
         >
-          +{formatAmount(totals.income)}
+          {formatAmount(totals.income, currency)}
         </div>
       </div>
 
@@ -74,7 +62,7 @@ const TransactionSummary = ({ transactions, currency = 'EUR' }) => {
             color: theme.colors.semantic.expense,
           }}
         >
-          -{formatAmount(totals.expenses)}
+          {formatAmount(-totals.expenses, currency)}
         </div>
       </div>
     </div>

@@ -1,14 +1,8 @@
 import PropTypes from 'prop-types';
 import { theme } from '../styles/theme';
+import { formatAmount } from '../utils/format';
 
 const WalletCard = ({ wallet, onClick, onEdit }) => {
-  // Format currency amount
-  const formatBalance = (balance) => {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(balance);
-  };
 
   // Get wallet type badge color
   const getTypeBadgeStyle = () => {
@@ -81,8 +75,7 @@ const WalletCard = ({ wallet, onClick, onEdit }) => {
             marginBottom: theme.spacing[1],
           }}
         >
-          {wallet.currency_symbol || '$'}
-          {formatBalance(wallet.current_balance || 0)}
+          {formatAmount(wallet.current_balance || 0, wallet.currency || 'EUR')}
         </div>
         <div
           style={{
@@ -90,7 +83,7 @@ const WalletCard = ({ wallet, onClick, onEdit }) => {
             color: theme.colors.text.secondary,
           }}
         >
-          {wallet.currency || 'USD'}
+          {wallet.currency}
         </div>
       </div>
     </div>

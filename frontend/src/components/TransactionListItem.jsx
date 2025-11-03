@@ -1,7 +1,9 @@
 import PropTypes from 'prop-types';
 import { Plus, Minus, ArrowRightLeft, Trash2, RefreshCw } from 'lucide-react';
 import { theme, getTypeColor } from '../styles/theme';
-import { getIconComponent } from '../constants';
+import { getIconComponent, DEFAULT_CURRENCY } from '../constants';
+import { formatAmount } from '../utils/format';
+import CategoryTag from './CategoryTag';
 
 const TransactionListItem = ({ transaction, onClick, onDelete }) => {
   // Determine icon based on transaction type
@@ -28,13 +30,22 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
     });
   };
 
-  // Format currency amount
-  const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Math.abs(amount));
+  // Get currency CODE from wallet (not symbol)
+  const currency = transaction.wallet_currency || DEFAULT_CURRENCY;
+
+  // Determine sign and sign color based on transaction type
+  const getSignDisplay = () => {
+    const type = transaction.type?.toLowerCase();
+    if (type === 'income') {
+      return { sign: '+', color: theme.colors.semantic.income };
+    } else if (type === 'expense') {
+      return { sign: '-', color: theme.colors.semantic.expense };
+    }
+    // Transfer or other types: no sign, default color
+    return { sign: '', color: theme.colors.text.primary };
   };
+
+  const signDisplay = getSignDisplay();
 
   return (
     <div
@@ -112,29 +123,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
 
       {/* Center section: Category (only shown for non-transfers) */}
       {transaction.type?.toLowerCase() !== 'transfer' && transaction.category && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: theme.spacing[2],
-            padding: `${theme.spacing[1]} ${theme.spacing[3]}`,
-            backgroundColor: theme.colors.background.cardHover,
-            borderRadius: theme.border.radius.full,
-          }}
-        >
-          {(() => {
-            const CategoryIcon = getIconComponent(transaction.category_icon);
-            return <CategoryIcon size={18} color={theme.colors.text.primary} />;
-          })()}
-          <span
-            style={{
-              fontSize: theme.typography.fontSize.sm,
-              color: theme.colors.text.secondary,
-            }}
-          >
-            {transaction.category}
-          </span>
-        </div>
+        <CategoryTag category={{ icon: transaction.category_icon, name: transaction.category }} />
       )}
 
       {/* Right section: Amount + Actions */}
@@ -144,20 +133,27 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
           style={{
             fontSize: theme.typography.fontSize.lg,
             fontWeight: theme.typography.fontWeight.semibold,
-            color: theme.colors.text.primary,
             textAlign: 'right',
             minWidth: '100px',
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'flex-end',
+            gap: '4px',
           }}
         >
-          <span style={{ color: getTypeColor(transaction.type) }}>
-            {transaction.type?.toLowerCase() === 'income'
-              ? '+'
-              : transaction.type?.toLowerCase() === 'expense'
-              ? '-'
-              : ''}
+          {signDisplay.sign && (
+            <span
+              style={{
+                color: signDisplay.color,
+                fontWeight: theme.typography.fontWeight.semibold,
+              }}
+            >
+              {signDisplay.sign}
+            </span>
+          )}
+          <span style={{ color: theme.colors.text.primary }}>
+            {formatAmount(transaction.amount, currency)}
           </span>
-          {transaction.currency_symbol || '$'}
-          {formatAmount(transaction.amount)}
         </div>
 
         {/* Action buttons */}

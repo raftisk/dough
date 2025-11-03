@@ -208,7 +208,7 @@ const WalletForm = ({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Spending Wallet, Savings Account"
                   style={{
-                    padding: `${theme.spacing[3]} ${theme.spacing[4]}`,
+                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
                     fontSize: theme.typography.fontSize.base,
                     border: `${theme.border.width.thin} ${theme.border.style.solid} ${
                       errors.name ? theme.colors.semantic.expense : theme.colors.border.light
@@ -256,8 +256,8 @@ const WalletForm = ({
                     onChange={(e) => setType(e.target.value)}
                     style={{
                       width: '100%',
-                      padding: `${theme.spacing[3]} ${theme.spacing[4]}`,
-                      paddingRight: theme.spacing[10],
+                      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                      paddingRight: theme.spacing[6],
                       fontSize: theme.typography.fontSize.base,
                       border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
                       borderRadius: theme.border.radius.base,
@@ -313,8 +313,8 @@ const WalletForm = ({
                     onClick={() => setShowCurrencyPicker(!showCurrencyPicker)}
                     style={{
                       width: '100%',
-                      padding: `${theme.spacing[3]} ${theme.spacing[4]}`,
-                      paddingRight: theme.spacing[10],
+                      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                      //paddingRight: theme.spacing[10],
                       fontSize: theme.typography.fontSize.base,
                       border: `${theme.border.width.thin} ${theme.border.style.solid} ${
                         errors.currency ? theme.colors.semantic.expense : theme.colors.border.light
@@ -383,7 +383,7 @@ const WalletForm = ({
                   <span
                     style={{
                       position: 'absolute',
-                      left: theme.spacing[3],
+                      left: theme.spacing[2],
                       top: '50%',
                       transform: 'translateY(-50%)',
                       fontSize: theme.typography.fontSize.base,
@@ -402,7 +402,7 @@ const WalletForm = ({
                     placeholder="0.00"
                     style={{
                       width: '100%',
-                      padding: `${theme.spacing[3]} ${theme.spacing[4]}`,
+                      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
                       paddingLeft: theme.spacing[6],
                       fontSize: theme.typography.fontSize.base,
                       border: `${theme.border.width.thin} ${theme.border.style.solid} ${

@@ -4,6 +4,8 @@ import NavigationBar from '../components/NavigationBar';
 import PageHeader from '../components/PageHeader';
 import BudgetForm from '../components/BudgetForm';
 import LargeBudgetCard from '../components/LargeBudgetCard';
+import EmptyState from '../components/EmptyState';
+import ErrorState from '../components/ErrorState';
 import { theme } from '../styles/theme';
 import { getBudgets, createBudget, updateBudget, deleteBudget, getCategories } from '../services/api';
 
@@ -12,7 +14,6 @@ function Budgets() {
   const [categories, setCategories] = useState([]);
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -21,7 +22,6 @@ function Budgets() {
 
   const fetchData = async () => {
     try {
-      setLoading(true);
       setError(null);
       const [budgetsData, categoriesData] = await Promise.all([
         getBudgets(),
@@ -33,8 +33,6 @@ function Budgets() {
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError(err.message || 'Failed to load budgets');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -82,43 +80,6 @@ function Budgets() {
     setShowBudgetForm(true);
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          backgroundColor: theme.colors.background.pageAlt,
-        }}
-      >
-        <NavigationBar />
-        <div
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: theme.spacing[6],
-          }}
-        >
-          <PageHeader
-            title="Budgets"
-            subtitle="Manage your spending limits"
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              color: theme.colors.text.secondary,
-            }}
-          >
-            Loading budgets...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Error state
   if (error) {
     return (
@@ -140,35 +101,7 @@ function Budgets() {
             title="Budgets"
             subtitle="Manage your spending limits"
           />
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              gap: theme.spacing[4],
-            }}
-          >
-            <div style={{ color: theme.colors.semantic.expense }}>
-              {error}
-            </div>
-            <button
-              onClick={fetchData}
-              style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                backgroundColor: theme.colors.action.primary,
-                color: theme.colors.text.inverse,
-                border: 'none',
-                borderRadius: theme.border.radius.base,
-                cursor: 'pointer',
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium,
-              }}
-            >
-              Retry
-            </button>
-          </div>
+          <ErrorState error={error} onRetry={fetchData} />
         </div>
       </div>
     );
@@ -201,38 +134,16 @@ function Budgets() {
         {/* Content Section */}
         <section style={{ marginBottom: theme.spacing[8] }}>
           {budgets.length === 0 ? (
-            <div
-              style={{
-                backgroundColor: theme.colors.background.card,
-                border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-                borderRadius: theme.border.radius.lg,
-                padding: theme.spacing[8],
-                textAlign: 'center',
-              }}
-            >
-              <p
-                style={{
-                  fontSize: theme.typography.fontSize.lg,
-                  color: theme.colors.text.secondary,
-                  marginBottom: theme.spacing[2],
-                }}
-              >
-                No budgets yet
-              </p>
-              <p
-                style={{
-                  fontSize: theme.typography.fontSize.sm,
-                  color: theme.colors.text.muted,
-                }}
-              >
-                Click the + button to create your first budget
-              </p>
-            </div>
+            <EmptyState
+                        message={
+                          'No active budgets'
+                        }
+                      />
           ) : (
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))',
+                gridTemplateColumns: 'repeat(2, minmax(min(100%, 400px), 1fr))',
                 gap: theme.spacing[6],
               }}
             >

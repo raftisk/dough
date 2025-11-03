@@ -50,10 +50,6 @@ class DashboardAPIView(APIView):
         ).order_by('-date', '-created_at')[:10]
         recent_transactions_data = TransactionSerializer(recent_transactions, many=True).data
 
-        # Budget summary (all active budgets)
-        budgets = Budget.objects.select_related('category').all()
-        budget_summary = BudgetSerializer(budgets, many=True).data
-
         # Wallet count
         wallet_count = Wallet.objects.count()
 
@@ -70,7 +66,6 @@ class DashboardAPIView(APIView):
             'net_savings': str(net_savings),
             'total_balance': str(total_balance),
             'recent_transactions': recent_transactions_data,
-            'budget_summary': budget_summary,
             'wallet_count': wallet_count,
             'transaction_count': transaction_count,
         }

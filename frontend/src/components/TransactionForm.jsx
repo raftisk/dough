@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import { X, Plus, Minus, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
 import DatePicker from './DatePicker';
-import { formatDateToLocal } from '../utils/format';
+import { formatDateToLocal, getCurrencySymbol } from '../utils/format';
+import { DEFAULT_CURRENCY } from '../constants';
 
 const TransactionForm = ({
   isOpen,
@@ -24,6 +25,7 @@ const TransactionForm = ({
   const [recurrence, setRecurrence] = useState('');
   const [autoPost, setAutoPost] = useState(false);
   const [errors, setErrors] = useState({});
+  const [selectedWalletCurrency, setSelectedWalletCurrency] = useState(DEFAULT_CURRENCY);
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -71,6 +73,14 @@ const TransactionForm = ({
       }
     }
   }, [type, categoryId, filteredCategories]);
+
+  // Track selected wallet's currency
+  useEffect(() => {
+    if (walletId && wallets.length > 0) {
+      const selectedWallet = wallets.find(w => w.id === parseInt(walletId));
+      setSelectedWalletCurrency(selectedWallet?.currency || DEFAULT_CURRENCY);
+    }
+  }, [walletId, wallets]);
 
   // Validate form
   const validateForm = () => {
@@ -256,6 +266,14 @@ const TransactionForm = ({
                     backgroundColor: theme.colors.background.card,
                     cursor: 'pointer',
                     appearance: 'none',
+                    outline: 'none',
+                    transition: theme.transitions.base,
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
                   }}
                 >
                   <option value="income">Income</option>
@@ -304,6 +322,18 @@ const TransactionForm = ({
                   fontSize: theme.typography.fontSize.base,
                   color: theme.colors.text.primary,
                   backgroundColor: theme.colors.background.card,
+                  outline: 'none',
+                  transition: theme.transitions.base,
+                }}
+                onFocus={(e) => {
+                  if (!errors.description) {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }
+                }}
+                onBlur={(e) => {
+                  if (!errors.description) {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
+                  }
                 }}
               />
               {errors.description && (
@@ -324,7 +354,7 @@ const TransactionForm = ({
                   marginBottom: theme.spacing[1],
                 }}
               >
-                Amount (EUR)
+                Amount
               </label>
               <div style={{ position: 'relative' }}>
                 <span
@@ -337,7 +367,7 @@ const TransactionForm = ({
                     color: theme.colors.text.secondary,
                   }}
                 >
-                  €
+                  {getCurrencySymbol(selectedWalletCurrency)}
                 </span>
                 <input
                   type="number"
@@ -357,6 +387,18 @@ const TransactionForm = ({
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
                     backgroundColor: theme.colors.background.card,
+                    outline: 'none',
+                    transition: theme.transitions.base,
+                  }}
+                  onFocus={(e) => {
+                    if (!errors.amount) {
+                      e.currentTarget.style.borderColor = theme.colors.text.primary;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.amount) {
+                      e.currentTarget.style.borderColor = theme.colors.border.medium;
+                    }
                   }}
                 />
               </div>
@@ -388,15 +430,21 @@ const TransactionForm = ({
                     width: '100%',
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
                     paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                      errors.category ? theme.colors.semantic.expense : theme.colors.border.medium
-                    }`,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
                     borderRadius: theme.border.radius.base,
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
                     backgroundColor: theme.colors.background.card,
                     cursor: 'pointer',
                     appearance: 'none',
+                    outline: 'none',
+                    transition: theme.transitions.base,
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
                   }}
                 >
                   <option value="">Select category</option>
@@ -406,7 +454,7 @@ const TransactionForm = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown
+                { <ChevronDown
                   size={20}
                   style={{
                     position: 'absolute',
@@ -416,7 +464,7 @@ const TransactionForm = ({
                     pointerEvents: 'none',
                     color: theme.colors.text.secondary,
                   }}
-                />
+                /> }
               </div>
               {errors.category && (
                 <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
@@ -446,15 +494,21 @@ const TransactionForm = ({
                     width: '100%',
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
                     paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                      errors.wallet ? theme.colors.semantic.expense : theme.colors.border.medium
-                    }`,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
                     borderRadius: theme.border.radius.base,
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
                     backgroundColor: theme.colors.background.card,
                     cursor: 'pointer',
                     appearance: 'none',
+                    outline: 'none',
+                    transition: theme.transitions.base,
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
                   }}
                 >
                   {wallets.map((wallet) => (
@@ -501,7 +555,6 @@ const TransactionForm = ({
                   const dateStr = newDate ? formatDateToLocal(newDate) : '';
                   setDate(dateStr);
                 }}
-                placeholder="Select date"
               />
               {errors.date && (
                 <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
@@ -538,6 +591,14 @@ const TransactionForm = ({
                     backgroundColor: theme.colors.background.card,
                     cursor: 'pointer',
                     appearance: 'none',
+                    outline: 'none',
+                    transition: theme.transitions.base,
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
                   }}
                 >
                   <option value="none">None</option>

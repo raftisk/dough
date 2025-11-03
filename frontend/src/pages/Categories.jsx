@@ -4,6 +4,7 @@ import { theme } from '../styles/theme';
 import PageHeader from '../components/PageHeader';
 import CategoryListItem from '../components/CategoryListItem';
 import EmptyState from '../components/EmptyState';
+import ErrorState from '../components/ErrorState';
 import NavigationBar from '../components/NavigationBar';
 import CategoryForm from '../components/CategoryForm';
 import PresetCategoriesList from '../components/PresetCategoriesList';
@@ -12,7 +13,6 @@ import { getCategories, createCategory, updateCategory, deleteCategory } from '.
 const Categories = () => {
   // State for categories data (fetched from API)
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // State for type toggles (separate for each section)
@@ -33,15 +33,12 @@ const Categories = () => {
 
   const fetchCategories = async () => {
     try {
-      setLoading(true);
       setError(null);
       const data = await getCategories();
       setCategories(data);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
       setError(err.message || 'Failed to load categories');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -252,43 +249,6 @@ const Categories = () => {
   const activeCategories = getFilteredCategories(true, activeType);
   const inactiveCategories = getFilteredCategories(false, inactiveType);
 
-  // Loading state
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          backgroundColor: theme.colors.background.pageAlt,
-        }}
-      >
-        <NavigationBar />
-        <div
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: theme.spacing[6],
-          }}
-        >
-          <PageHeader
-            title="Categories"
-            subtitle="Manage your income and expense categories"
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              color: theme.colors.text.secondary,
-            }}
-          >
-            Loading categories...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Error state
   if (error) {
     return (
@@ -310,35 +270,7 @@ const Categories = () => {
             title="Categories"
             subtitle="Manage your income and expense categories"
           />
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              gap: theme.spacing[4],
-            }}
-          >
-            <div style={{ color: theme.colors.semantic.expense }}>
-              {error}
-            </div>
-            <button
-              onClick={fetchCategories}
-              style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                backgroundColor: theme.colors.action.primary,
-                color: theme.colors.text.inverse,
-                border: 'none',
-                borderRadius: theme.border.radius.sm,
-                cursor: 'pointer',
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium,
-              }}
-            >
-              Retry
-            </button>
-          </div>
+          <ErrorState error={error} onRetry={fetchCategories} />
         </div>
       </div>
     );

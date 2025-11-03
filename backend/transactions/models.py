@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from month.models import MonthField
@@ -14,7 +15,98 @@ from .constants import (
 def get_current_month():
     return Month.from_date(date.today())
 
+
+class UserManager(BaseUserManager):
+
+    def create_user(self, email, username, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, username, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(email, username, password, **extra_fields)
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(unique=True, max_length=255)
+    username = models.CharField(max_length=150)
+    date_joined = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    class Meta:
+        ordering = ['-date_joined']
+
+    def __str__(self):
+        return self.email
+
+
+class UserPreferences(models.Model):
+    """User preferences for customization"""
+    THEME_CHOICES = [
+        ('light', 'Light'),
+        ('dark', 'Dark'),
+        ('auto', 'Auto'),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='preferences'
+    )
+    default_currency = models.CharField(
+        max_length=3,
+        choices=CURRENCIES,
+        default=DEFAULT_CURRENCY
+    )
+    default_wallet = models.ForeignKey(
+        'Wallet',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+'
+    )
+    theme = models.CharField(
+        max_length=10,
+        choices=THEME_CHOICES,
+        default='light'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = 'User Preferences'
+
+    def __str__(self):
+        return f"{self.user.email} preferences"
+
+
 class Wallet(models.Model):
+    user = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='wallets'
+    )
     name = models.CharField(max_length=100)
     type = models.CharField(
         max_length=15,
@@ -72,6 +164,13 @@ class Category(models.Model):
     Examples: 'Eating out', 'Transportation', 'Salary', 'Investments'
     Categories are user-configurable.
     """
+    user = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='categories'
+    )
     name = models.CharField(max_length=100, unique=True)
     type = models.CharField(
         max_length=10,
@@ -180,23 +279,15 @@ class Transaction(models.Model):
 
         return None
 
-    # @property
-    # def description(self):
-    #     """Alias for description to maintain backward compatibility"""
-    #     return self.description
-
-    # @description.setter
-    # def description(self, value):
-    #     """Alias setter for description to maintain backward compatibility"""
-    #     self.description = value
-
 
 class Budget(models.Model):
     """Budgets are only for expense tracking"""
-    category = models.ForeignKey(
+    name = models.CharField(
+        max_length=100,
+    )
+    categories = models.ManyToManyField(
         Category,
-        on_delete=models.CASCADE,
-        related_name='budgets'
+        related_name='budgets',
     )
     amount = models.DecimalField(
         **MONEY_FIELD_CONFIG,
@@ -225,7 +316,7 @@ class Budget(models.Model):
         ordering = ['-start_month']
 
     def __str__(self):
-        return f"{self.category.name} - {self.get_period_display()} budget"
+        return f"{self.name} - {self.get_period_display()} budget"
 
     @property
     def start_date(self):
@@ -260,12 +351,13 @@ class Budget(models.Model):
         return self.start_date
 
     def spent_amount(self):
-        """Calculate total spent in this budget period"""
+        """Calculate total spent across ALL categories for past/present only"""
+        today = date.today()
         filters = {
             'type': 'expense',
-            'category': self.category,
+            'category__in': self.categories.all(),
             'date__gte': self.start_date,
-            'date__lte': self.end_date,
+            'date__lte': min(self.end_date, today),
         }
 
         spent = Transaction.objects.filter(**filters).aggregate(
@@ -290,6 +382,37 @@ class Budget(models.Model):
         """Check if spending exceeds budget"""
         return self.spent_amount() > self.amount
 
+    def spent_amount_per_category(self):
+        """Return dict of {category_id: spent_amount} for past/present only"""
+        today = date.today()
+        result = {}
+        for category in self.categories.all():
+            spent = Transaction.objects.filter(
+                type='expense',
+                category=category,
+                date__gte=self.start_date,
+                date__lte=min(self.end_date, today)
+            ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0.00')
+            result[category.id] = Decimal(str(spent)).quantize(Decimal('0.01'))
+        return result
+
+    def upcoming_amount(self):
+        """Calculate upcoming (future) spending for this budget period"""
+        today = date.today()
+        if self.end_date <= today:
+            return Decimal('0.00')
+
+        filters = {
+            'type': 'expense',
+            'category__in': self.categories.all(),
+            'date__gt': today,
+            'date__lte': self.end_date,
+        }
+        upcoming = Transaction.objects.filter(**filters).aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+        return Decimal(str(upcoming)).quantize(Decimal('0.01'))
+
     def clean(self):
         from django.core.exceptions import ValidationError
 
@@ -299,20 +422,7 @@ class Budget(models.Model):
                 'amount': 'Amount must be positive.'
             })
 
-        # Prevent duplicate budgets for same category and overlapping periods
-        if self.category and self.start_month:
-            end = self.end_date
-
-            # Find overlapping budgets for the same category
-            overlapping = Budget.objects.filter(
-                category=self.category,
-            ).exclude(pk=self.pk)
-
-            for budget in overlapping:
-                if budget.end_date >= self.start_date and budget.start_date <= end:
-                    raise ValidationError({
-                        'start_month': f'A budget for {self.category.name} already exists for this period.'
-                    })
+        # Overlapping budgets and categories are now allowed - validation removed
 
         # Validate rollover only works with reset
         if self.rollover and not self.reset:
@@ -473,6 +583,13 @@ class Transfer(models.Model):
 
 class WishlistItem(models.Model):
     """Wishlist items for tracking savings goals"""
+    user = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='wishlist_items'
+    )
     description = models.TextField()
     amount = models.DecimalField(
         **MONEY_FIELD_CONFIG,

@@ -5,8 +5,8 @@ import {
   PageHeader,
   WalletCard,
   EmptyState,
+  ErrorState,
   WalletForm,
-  WalletTypeLabel,
 } from '../components';
 import { theme } from '../styles/theme';
 import { getWallets, createWallet, updateWallet, deleteWallet } from '../services/api';
@@ -18,7 +18,6 @@ const Wallets = () => {
   const [showWalletForm, setShowWalletForm] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [wallets, setWallets] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const menuRef = useRef(null);
   const fabRef = useRef(null);
@@ -30,15 +29,12 @@ const Wallets = () => {
 
   const fetchWallets = async () => {
     try {
-      setLoading(true);
       setError(null);
       const data = await getWallets();
       setWallets(data);
     } catch (err) {
       console.error('Failed to fetch wallets:', err);
       setError(err.message || 'Failed to load wallets');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -135,40 +131,6 @@ const Wallets = () => {
 
   const filteredWallets = getFilteredWallets();
 
-  // Loading state
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          backgroundColor: theme.colors.background.pageAlt,
-        }}
-      >
-        <NavigationBar />
-        <main
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: theme.spacing[6],
-          }}
-        >
-          <PageHeader title="Wallets" subtitle="Manage your wallets and wallet types"/>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              color: theme.colors.text.secondary,
-            }}
-          >
-            Loading wallets...
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   // Error state
   if (error) {
     return (
@@ -187,35 +149,7 @@ const Wallets = () => {
           }}
         >
           <PageHeader title="Wallets" subtitle="Manage your wallets and wallet types"/>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              gap: theme.spacing[4],
-            }}
-          >
-            <div style={{ color: theme.colors.semantic.expense }}>
-              {error}
-            </div>
-            <button
-              onClick={fetchWallets}
-              style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                backgroundColor: theme.colors.action.primary,
-                color: theme.colors.text.inverse,
-                border: 'none',
-                borderRadius: theme.border.radius.sm,
-                cursor: 'pointer',
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium,
-              }}
-            >
-              Retry
-            </button>
-          </div>
+          <ErrorState error={error} onRetry={fetchWallets} />
         </main>
       </div>
     );
@@ -245,19 +179,35 @@ const Wallets = () => {
         <div
           style={{
             display: 'flex',
-            flexDirection: 'row',
-            gap: theme.spacing[3],
+            gap: theme.spacing[2],
             marginBottom: theme.spacing[6],
             flexWrap: 'wrap',
           }}
         >
           {walletTypes.map((type) => (
-            <WalletTypeLabel
+            <button
               key={type}
-              type={type}
-              isActive={selectedType === type.toLowerCase()}
               onClick={() => handleTypeFilterClick(type)}
-            />
+              style={{
+                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
+                borderRadius: theme.border.radius.sm,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: theme.typography.fontSize.sm,
+                fontWeight: theme.typography.fontWeight.medium,
+                transition: theme.transitions.fast,
+                backgroundColor:
+                  selectedType === type.toLowerCase()
+                    ? theme.colors.text.primary
+                    : theme.colors.background.cardHover,
+                color:
+                  selectedType === type.toLowerCase()
+                    ? theme.colors.text.inverse
+                    : theme.colors.text.secondary,
+              }}
+            >
+              {type}
+            </button>
           ))}
         </div>
 

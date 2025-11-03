@@ -1,59 +1,70 @@
+import { DEFAULT_CURRENCY, CURRENCY_MAP, DEFAULT_LOCALE } from '../constants';
+
+// Cache for Intl.NumberFormat instances (performance optimization)
+const formatters = {};
+
 /**
  * Get currency symbol for a given currency code
- * @param {string} currency - Currency code (USD, EUR, GBP, etc.)
+ * @param {string} currencyCode - Currency code (EUR, USD, GBP, etc.)
  * @returns {string} Currency symbol
  */
-export const getCurrencySymbol = (currency) => {
-  const symbols = {
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    JPY: '¥',
-    CHF: 'Fr',
-    CAD: 'C$',
-    AUD: 'A$',
-    CNY: '¥',
-    INR: '₹',
-    RUB: '₽',
-    BRL: 'R$',
-    ZAR: 'R',
-    MXN: '$',
-    SEK: 'kr',
-    NOK: 'kr',
-    DKK: 'kr',
-    PLN: 'zł',
-    TRY: '₺',
-    KRW: '₩',
-    THB: '฿',
-  };
-
-  return symbols[currency] || currency;
+export const getCurrencySymbol = (currencyCode) => {
+  return CURRENCY_MAP[currencyCode]?.symbol || currencyCode;
 };
 
 /**
- * Format a number as currency
+ * Format amount as currency using Intl.NumberFormat
+ * Handles all formatting automatically: decimal places, thousands separators, sign, symbol placement
+ *
  * @param {number|string} amount - Amount to format
- * @param {string} currency - Currency code (default: 'USD')
- * @returns {string} Formatted currency string
+ * @param {string} currency - Currency code (default: DEFAULT_CURRENCY)
+ * @returns {string} Formatted currency string (e.g., "€1,234.56", "$1,234.56", "¥1,235")
+ *
  */
-export const formatCurrency = (amount, currency = 'EUR') => {
+export const formatAmount = (amount, currency = DEFAULT_CURRENCY) => {
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
 
+  // Handle invalid amounts
   if (isNaN(numAmount)) {
-    return `${getCurrencySymbol(currency)}0.00`;
+    console.warn(`formatAmount: Invalid amount "${amount}", defaulting to 0`);
+    return formatAmount(0, currency);
   }
 
-  const symbol = getCurrencySymbol(currency);
-  const formattedAmount = Math.abs(numAmount).toFixed(2);
-  const parts = formattedAmount.split('.');
+  // Get or create cached formatter for this currency
+  if (!formatters[currency]) {
+    const currencyConfig = CURRENCY_MAP[currency];
 
-  // Add thousands separators
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (!currencyConfig) {
+      console.warn(`formatAmount: Unsupported currency "${currency}", using DEFAULT_CURRENCY`);
+      return formatAmount(numAmount, DEFAULT_CURRENCY);
+    }
 
-  const sign = numAmount < 0 ? '-' : '';
+    const locale = DEFAULT_LOCALE === '' ? currencyConfig.locale : DEFAULT_LOCALE;
+    const decimals = currencyConfig.decimals ?? 2;
 
-  return `${sign}${symbol}${parts.join('.')}`;
+    try {
+      formatters[currency] = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
+    } catch (error) {
+      console.error(`formatAmount: Error creating formatter for ${currency}:`, error);
+      // Fallback to manual formatting
+      const symbol = getCurrencySymbol(currency);
+      return `${symbol}${numAmount.toFixed(decimals)}`;
+    }
+  }
+
+  return formatters[currency].format(numAmount);
 };
+
+/**
+ * Legacy alias for backward compatibility
+ * @deprecated Use formatAmount instead
+ */
+export const formatCurrency = formatAmount;
 
 /**
  * Format a date string or Date object

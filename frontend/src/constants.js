@@ -7,20 +7,25 @@ import {
   Paintbrush, PaintbrushVertical, Palette, Brush, Stamp, SwatchBook, Binoculars, Book, BookOpen, BookOpenText, Box, Folder, Gem, LibraryBig, Keyboard, Package, 
   PackageOpen, Plug, Plug2, Puzzle, Rocket, Scroll, ScrollText, Telescope, Unplug, AlarmClock, Drill, Drum, Laptop, LaptopMinimal, Piano, Printer, Toilet, Wallpaper, 
   BicepsFlexed, HandFist, HandMetal, Heart, HeartCrack, Laugh, LeafyGreen, PartyPopper, Ribbon, Salad, Archive, Music, Music2, Banknote, BanknoteArrowDown, BanknoteArrowUp, 
-  Bitcoin, PiggyBank, Receipt, ReceiptEuro, ReceiptText, ReceiptPoundSterling, Amphora, Apple, Banana, Barrel, Bean, Beef, Beer, BottleWine, CakeSlice, Candy, Carrot, ChefHat, 
-  Cherry, Citrus, Coffee, CookingPot, Croissant, CupSoda, Dessert, Drumstick, EggFried, GlassWater, Grape, Ham, Hamburger, HandPlatter, Hop, IceCreamCone, Martini, 
+  Bitcoin, PiggyBank, Receipt, ReceiptEuro, ReceiptText, ReceiptPoundSterling, Amphora, Apple, Banana, Barrel, Bean, Beef, Beer, BottleWine, CakeSlice, Candy, CandyCane, Carrot, ChefHat, 
+  Cherry, Citrus, Coffee, CookingPot, Croissant, CupSoda, Dessert, Drumstick, EggFried, GlassWater, Grape, Ham, Hamburger, HandPlatter, Hop, IceCreamBowl, IceCreamCone, Martini, 
   Microwave, Milk, Nut, Pizza, Popcorn, Popsicle, Refrigerator, Sandwich, Soup, Tractor, Utensils, UtensilsCrossed, Vegan, Wheat, Wine, Anvil, Axe, Backpack, BowArrow, Clover, 
   Dices, Feather, Flame, FlameKindling, FlaskConical, Flower, Gamepad2, Ghost, Mountain, Pickaxe, Signpost, Spade, Sprout, Sword, ToyBrick, Trophy, Volleyball, AirVent, 
   Armchair, Bed, BedDouble, BedSingle, DoorClosed, DoorOpen, Fan, Hammer, Heater, Lamp, LampCeiling, LampFloor, LampDesk, RockingChair, Rose, ShowerHead, 
   ToolCase, WashingMachine, WavesLadder, MailOpen, Mailbox, Mails, Trash, Cone, Pyramid, Weight, Ambulance, Bandage, BriefcaseMedical, Cigarette, Ear, HeartPulse, Microscope, 
-  Pill, PillBottle, Stethoscope, Syringe, Brain, Antenna, Drama, Film, Guitar, Image, Megaphone, MicVocal, Youtube, Cannabis, Caravan, Flower2, MountainSnow, Shovel, Shrub, Tent, 
+  Pill, PillBottle, Stethoscope, Syringe, Brain, BrainCircuit, Antenna, Drama, Film, Guitar, Image, Megaphone, MicVocal, Youtube, Cannabis, Caravan, Flower2, MountainSnow, Shovel, Shrub, Tent, 
   TentTree, TreePalm, TreePine, Trees, Dumbbell, Earth, EvCharger, FerrisWheel, Fuel, Gavel, Globe, Map, Pin, Scale, Ship, ShipWheel, TrainFrontTunnel, TrainTrack, 
   Instagram, Lightbulb, Atom, Gauge, Pipette, Satellite, TestTubeDiagonal, Snowflake, Club, Cross, Cuboid, Triangle, Octagon, Shapes, Pentagon, Handbag, Shirt, ShoppingBag, 
-  ShoppingBasket, ShoppingCart, TicketPercent, NotebookText, Rss, Medal, Recycle, Wind, Clipboard, BookMarked, Sheet, Watch, BaggageClaim, Bike, Briefcase, BriefcaseBusiness, 
+  ShoppingBasket, ShoppingCart, TicketPercent, NotebookText, Rss, Medal, Recycle, Wind, Clipboard, BookMarked, Sheet, Shell, Watch, BaggageClaim, Bike, Briefcase, BriefcaseBusiness, 
   BriefcaseConveyorBelt, Bus, BusFront, CableCar, Car, CarFront, CarTaxiFront, ParkingCircle, ParkingSquare, Container, Forklift, Luggage, Motorbike, Plane, PlaneLanding, 
   PlaneTakeoff, Sailboat, Tickets, TicketsPlane, TrafficCone, TrainFront, TramFront, Truck, Bath, ConciergeBell, MapPinned, Bubbles, Cloud, CloudRain, Droplets, Rainbow, 
-  Thermometer, ThermometerSnowflake, ThermometerSun, Umbrella, Tablet, Train, DollarSign, Activity, Droplet
+  Thermometer, ThermometerSnowflake, ThermometerSun, Umbrella, Tablet, Train, DollarSign, Activity, Droplet, Calculator, RectangleGoggles
 } from 'lucide-react';
+
+// Default currency (TODO: User configurable)
+export const DEFAULT_CURRENCY = 'EUR';
+// Default locale (TODO: User configurable)
+export const DEFAULT_LOCALE = 'en-US';
 
 // Preset categories for Dough expense tracker
 export const PRESET_CATEGORIES = {
@@ -53,6 +58,7 @@ export const PRESET_CATEGORIES = {
     { name: 'Appliances', icon: Refrigerator, iconName: 'Refrigerator' },
     { name: 'Healthcare', icon: Hospital, iconName: 'Hospital' },
     { name: 'Medication', icon: Pill, iconName: 'Pill' },
+    { name: 'Therapy & Counseling', icon: Brain, iconName: 'Brain' },
     { name: 'Fitness', icon: Dumbbell, iconName: 'Dumbbell' },
     { name: 'Education', icon: GraduationCap, iconName: 'GraduationCap' },
     { name: 'Personal Care', icon: Sparkles, iconName: 'Sparkles' },
@@ -73,13 +79,13 @@ export const PRESET_CATEGORIES = {
     { name: 'Insurance', icon: Shield, iconName: 'Shield' },
     { name: 'Taxes', icon: Receipt, iconName: 'Receipt' },
     { name: 'Mortgage', icon: Landmark, iconName: 'Landmark' },
-    { name: 'Student Loan', icon: University, iconName: 'University' },
+    { name: 'Student Loan', icon: School, iconName: 'School' },
     { name: 'Donations', icon: HandCoins, iconName: 'HandCoins' },
     { name: 'Legal Services', icon: Stamp, iconName: 'Stamp' },
     { name: 'Other Expenses', icon: Folder, iconName: 'Folder' },
   ],
   income: [
-    { name: 'Salary', icon: Briefcase, iconName: 'Briefcase' },
+    { name: 'Salary', icon: Banknote, iconName: 'Banknote' },
     { name: 'Freelance', icon: Laptop, iconName: 'Laptop' },
     { name: 'Business', icon: BriefcaseBusiness, iconName: 'BriefcaseBusiness' },
     { name: 'Investments', icon: ChartNoAxesCombined, iconName: 'ChartNoAxesCombined' },
@@ -136,6 +142,7 @@ export const ICON_MAP = {
 'BowArrow': BowArrow,
 'Box': Box,
 'Brain': Brain,
+'BrainCircuit': BrainCircuit,
 'BrickWall': BrickWall,
 'Briefcase': Briefcase,
 'BriefcaseBusiness': BriefcaseBusiness,
@@ -152,8 +159,10 @@ export const ICON_MAP = {
 'CableCar': CableCar,
 'Cake': Cake,
 'CakeSlice': CakeSlice,
+'Calculator': Calculator,
 'Camera': Camera,
 'Candy': Candy,
+'CandyCane': CandyCane,
 'Cannabis': Cannabis,
 'Car': Car,
 'CarFront': CarFront,
@@ -253,6 +262,7 @@ export const ICON_MAP = {
 'HouseHeart': HouseHeart,
 'HousePlug': HousePlug,
 'HouseWifi': HouseWifi,
+'IceCreamBowl': IceCreamBowl,
 'IceCreamCone': IceCreamCone,
 'Image': Image,
 'Instagram': Instagram,
@@ -343,6 +353,7 @@ export const ICON_MAP = {
 'ReceiptEuro': ReceiptEuro,
 'ReceiptPoundSterling': ReceiptPoundSterling,
 'ReceiptText': ReceiptText,
+'RectangleGoggles': RectangleGoggles,
 'Recycle': Recycle,
 'Refrigerator': Refrigerator,
 'Ribbon': Ribbon,
@@ -363,6 +374,7 @@ export const ICON_MAP = {
 'ScrollText': ScrollText,
 'Shapes': Shapes,
 'Sheet': Sheet,
+'Shell': Shell,
 'Shield': Shield,
 'Ship': Ship,
 'ShipWheel': ShipWheel,
@@ -458,38 +470,126 @@ export const getIconComponent = (iconName) => {
   return ICON_MAP[iconName] || Folder; // Default to Folder if not found
 };
 
-// Common currencies for currency picker
-export const CURRENCIES = [
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-  { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
-  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
-  { code: 'BRL', name: 'Brazilian Real', symbol: 'R$' },
-  { code: 'MXN', name: 'Mexican Peso', symbol: '$' },
-  { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
-  { code: 'SEK', name: 'Swedish Krona', symbol: 'kr' },
-  { code: 'NOK', name: 'Norwegian Krone', symbol: 'kr' },
-  { code: 'DKK', name: 'Danish Krone', symbol: 'kr' },
-  { code: 'PLN', name: 'Polish Zloty', symbol: 'zł' },
-  { code: 'RUB', name: 'Russian Ruble', symbol: '₽' },
-  { code: 'TRY', name: 'Turkish Lira', symbol: '₺' },
-  { code: 'KRW', name: 'South Korean Won', symbol: '₩' },
-  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
-  { code: 'HKD', name: 'Hong Kong Dollar', symbol: 'HK$' },
-  { code: 'NZD', name: 'New Zealand Dollar', symbol: 'NZ$' },
-  { code: 'THB', name: 'Thai Baht', symbol: '฿' },
-  { code: 'MYR', name: 'Malaysian Ringgit', symbol: 'RM' },
-  { code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp' },
-  { code: 'PHP', name: 'Philippine Peso', symbol: '₱' },
-  { code: 'CZK', name: 'Czech Koruna', symbol: 'Kč' },
-  { code: 'HUF', name: 'Hungarian Forint', symbol: 'Ft' },
-  { code: 'ILS', name: 'Israeli Shekel', symbol: '₪' },
-  { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
-];
+// Currency Map - Single source of truth for all currency metadata
+// IMPORTANT: Must match backend /transactions/constants.py CURRENCIES
+// Only these 15 currencies are supported by the backend
+export const CURRENCY_MAP = {
+  EUR: {
+    code: 'EUR',
+    name: 'Euro',
+    symbol: '€',
+    locale: 'de-DE',
+    decimals: 2
+  },
+  USD: {
+    code: 'USD',
+    name: 'US Dollar',
+    symbol: '$',
+    locale: 'en-US',
+    decimals: 2
+  },
+  GBP: {
+    code: 'GBP',
+    name: 'British Pound',
+    symbol: '£',
+    locale: 'en-GB',
+    decimals: 2
+  },
+  JPY: {
+    code: 'JPY',
+    name: 'Japanese Yen',
+    symbol: '¥',
+    locale: 'ja-JP',
+    decimals: 0  
+  },
+  CHF: {
+    code: 'CHF',
+    name: 'Swiss Franc',
+    symbol: 'Fr',
+    locale: 'de-CH',
+    decimals: 2
+  },
+  CAD: {
+    code: 'CAD',
+    name: 'Canadian Dollar',
+    symbol: 'C$',
+    locale: 'en-CA',
+    decimals: 2
+  },
+  AUD: {
+    code: 'AUD',
+    name: 'Australian Dollar',
+    symbol: 'A$',
+    locale: 'en-AU',
+    decimals: 2
+  },
+  CNY: {
+    code: 'CNY',
+    name: 'Chinese Yuan',
+    symbol: '¥',
+    locale: 'zh-CN',
+    decimals: 2
+  },
+  INR: {
+    code: 'INR',
+    name: 'Indian Rupee',
+    symbol: '₹',
+    locale: 'en-IN',
+    decimals: 2
+  },
+  SEK: {
+    code: 'SEK',
+    name: 'Swedish Krona',
+    symbol: 'kr',
+    locale: 'sv-SE',
+    decimals: 2
+  },
+  NOK: {
+    code: 'NOK',
+    name: 'Norwegian Krone',
+    symbol: 'kr',
+    locale: 'nb-NO',
+    decimals: 2
+  },
+  DKK: {
+    code: 'DKK',
+    name: 'Danish Krone',
+    symbol: 'kr',
+    locale: 'da-DK',
+    decimals: 2
+  },
+  PLN: {
+    code: 'PLN',
+    name: 'Polish Zloty',
+    symbol: 'zł',
+    locale: 'pl-PL',
+    decimals: 2
+  },
+  CZK: {
+    code: 'CZK',
+    name: 'Czech Koruna',
+    symbol: 'Kč',
+    locale: 'cs-CZ',
+    decimals: 2
+  },
+  HUF: {
+    code: 'HUF',
+    name: 'Hungarian Forint',
+    symbol: 'Ft',
+    locale: 'hu-HU',
+    decimals: 2
+  },
+  SGD: {
+    code: 'SGD',
+    name: 'Singapore Dollar',
+    symbol: 'S$',
+    locale: 'en-SG',
+    decimals: 2
+  }
+};
+
+// Export as array for currency picker components
+// Only includes currencies supported by backend
+export const CURRENCIES = Object.values(CURRENCY_MAP);
 
 export default PRESET_CATEGORIES;

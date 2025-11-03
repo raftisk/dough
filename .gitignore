@@ -88,5 +88,6 @@ frontend/.env.development.local
 frontend/.env.test.local
 frontend/.env.production.local
 
-# miscellaneous #
-ideas.md
+# Markdown #
+*.md
+!README.md

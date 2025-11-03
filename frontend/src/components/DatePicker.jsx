@@ -173,7 +173,7 @@ const DatePicker = ({ date, onDateChange, placeholder = 'Select date' }) => {
           }}
         >
           {/* Calendar Header */}
-          <div
+          {<div
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -246,7 +246,7 @@ const DatePicker = ({ date, onDateChange, placeholder = 'Select date' }) => {
             >
               <ChevronRight size={20} color={theme.colors.text.primary} />
             </button>
-          </div>
+          </div>}
 
           {/* Day Names */}
           <div

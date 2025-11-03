@@ -2,12 +2,12 @@
 export { default as NavigationBar } from './NavigationBar';
 export { default as PageHeader } from './PageHeader';
 export { default as MetricCard } from './MetricCard';
-export { default as BudgetCard } from './BudgetCard';
 export { default as TransactionListItem } from './TransactionListItem';
 export { default as WalletCard } from './WalletCard';
 export { default as CategoryCard } from './CategoryCard';
 export { default as CategoryListItem } from './CategoryListItem';
 export { default as EmptyState } from './EmptyState';
+export { default as ErrorState } from './ErrorState';
 export { default as FilterBar } from './FilterBar';
 export { default as TransactionSummary } from './TransactionSummary';
 export { default as FloatingActionButton } from './FloatingActionButton';

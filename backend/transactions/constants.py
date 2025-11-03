@@ -9,7 +9,7 @@ CURRENCIES = [
     ('USD', 'US Dollar ($)'),
     ('GBP', 'British Pound (£)'),
     ('JPY', 'Japanese Yen (¥)'),
-    ('CHF', 'Swiss Franc (CHF)'),
+    ('CHF', 'Swiss Franc (Fr)'),
     ('CAD', 'Canadian Dollar (C$)'),
     ('AUD', 'Australian Dollar (A$)'),
     ('CNY', 'Chinese Yuan (¥)'),
@@ -82,7 +82,7 @@ CURRENCY_SYMBOLS = {
     'USD': '$',
     'GBP': '£',
     'JPY': '¥',
-    'CHF': 'CHF',
+    'CHF': 'Fr',
     'CAD': 'C$',
     'AUD': 'A$',
     'CNY': '¥',
@@ -93,6 +93,7 @@ CURRENCY_SYMBOLS = {
     'PLN': 'zł',
     'CZK': 'Kč',
     'HUF': 'Ft',
+    'SGD': 'S$',
 }
 
 

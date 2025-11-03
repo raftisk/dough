@@ -6,6 +6,7 @@ import {
   TransactionSummary,
   TransactionListItem,
   EmptyState,
+  ErrorState,
   FloatingActionButton,
   TransactionForm,
   UpcomingTransactionsList,
@@ -35,7 +36,6 @@ const Transactions = () => {
   const [upcomingTransactions, setUpcomingTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [wallets, setWallets] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   // Get current month's date range as default
   const getCurrentMonthRange = () => {
@@ -73,7 +73,6 @@ const Transactions = () => {
 
   const fetchData = async () => {
     try {
-      setLoading(true);
       setError(null);
       const [transactionsData, transfersData, upcomingData, categoriesData, walletsData] = await Promise.all([
         getTransactions(),
@@ -90,8 +89,6 @@ const Transactions = () => {
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError(err.message || 'Failed to load data');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -293,39 +290,6 @@ const Transactions = () => {
     }
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          backgroundColor: theme.colors.background.pageAlt,
-        }}
-      >
-        <NavigationBar />
-        <div
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: theme.spacing[6],
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              color: theme.colors.text.secondary,
-            }}
-          >
-            Loading transactions...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Error state
   if (error) {
     return (
@@ -343,35 +307,11 @@ const Transactions = () => {
             padding: theme.spacing[6],
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              gap: theme.spacing[4],
-            }}
-          >
-            <div style={{ color: theme.colors.semantic.expense }}>
-              {error}
-            </div>
-            <button
-              onClick={fetchData}
-              style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                backgroundColor: theme.colors.action.primary,
-                color: theme.colors.text.inverse,
-                border: 'none',
-                borderRadius: theme.border.radius.sm,
-                cursor: 'pointer',
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium,
-              }}
-            >
-              Retry
-            </button>
-          </div>
+          <PageHeader
+            title="Transactions"
+            subtitle="Track all your income, expenses, and transfers"
+          />
+          <ErrorState error={error} onRetry={fetchData} />
         </div>
       </div>
     );

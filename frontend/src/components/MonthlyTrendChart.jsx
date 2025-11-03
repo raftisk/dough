@@ -9,14 +9,15 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { theme } from '../../styles/theme';
-import { formatCurrency } from '../../utils/format';
+import { theme } from '../styles/theme';
+import { formatAmount, getCurrencySymbol } from '../utils/format';
+import { DEFAULT_CURRENCY } from '../constants';
 
 /**
  * Custom tooltip component for the monthly trend chart
  * Shows detailed breakdown of income, expenses, and net savings
  */
-const CustomTooltip = ({ active, payload }) => {
+const CustomTooltip = ({ active, payload, currency = DEFAULT_CURRENCY }) => {
   if (!active || !payload || payload.length === 0) {
     return null;
   }
@@ -84,7 +85,7 @@ const CustomTooltip = ({ active, payload }) => {
             marginLeft: theme.spacing[3],
           }}
         >
-          {formatCurrency(income)}
+          {formatAmount(income, currency)}
         </span>
       </div>
 
@@ -113,7 +114,7 @@ const CustomTooltip = ({ active, payload }) => {
             marginLeft: theme.spacing[3],
           }}
         >
-          {formatCurrency(expenses)}
+          {formatAmount(expenses, currency)}
         </span>
       </div>
 
@@ -144,8 +145,7 @@ const CustomTooltip = ({ active, payload }) => {
             marginLeft: theme.spacing[3],
           }}
         >
-          {netSavings >= 0 ? '+' : ''}
-          {formatCurrency(netSavings)}
+          {formatAmount(netSavings, currency)}
         </span>
       </div>
     </div>
@@ -155,6 +155,7 @@ const CustomTooltip = ({ active, payload }) => {
 CustomTooltip.propTypes = {
   active: PropTypes.bool,
   payload: PropTypes.array,
+  currency: PropTypes.string,
 };
 
 /**
@@ -163,7 +164,7 @@ CustomTooltip.propTypes = {
  * Displays monthly financial trends as smooth line charts showing income and expenses.
  * Uses invisible bars to create hover zones for better UX.
  */
-const MonthlyTrendChart = ({ data, loading, error }) => {
+const MonthlyTrendChart = ({ data, currency = DEFAULT_CURRENCY, loading, error }) => {
   // Format data for Recharts
   const chartData = data.map((item) => ({
     month: item.month,
@@ -184,10 +185,11 @@ const MonthlyTrendChart = ({ data, loading, error }) => {
 
   // Format tick for Y-axis (currency)
   const formatYAxis = (value) => {
-    if (value >= 1000) {
-      return `€${(value / 1000).toFixed(1)}k`;
+    const currencySymbol = getCurrencySymbol(currency);
+    if (Math.abs(value) >= 1000) {
+      return `${currencySymbol}${(value / 1000).toFixed(1)}k`;
     }
-    return `€${value.toLocaleString()}`;
+    return formatAmount(value, currency);
   };
 
   if (loading) {
@@ -293,7 +295,7 @@ const MonthlyTrendChart = ({ data, loading, error }) => {
             The cursor creates the "bar-like" hover effect over entire month width
           */}
           <Tooltip
-            content={<CustomTooltip />}
+            content={<CustomTooltip currency={currency} />}
             cursor={{
               fill: '#f3f4f6',
               opacity: 0.6,
@@ -354,11 +356,13 @@ MonthlyTrendChart.propTypes = {
       net_savings: PropTypes.string.isRequired,
     })
   ).isRequired,
+  currency: PropTypes.string,
   loading: PropTypes.bool,
   error: PropTypes.string,
 };
 
 MonthlyTrendChart.defaultProps = {
+  currency: DEFAULT_CURRENCY,
   loading: false,
   error: null,
 };

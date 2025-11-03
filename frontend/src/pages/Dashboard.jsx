@@ -3,7 +3,6 @@ import { TrendingUp, TrendingDown, PiggyBank, Wallet } from 'lucide-react';
 import NavigationBar from '../components/NavigationBar';
 import PageHeader from '../components/PageHeader';
 import MetricCard from '../components/MetricCard';
-import BudgetCard from '../components/BudgetCard';
 import TransactionListItem from '../components/TransactionListItem';
 import WalletCard from '../components/WalletCard';
 import CategoryCard from '../components/CategoryCard';
@@ -11,17 +10,18 @@ import FloatingActionButton from '../components/FloatingActionButton';
 import TransactionForm from '../components/TransactionForm';
 import TransferForm from '../components/TransferForm';
 import CalendarView from '../components/CalendarView';
+import ErrorState from '../components/ErrorState';
 import { theme } from '../styles/theme';
 import { getCurrentMonthYear } from '../utils/date';
 import { getDashboardData, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction, createTransfer, updateTransfer, deleteTransfer } from '../services/api';
-import { getIconComponent } from '../constants';
+import { getIconComponent, DEFAULT_CURRENCY } from '../constants';
+import { formatAmount } from '../utils/format';
 
 function Dashboard() {
   // State management
   const [dashboardData, setDashboardData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [wallets, setWallets] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   // Transaction form states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -38,7 +38,6 @@ function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
       setError(null);
       const [dashData, categoriesData, walletsData] = await Promise.all([
         getDashboardData(),
@@ -51,8 +50,6 @@ function Dashboard() {
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
       setError(err.message || 'Failed to load dashboard');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -207,43 +204,6 @@ function Dashboard() {
     setIsFormOpen(true);
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          backgroundColor: theme.colors.background.pageAlt,
-        }}
-      >
-        <NavigationBar />
-        <div
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: theme.spacing[6],
-          }}
-        >
-          <PageHeader
-            title={getCurrentMonthYear()}
-            subtitle="Overview of your finances"
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              color: theme.colors.text.secondary,
-            }}
-          >
-            Loading dashboard...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Error state
   if (error) {
     return (
@@ -265,35 +225,7 @@ function Dashboard() {
             title={getCurrentMonthYear()}
             subtitle="Overview of your finances"
           />
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: theme.spacing[8],
-              gap: theme.spacing[4],
-            }}
-          >
-            <div style={{ color: theme.colors.semantic.expense }}>
-              {error}
-            </div>
-            <button
-              onClick={fetchDashboardData}
-              style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                backgroundColor: theme.colors.action.primary,
-                color: theme.colors.text.inverse,
-                border: 'none',
-                borderRadius: theme.border.radius.sm,
-                cursor: 'pointer',
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium,
-              }}
-            >
-              Retry
-            </button>
-          </div>
+          <ErrorState error={error} onRetry={fetchDashboardData} />
         </div>
       </div>
     );
@@ -339,21 +271,21 @@ function Dashboard() {
           >
             <MetricCard
               label="Total Income"
-              value={`€${parseFloat(dashboardData.current_month_income).toFixed(2)}`}
+              value={formatAmount(parseFloat(dashboardData.current_month_income), DEFAULT_CURRENCY)}
               icon={TrendingUp}
               iconColor={theme.colors.semantic.income}
               subtitle={`${dashboardData.transaction_count} transaction${dashboardData.transaction_count !== 1 ? 's' : ''} this month`}
             />
             <MetricCard
               label="Total Expenses"
-              value={`€${parseFloat(dashboardData.current_month_expenses).toFixed(2)}`}
+              value={formatAmount(parseFloat(dashboardData.current_month_expenses), DEFAULT_CURRENCY)}
               icon={TrendingDown}
               iconColor={theme.colors.semantic.expense}
               subtitle={`${dashboardData.transaction_count} transaction${dashboardData.transaction_count !== 1 ? 's' : ''} this month`}
             />
             <MetricCard
               label="Net Savings"
-              value={`€${parseFloat(dashboardData.net_savings).toFixed(2)}`}
+              value={formatAmount(parseFloat(dashboardData.net_savings), DEFAULT_CURRENCY)}
               icon={PiggyBank}
               iconColor={theme.colors.text.secondary}
               subtitle={
@@ -364,7 +296,7 @@ function Dashboard() {
             />
             <MetricCard
               label="Total Wealth"
-              value={`€${parseFloat(dashboardData.total_balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={formatAmount(parseFloat(dashboardData.total_balance), DEFAULT_CURRENCY)}
               icon={Wallet}
               iconColor={theme.colors.text.secondary}
               subtitle={`Across ${dashboardData.wallet_count} wallets`}
@@ -373,41 +305,6 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* Budget Cards Section */}
-        <section style={{ marginBottom: theme.spacing[8] }}>
-          <h2
-            style={{
-              fontSize: theme.typography.fontSize.xl,
-              fontWeight: theme.typography.fontWeight.semibold,
-              color: theme.colors.text.primary,
-              marginBottom: theme.spacing[4],
-            }}
-          >
-            Budgets
-          </h2>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: theme.spacing[4],
-            }}
-          >
-            {dashboardData.budget_summary && dashboardData.budget_summary.length > 0 ? (
-              dashboardData.budget_summary.map((budget) => (
-                <BudgetCard
-                  key={budget.id}
-                  budget={budget}
-                  onEdit={handleEditBudget}
-                  onDelete={handleDeleteBudget}
-                />
-              ))
-            ) : (
-              <div style={{ color: theme.colors.text.secondary, padding: theme.spacing[4] }}>
-                No budgets configured
-              </div>
-            )}
-          </div>
-        </section>
 
         {/* Transaction Items Section */}
         <section style={{ marginBottom: theme.spacing[8] }}>

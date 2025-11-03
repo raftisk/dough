@@ -250,7 +250,15 @@ const TransferForm = ({
                   fontSize: theme.typography.fontSize.base,
                   color: theme.colors.text.primary,
                   backgroundColor: theme.colors.background.card,
+                  outline: 'none',
+                  transition: theme.transitions.base,
                 }}
+                onFocus={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
+                  }}
               />
               {errors.description && (
                 <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
@@ -303,6 +311,18 @@ const TransferForm = ({
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
                     backgroundColor: theme.colors.background.card,
+                    outline: 'none',
+                    transition: theme.transitions.base,
+                  }}
+                  onFocus={(e) => {
+                    if (!errors.amount) {
+                      e.currentTarget.style.borderColor = theme.colors.text.primary;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.amount) {
+                      e.currentTarget.style.borderColor = theme.colors.border.medium;
+                    }
                   }}
                 />
               </div>
@@ -334,15 +354,21 @@ const TransferForm = ({
                     width: '100%',
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
                     paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                      errors.from_wallet ? theme.colors.semantic.expense : theme.colors.border.medium
-                    }`,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
                     borderRadius: theme.border.radius.base,
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
                     backgroundColor: theme.colors.background.card,
                     cursor: 'pointer',
                     appearance: 'none',
+                    outline: 'none',
+                    transition: theme.transitions.base,
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
                   }}
                 >
                   {wallets.map((wallet) => (
@@ -391,15 +417,21 @@ const TransferForm = ({
                     width: '100%',
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
                     paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                      errors.to_wallet ? theme.colors.semantic.expense : theme.colors.border.medium
-                    }`,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
                     borderRadius: theme.border.radius.base,
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
                     backgroundColor: theme.colors.background.card,
                     cursor: 'pointer',
                     appearance: 'none',
+                    outline: 'none',
+                    transition: theme.transitions.base,
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
                   }}
                 >
                   {wallets.map((wallet) => (

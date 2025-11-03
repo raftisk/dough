@@ -1,28 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { X } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
-import { getIconComponent } from '../constants';
+import { getIconComponent, DEFAULT_CURRENCY } from '../constants';
+import { getCurrencySymbol } from '../utils/format';
 
 const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
-  const [categoryId, setCategoryId] = useState('');
+  const [name, setName] = useState('');
+  const [categoryIds, setCategoryIds] = useState([]);
   const [amount, setAmount] = useState('');
   const [period, setPeriod] = useState('monthly');
   const [reset, setReset] = useState(true);
   const [rollover, setRollover] = useState(false);
   const [error, setError] = useState('');
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const categoriesDropdownRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && initialData) {
       // Edit mode - populate form
-      setCategoryId(initialData.category || '');
+      setName(initialData.name || '');
+      setCategoryIds(initialData.categories || []);
       setAmount(initialData.amount || '');
       setPeriod(initialData.period || 'monthly');
       setReset(initialData.reset !== undefined ? initialData.reset : true);
       setRollover(initialData.rollover || false);
     } else if (isOpen) {
       // Create mode - reset form
-      setCategoryId('');
+      setName('');
+      setCategoryIds([]);
       setAmount('');
       setPeriod('monthly');
       setReset(true);
@@ -31,13 +37,37 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
     }
   }, [isOpen, initialData]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isCategoriesOpen && categoriesDropdownRef.current && !categoriesDropdownRef.current.contains(event.target)) {
+        setIsCategoriesOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isCategoriesOpen]);
+
+  const handleCategoryToggle = (categoryId) => {
+    if (categoryIds.includes(categoryId)) {
+      setCategoryIds(categoryIds.filter((id) => id !== categoryId));
+    } else {
+      setCategoryIds([...categoryIds, categoryId]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     // Validation
-    if (!categoryId) {
-      setError('Please select a category');
+    if (!name.trim()) {
+      setError('Please enter a budget name');
+      return;
+    }
+    if (categoryIds.length === 0) {
+      setError('Please select at least one category');
       return;
     }
     if (!amount || parseFloat(amount) <= 0) {
@@ -52,7 +82,8 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
     }
 
     const payload = {
-      category: parseInt(categoryId),
+      name: name.trim(),
+      categories: categoryIds.map(id => parseInt(id)),
       amount: parseFloat(amount),
       period: period,
       reset: reset,
@@ -151,7 +182,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
             </div>
           )}
 
-          {/* Category Dropdown */}
+          {/* Budget Name */}
           <div style={{ marginBottom: theme.spacing[4] }}>
             <label
               style={{
@@ -162,11 +193,12 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                 marginBottom: theme.spacing[1],
               }}
             >
-              Category
+              Budget Name
             </label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               style={{
                 width: '100%',
                 padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
@@ -175,17 +207,129 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                 borderRadius: theme.border.radius.base,
                 fontSize: theme.typography.fontSize.base,
                 color: theme.colors.text.primary,
-                cursor: 'pointer',
+                outline: 'none',
+                transition: theme.transitions.base,
               }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = theme.colors.text.primary;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = theme.colors.border.medium;
+              }}
+              placeholder="e.g., Monthly Essentials, Entertainment"
               required
+            />
+          </div>
+
+          {/* Categories Dropdown with Checkboxes */}
+          <div style={{ marginBottom: theme.spacing[4] }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: theme.typography.fontSize.sm,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.text.primary,
+                marginBottom: theme.spacing[1],
+              }}
             >
-              <option value="">Select category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              Categories
+            </label>
+            <div style={{ position: 'relative' }} ref={categoriesDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
+                style={{
+                  width: '100%',
+                  padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                  paddingRight: theme.spacing[8],
+                  backgroundColor: theme.colors.background.card,
+                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                  borderRadius: theme.border.radius.base,
+                  fontSize: theme.typography.fontSize.base,
+                  color: theme.colors.text.primary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  outline: 'none',
+                  transition: theme.transitions.base,
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = theme.colors.text.primary;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = theme.colors.border.medium;
+                }}
+              >
+                {categoryIds.length === 0
+                  ? 'Select categories'
+                  : `${categoryIds.length} categor${categoryIds.length === 1 ? 'y' : 'ies'} selected`}
+              </button>
+              <ChevronDown
+                size={20}
+                style={{
+                  position: 'absolute',
+                  right: theme.spacing[3],
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: theme.colors.text.secondary,
+                }}
+              />
+              {isCategoriesOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 4px)',
+                    left: 0,
+                    width: '100%',
+                    backgroundColor: theme.colors.background.card,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+                    borderRadius: theme.border.radius.lg,
+                    boxShadow: theme.shadows.lg,
+                    padding: theme.spacing[2],
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    zIndex: theme.zIndex.popover || 1000,
+                  }}
+                >
+                  {categories.map((category) => {
+                    const IconComponent = getIconComponent(category.icon);
+                    return (
+                      <label
+                        key={category.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: theme.spacing[2],
+                          padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                          cursor: 'pointer',
+                          borderRadius: theme.border.radius.base,
+                          transition: theme.transitions.fast,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={categoryIds.includes(category.id)}
+                          onChange={() => handleCategoryToggle(category.id)}
+                          style={{
+                            width: '16px',
+                            height: '16px',
+                            cursor: 'pointer',
+                          }}
+                        />
+                        <IconComponent size={16} color={theme.colors.text.primary} />
+                        <span style={{ fontSize: theme.typography.fontSize.sm }}>{category.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Amount */}
@@ -213,7 +357,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                   pointerEvents: 'none',
                 }}
               >
-                €
+                {getCurrencySymbol(DEFAULT_CURRENCY)}
               </span>
               <input
                 type="number"
@@ -230,6 +374,14 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                   borderRadius: theme.border.radius.base,
                   fontSize: theme.typography.fontSize.base,
                   color: theme.colors.text.primary,
+                  outline: 'none',
+                  transition: theme.transitions.base,
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = theme.colors.text.primary;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = theme.colors.border.medium;
                 }}
                 placeholder="0.00"
                 required
@@ -250,25 +402,48 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
             >
               Period
             </label>
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              style={{
-                width: '100%',
-                padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                backgroundColor: theme.colors.background.card,
-                border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                borderRadius: theme.border.radius.base,
-                fontSize: theme.typography.fontSize.base,
-                color: theme.colors.text.primary,
-                cursor: 'pointer',
-              }}
-            >
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="6-month">Half-Year</option>
-              <option value="yearly">Yearly</option>
-            </select>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                  paddingRight: theme.spacing[8],
+                  backgroundColor: theme.colors.background.card,
+                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                  borderRadius: theme.border.radius.base,
+                  fontSize: theme.typography.fontSize.base,
+                  color: theme.colors.text.primary,
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  outline: 'none',
+                  transition: theme.transitions.base,
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = theme.colors.text.primary;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = theme.colors.border.medium;
+                }}
+              >
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="6-month">Half-Year</option>
+                <option value="yearly">Yearly</option>
+              </select>
+              <ChevronDown
+                size={20}
+                style={{
+                  position: 'absolute',
+                  right: theme.spacing[3],
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: theme.colors.text.secondary,
+                }}
+              />
+            </div>
           </div>
 
           {/* Reset Checkbox */}
@@ -430,7 +605,8 @@ BudgetForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   initialData: PropTypes.shape({
     id: PropTypes.number,
-    category: PropTypes.number,
+    name: PropTypes.string,
+    categories: PropTypes.arrayOf(PropTypes.number),
     amount: PropTypes.number,
     period: PropTypes.string,
     reset: PropTypes.bool,

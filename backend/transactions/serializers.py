@@ -72,6 +72,11 @@ class TransactionSerializer(serializers.ModelSerializer):
         source='wallet.name',
         read_only=True
     )
+    wallet_currency = serializers.CharField(
+        source='wallet.currency',
+        read_only=True,
+        help_text='Currency code from parent wallet (e.g., EUR, USD)'
+    )
     currency_symbol = serializers.SerializerMethodField()
     signed_amount = serializers.DecimalField(
         max_digits=12,
@@ -91,6 +96,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             'id',
             'wallet',
             'wallet_name',
+            'wallet_currency',
             'type',
             'category',
             'category_name',
@@ -115,7 +121,10 @@ class BudgetSerializer(serializers.ModelSerializer):
     period_start_date = serializers.SerializerMethodField()
     period_end_date = serializers.SerializerMethodField()
     period_display = serializers.SerializerMethodField()
-    category_data = serializers.SerializerMethodField()
+    categories_data = serializers.SerializerMethodField()
+    spent_per_category = serializers.SerializerMethodField()
+    upcoming_amount = serializers.SerializerMethodField()
+    currency_symbol = serializers.SerializerMethodField()
     # Keep legacy fields for backward compatibility
     percentage_used = serializers.SerializerMethodField()
     start_date = serializers.DateField(read_only=True)
@@ -162,26 +171,52 @@ class BudgetSerializer(serializers.ModelSerializer):
             end_str = f"{month_name[end_date.month]} {end_date.year}"
             return f"{start_str} - {end_str}"
 
-    def get_category_data(self, obj):
-        """Return nested category data with name and icon"""
-        return {
-            'id': obj.category.id,
-            'name': obj.category.name,
-            'icon': obj.category.icon,
-            'type': obj.category.type
-        }
+    def get_categories_data(self, obj):
+        """Return list of category data"""
+        return [
+            {
+                'id': cat.id,
+                'name': cat.name,
+                'icon': cat.icon,
+                'type': cat.type
+            }
+            for cat in obj.categories.all()
+        ]
+
+    def get_spent_per_category(self, obj):
+        """Return spending breakdown by category"""
+        per_category = obj.spent_amount_per_category()
+        # Convert Decimal values to float for JSON serialization
+        return {str(cat_id): float(amount) for cat_id, amount in per_category.items()}
+
+    def get_upcoming_amount(self, obj):
+        """Return upcoming spending amount"""
+        return float(obj.upcoming_amount())
+
+    def get_currency_symbol(self, obj):
+        """
+        Return currency symbol for budget display.
+        Budgets don't have wallets, so use DEFAULT_CURRENCY.
+        In future, could track user's preferred currency or per-budget currency.
+        """
+        from .constants import DEFAULT_CURRENCY
+        return get_currency_symbol(DEFAULT_CURRENCY)
 
     class Meta:
         model = Budget
         fields = [
             'id',
-            'category',
-            'category_data',
+            'name',
+            'categories',
+            'categories_data',
+            'spent_per_category',
+            'upcoming_amount',
             'amount',
             'spent_amount',
             'remaining_amount',
             'percentage_spent',
             'percentage_used',  # Legacy field
+            'currency_symbol',
             'period',
             'period_start_date',
             'period_end_date',
