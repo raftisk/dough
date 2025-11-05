@@ -98,7 +98,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
             }}
           >
             {transaction.description}
-            {transaction.recurrence && (
+            {transaction.recurrence && transaction.recurrence !== 'none' && (
               <RefreshCw size={14} color={theme.colors.text.muted} />
             )}
           </div>

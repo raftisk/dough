@@ -5,6 +5,7 @@ import { theme } from '../styles/theme';
 import DatePicker from './DatePicker';
 import { formatDateToLocal, getCurrencySymbol } from '../utils/format';
 import { DEFAULT_CURRENCY } from '../constants';
+import { createTemplate } from '../services/api';
 
 const TransactionForm = ({
   isOpen,
@@ -21,7 +22,7 @@ const TransactionForm = ({
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [walletId, setWalletId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(formatDateToLocal(new Date()));
   const [recurrence, setRecurrence] = useState('');
   const [autoPost, setAutoPost] = useState(false);
   const [errors, setErrors] = useState({});
@@ -35,7 +36,7 @@ const TransactionForm = ({
       setAmount(initialData.amount?.toString() || '');
       setCategoryId(initialData.category?.toString() || '');
       setWalletId(initialData.wallet?.toString() || '');
-      setDate(initialData.date || new Date().toISOString().split('T')[0]);
+      setDate(initialData.date || formatDateToLocal(new Date()));
       setRecurrence(initialData.recurrence || '');
       setAutoPost(initialData.auto_post || false);
     } else {
@@ -45,7 +46,7 @@ const TransactionForm = ({
       setAmount('');
       setCategoryId('');
       setWalletId(wallets.length > 0 ? wallets[0].id.toString() : '');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(formatDateToLocal(new Date()));
       setRecurrence('');
       setAutoPost(false);
     }
@@ -141,6 +142,59 @@ const TransactionForm = ({
     onClose();
   };
 
+  // Handle save as template
+  const handleSaveAsTemplate = async () => {
+    // Validate required fields for template
+    const newErrors = {};
+
+    if (!description.trim()) {
+      newErrors.description = 'Description is required';
+    }
+
+    if (!type) {
+      newErrors.type = 'Type is required';
+    }
+
+    if (!walletId) {
+      newErrors.wallet = 'Wallet is required';
+    }
+
+    // Category is optional for templates
+    // Amount is optional (defaults to 0 in backend)
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      alert('Please fill in required fields: Description, Type, and Wallet');
+      return;
+    }
+
+    try {
+      // Prepare template data (exclude date and recurrence)
+      const templateData = {
+        description: description.trim(),
+        type,
+        wallet: parseInt(walletId, 10),
+        amount: amount ? parseFloat(amount) : 0,
+      };
+
+      // Include category only if selected
+      if (categoryId) {
+        templateData.category = parseInt(categoryId, 10);
+      }
+
+      // Call API to create template
+      await createTemplate(templateData);
+
+      // Show success message
+      alert('Template saved successfully!');
+
+      // Keep form open - user might want to submit transaction too
+    } catch (err) {
+      console.error('Failed to save template:', err);
+      alert(err.message || 'Failed to save template');
+    }
+  };
+
   // Handle Escape key
   useEffect(() => {
     const handleEscape = (e) => {
@@ -206,7 +260,7 @@ const TransactionForm = ({
               margin: 0,
             }}
           >
-            {initialData ? 'Edit Transaction' : 'Add Transaction'}
+            {initialData && initialData.id ? 'Edit Transaction' : 'Add Transaction'}
           </h2>
           <button
             onClick={handleCancel}
@@ -687,10 +741,7 @@ const TransactionForm = ({
             {/* Left side - Save as Template button */}
             <button
               type="button"
-              onClick={() => {
-                // TODO: Implement save as template functionality
-                console.log('Save as template clicked (not yet implemented)');
-              }}
+              onClick={handleSaveAsTemplate}
               style={{
                 padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
                 borderRadius: theme.border.radius.base,

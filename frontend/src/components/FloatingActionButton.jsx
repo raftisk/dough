@@ -106,7 +106,7 @@ const FloatingActionButton = ({ onSelectType, templates = [] }) => {
             borderRadius: theme.border.radius.lg,
             boxShadow: theme.shadows.lg,
             border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-            minWidth: '180px',
+            minWidth: '240px',
             overflow: 'hidden',
           }}
         >

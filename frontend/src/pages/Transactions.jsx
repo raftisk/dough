@@ -32,6 +32,7 @@ import {
   updateTemplate,
 } from '../services/api';
 import { getIconComponent } from '../constants';
+import { formatDateToLocal } from '../utils/format';
 
 const Transactions = () => {
   // Data state
@@ -48,8 +49,8 @@ const Transactions = () => {
     const year = today.getFullYear();
     const month = today.getMonth();
     return {
-      start: new Date(year, month, 1).toISOString().split('T')[0],
-      end: new Date(year, month + 1, 0).toISOString().split('T')[0],
+      start: formatDateToLocal(new Date(year, month, 1)),
+      end: formatDateToLocal(new Date(year, month + 1, 0)),
     };
   };
 
@@ -177,7 +178,7 @@ const Transactions = () => {
         category: templateData.category,
         amount: templateData.amount,
         wallet: templateData.wallet,
-        date: new Date().toISOString().split('T')[0],
+        date: formatDateToLocal(new Date()),
         recurrence: 'none',
         auto_post: false,
       });
@@ -261,7 +262,8 @@ const Transactions = () => {
         auto_post: formData.auto_post, // Include auto_post field
       };
 
-      if (selectedTransaction) {
+      if (selectedTransaction && selectedTransaction.id) {
+        // Update existing transaction (has ID)
         // Check if editing upcoming transaction
         if (selectedTransaction._isUpcoming) {
           // Update upcoming transaction
@@ -271,7 +273,8 @@ const Transactions = () => {
           await updateTransaction(selectedTransaction.id, transactionData);
         }
       } else {
-        // Create new transaction (backend will route to upcoming if future date)
+        // Create new transaction (no ID = new or from template)
+        // Backend will route to upcoming if future date
         await createTransaction(transactionData);
       }
 

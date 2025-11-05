@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { ChevronLeft, ChevronRight, Plus, Minus, ArrowLeftRight } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { getIconComponent } from '../constants';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, formatDateToLocal } from '../utils/format';
 
 /**
  * CalendarView - Monthly calendar displaying transactions
@@ -88,9 +88,9 @@ const CalendarView = ({ transactions, onTransactionClick }) => {
     return days;
   };
 
-  // Format date as YYYY-MM-DD
+  // Format date as YYYY-MM-DD in local timezone
   const formatDateKey = (date) => {
-    return date.toISOString().split('T')[0];
+    return formatDateToLocal(date);
   };
 
   // Get day name (MON, TUE, etc.)

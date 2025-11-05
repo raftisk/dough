@@ -14,7 +14,7 @@ import { theme } from '../styles/theme';
 import { getCurrentMonthYear } from '../utils/date';
 import { getDashboardData, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction, createTransfer, updateTransfer, deleteTransfer, getTemplates, createTemplate, updateTemplate } from '../services/api';
 import { DEFAULT_CURRENCY } from '../constants';
-import { formatAmount } from '../utils/format';
+import { formatAmount, formatDateToLocal } from '../utils/format';
 
 function Dashboard() {
   // State management
@@ -75,7 +75,7 @@ function Dashboard() {
         category: templateData.category,
         amount: templateData.amount,
         wallet: templateData.wallet,
-        date: new Date().toISOString().split('T')[0],
+        date: formatDateToLocal(new Date()),
         recurrence: 'none',
         auto_post: false,
       });
@@ -135,16 +135,16 @@ function Dashboard() {
         type: formData.type,
         category: formData.category,
         amount: formData.amount,
-        description: formData.description, 
+        description: formData.description,
         date: formData.date,
         recurrence: formData.recurrence, // Send as is from form (empty string for "None")
       };
 
-      if (selectedTransaction) {
-        // Update existing transaction
+      if (selectedTransaction && selectedTransaction.id) {
+        // Update existing transaction (has ID)
         await updateTransaction(selectedTransaction.id, transactionData);
       } else {
-        // Create new transaction
+        // Create new transaction (no ID = new or from template)
         await createTransaction(transactionData);
       }
 

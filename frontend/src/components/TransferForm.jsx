@@ -17,7 +17,7 @@ const TransferForm = ({
   const [amount, setAmount] = useState('');
   const [fromWalletId, setFromWalletId] = useState('');
   const [toWalletId, setToWalletId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(formatDateToLocal(new Date()));
   const [errors, setErrors] = useState({});
 
   // Pre-fill form when editing
@@ -27,14 +27,14 @@ const TransferForm = ({
       setAmount(initialData.amount?.toString() || '');
       setFromWalletId(initialData.from_wallet?.toString() || '');
       setToWalletId(initialData.to_wallet?.toString() || '');
-      setDate(initialData.date || new Date().toISOString().split('T')[0]);
+      setDate(initialData.date || formatDateToLocal(new Date()));
     } else {
       // Reset form for new transfer
       setDescription('');
       setAmount('');
       setFromWalletId(wallets.length > 0 ? wallets[0].id.toString() : '');
       setToWalletId(wallets.length > 1 ? wallets[1].id.toString() : '');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(formatDateToLocal(new Date()));
     }
     setErrors({});
   }, [initialData, wallets, isOpen]);
