@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Plus, Minus, ArrowRightLeft } from 'lucide-react';
 import { theme } from '../styles/theme';
 
-const FloatingActionButton = ({ onSelectType }) => {
+const FloatingActionButton = ({ onSelectType, templates = [] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
@@ -30,10 +30,14 @@ const FloatingActionButton = ({ onSelectType }) => {
     };
   }, [isMenuOpen]);
 
-  const handleTypeSelect = (type) => {
+  const handleTypeSelect = (type, templateData = null) => {
     setIsMenuOpen(false);
-    onSelectType(type);
+    onSelectType(type, templateData);
   };
+
+  // Group templates by type
+  const incomeTemplates = templates.filter(t => t.type === 'income');
+  const expenseTemplates = templates.filter(t => t.type === 'expense');
 
   const menuOptions = [
     {
@@ -41,18 +45,50 @@ const FloatingActionButton = ({ onSelectType }) => {
       label: 'Income',
       icon: Plus,
       color: theme.colors.semantic.income,
+      isDefault: true,
     },
     {
       type: 'expense',
       label: 'Expense',
       icon: Minus,
       color: theme.colors.semantic.expense,
+      isDefault: true,
     },
     {
       type: 'transfer',
       label: 'Transfer',
       icon: ArrowRightLeft,
       color: theme.colors.semantic.transfer,
+      isDefault: true,
+    },
+  ];
+
+  // Build complete menu with templates
+  const completeMenu = [
+    ...menuOptions,
+    ...(templates.length > 0 ? [{ type: 'separator' }] : []),
+    ...incomeTemplates.map(template => ({
+      type: 'template',
+      templateData: template,
+      label: template.description || 'Untitled',
+      icon: Plus,
+      color: theme.colors.semantic.income,
+      isTemplate: true,
+    })),
+    ...expenseTemplates.map(template => ({
+      type: 'template',
+      templateData: template,
+      label: template.description || 'Untitled',
+      icon: Minus,
+      color: theme.colors.semantic.expense,
+      isTemplate: true,
+    })),
+    ...(templates.length > 0 ? [{ type: 'separator' }] : []),
+    {
+      type: 'add-template',
+      label: 'Add Template',
+      color: theme.colors.text.secondary,
+      isAddTemplate: true,
     },
   ];
 
@@ -74,12 +110,35 @@ const FloatingActionButton = ({ onSelectType }) => {
             overflow: 'hidden',
           }}
         >
-          {menuOptions.map((option) => {
+          {completeMenu.map((option, index) => {
+            // Render separator
+            if (option.type === 'separator') {
+              return (
+                <div
+                  key={`separator-${index}`}
+                  style={{
+                    borderTop: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+                    margin: `${theme.spacing[1]} 0`,
+                  }}
+                />
+              );
+            }
+
             const Icon = option.icon;
+            const truncatedLabel = option.label.length > 25 ? option.label.substring(0, 25) + '...' : option.label;
+
             return (
               <button
-                key={option.type}
-                onClick={() => handleTypeSelect(option.type)}
+                key={option.isTemplate ? `template-${option.templateData.id}` : option.type}
+                onClick={() => {
+                  if (option.isTemplate) {
+                    handleTypeSelect('template', option.templateData);
+                  } else if (option.isAddTemplate) {
+                    handleTypeSelect('add-template');
+                  } else {
+                    handleTypeSelect(option.type);
+                  }
+                }}
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -90,7 +149,7 @@ const FloatingActionButton = ({ onSelectType }) => {
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
+                  fontWeight: option.isAddTemplate ? theme.typography.fontWeight.normal : theme.typography.fontWeight.medium,
                   color: theme.colors.text.primary,
                   transition: theme.transitions.fast,
                   textAlign: 'left',
@@ -102,8 +161,8 @@ const FloatingActionButton = ({ onSelectType }) => {
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                <Icon size={20} color={option.color} />
-                <span>{option.label}</span>
+                {Icon && <Icon size={20} color={option.color} />}
+                <span>{truncatedLabel}</span>
               </button>
             );
           })}
@@ -147,6 +206,16 @@ const FloatingActionButton = ({ onSelectType }) => {
 
 FloatingActionButton.propTypes = {
   onSelectType: PropTypes.func.isRequired,
+  templates: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number,
+      description: PropTypes.string,
+      type: PropTypes.string,
+      category: PropTypes.number,
+      amount: PropTypes.string,
+      wallet: PropTypes.number,
+    })
+  ),
 };
 
 export default FloatingActionButton;

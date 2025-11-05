@@ -566,20 +566,6 @@ class Transfer(models.Model):
                     'amount': f'Insufficient balance. Current balance: {current_balance}'
                 })
 
-    # @property
-    # def description(self):
-    #     """Alias for description to maintain backward compatibility"""
-    #     return self.description
-
-    # @description.setter
-    # def description(self, value):
-    #     """Alias setter for description to maintain backward compatibility"""
-    #     self.description = value
-
-    # def save(self, *args, **kwargs):
-    #     self.full_clean()
-    #     super().save(*args, **kwargs)
-
 
 class WishlistItem(models.Model):
     """Wishlist items for tracking savings goals"""
@@ -619,14 +605,45 @@ class WishlistItem(models.Model):
     def __str__(self):
         return f"{self.description} - {self.amount} (Target: {self.target})"
 
-    # @property
-    # def description(self):
-    #     """Alias for description to maintain backward compatibility"""
-    #     return self.description
 
-    # @description.setter
-    # def description(self, value):
-    #     """Alias setter for description to maintain backward compatibility"""
-    #     self.description = value
+class Template(models.Model):
+    """Template for quick transaction entry with pre-filled data"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='transaction_templates'
+    )
+    description = models.TextField(blank=True)
+    type = models.CharField(
+        max_length=10,
+        choices=TRANSACTION_TYPES
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='templates'
+    )
+    amount = models.DecimalField(
+        **MONEY_FIELD_CONFIG,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        default=Decimal('0.00'),
+        help_text='Default amount for this template (can be zero)'
+    )
+    wallet = models.ForeignKey(
+        Wallet,
+        on_delete=models.CASCADE,
+        related_name='templates'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.description if self.description else f"{self.get_type_display()} Template"
 
 

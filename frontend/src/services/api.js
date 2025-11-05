@@ -420,6 +420,63 @@ export const deleteTransfer = async (id) => {
   }
 };
 
+// ============ TEMPLATE OPERATIONS ============
+
+/**
+ * Fetch all templates
+ * @returns {Promise<Array>} Array of template objects
+ */
+export const getTemplates = async () => {
+  try {
+    const response = await api.get('/templates/');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch templates');
+  }
+};
+
+/**
+ * Create a new template
+ * @param {Object} templateData - Template data
+ * @returns {Promise<Object>} Created template object
+ */
+export const createTemplate = async (templateData) => {
+  try {
+    const response = await api.post('/templates/', templateData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to create template');
+  }
+};
+
+/**
+ * Update an existing template
+ * @param {number} id - Template ID
+ * @param {Object} templateData - Updated template data
+ * @returns {Promise<Object>} Updated template object
+ */
+export const updateTemplate = async (id, templateData) => {
+  try {
+    const response = await api.patch(`/templates/${id}/`, templateData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to update template');
+  }
+};
+
+/**
+ * Delete a template
+ * @param {number} id - Template ID
+ * @returns {Promise<void>}
+ */
+export const deleteTemplate = async (id) => {
+  try {
+    await api.delete(`/templates/${id}/`);
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to delete template');
+  }
+};
+
 // ============ INSIGHTS OPERATIONS ============
 
 /**

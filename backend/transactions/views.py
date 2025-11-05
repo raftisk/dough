@@ -5,7 +5,7 @@ from django.db.models import Sum, Q
 from django.utils import timezone
 from decimal import Decimal
 from datetime import date
-from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem
+from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem, Template
 from .serializers import (
     WalletSerializer,
     CategorySerializer,
@@ -13,7 +13,8 @@ from .serializers import (
     BudgetSerializer,
     UpcomingTransactionSerializer,
     TransferSerializer,
-    WishlistItemSerializer
+    WishlistItemSerializer,
+    TemplateSerializer
 )
 
 
@@ -391,3 +392,8 @@ def monthly_summary(request):
         })
 
     return Response(monthly_data)
+
+
+class TemplateViewSet(viewsets.ModelViewSet):
+    queryset = Template.objects.all()
+    serializer_class = TemplateSerializer

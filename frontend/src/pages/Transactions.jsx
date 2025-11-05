@@ -12,6 +12,7 @@ import {
   UpcomingTransactionsList,
   TransferForm,
 } from '../components';
+import TemplateForm from '../components/TemplateForm';
 import { theme } from '../styles/theme';
 import {
   getTransactions,
@@ -26,6 +27,9 @@ import {
   createTransfer,
   updateTransfer,
   deleteTransfer,
+  getTemplates,
+  createTemplate,
+  updateTemplate,
 } from '../services/api';
 import { getIconComponent } from '../constants';
 
@@ -36,6 +40,7 @@ const Transactions = () => {
   const [upcomingTransactions, setUpcomingTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [wallets, setWallets] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [error, setError] = useState(null);
   // Get current month's date range as default
   const getCurrentMonthRange = () => {
@@ -63,6 +68,10 @@ const Transactions = () => {
   const [isTransferFormOpen, setIsTransferFormOpen] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState(null);
 
+  // Template form states
+  const [isTemplateFormOpen, setIsTemplateFormOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
   // Upcoming transactions modal state
   const [showUpcomingModal, setShowUpcomingModal] = useState(false);
 
@@ -74,18 +83,20 @@ const Transactions = () => {
   const fetchData = async () => {
     try {
       setError(null);
-      const [transactionsData, transfersData, upcomingData, categoriesData, walletsData] = await Promise.all([
+      const [transactionsData, transfersData, upcomingData, categoriesData, walletsData, templatesData] = await Promise.all([
         getTransactions(),
         getTransfers(),
         getUpcomingTransactions(),
         getCategories(),
         getWallets(),
+        getTemplates(),
       ]);
       setTransactions(transactionsData);
       setTransfers(transfersData.map(t => ({ ...t, type: 'transfer' }))); // Add type field for filtering
       setUpcomingTransactions(upcomingData);
       setCategories(categoriesData.filter(c => c.is_active)); // Only active categories for forms
       setWallets(walletsData);
+      setTemplates(templatesData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError(err.message || 'Failed to load data');
@@ -149,11 +160,28 @@ const Transactions = () => {
   const filteredTransactions = getFilteredTransactions();
 
   // Handle add transaction from floating button
-  const handleAddTransaction = (type) => {
-    console.log('Add transaction type:', type);
+  const handleAddTransaction = (type, templateData = null) => {
+    console.log('Add transaction type:', type, 'templateData:', templateData);
     if (type === 'transfer') {
       setSelectedTransfer(null);
       setIsTransferFormOpen(true);
+    } else if (type === 'add-template') {
+      setSelectedTemplate(null);
+      setIsTemplateFormOpen(true);
+    } else if (type === 'template') {
+      // Open TransactionForm with template data pre-filled
+      setFormType(templateData.type);
+      setSelectedTransaction({
+        description: templateData.description,
+        type: templateData.type,
+        category: templateData.category,
+        amount: templateData.amount,
+        wallet: templateData.wallet,
+        date: new Date().toISOString().split('T')[0],
+        recurrence: 'none',
+        auto_post: false,
+      });
+      setIsFormOpen(true);
     } else {
       setFormType(type);
       setSelectedTransaction(null);
@@ -288,6 +316,29 @@ const Transactions = () => {
       console.error('Failed to save transfer:', err);
       alert(err.message || 'Failed to save transfer');
     }
+  };
+
+  // Handle template form submission
+  const handleTemplateFormSubmit = async (formData) => {
+    try {
+      if (selectedTemplate) {
+        await updateTemplate(selectedTemplate.id, formData);
+      } else {
+        await createTemplate(formData);
+      }
+
+      await fetchData();
+      setIsTemplateFormOpen(false);
+      setSelectedTemplate(null);
+    } catch (err) {
+      console.error('Failed to save template:', err);
+      alert(err.message || 'Failed to save template');
+    }
+  };
+
+  const handleTemplateFormClose = () => {
+    setIsTemplateFormOpen(false);
+    setSelectedTemplate(null);
   };
 
   // Error state
@@ -431,7 +482,7 @@ const Transactions = () => {
       </div>
 
       {/* Floating Action Button */}
-      <FloatingActionButton onSelectType={handleAddTransaction} />
+      <FloatingActionButton onSelectType={handleAddTransaction} templates={templates} />
 
       {/* Transaction Form Modal */}
       <TransactionForm
@@ -459,6 +510,16 @@ const Transactions = () => {
         onClose={() => setIsTransferFormOpen(false)}
         onSubmit={handleTransferFormSubmit}
         initialData={selectedTransfer}
+        wallets={wallets}
+      />
+
+      {/* Template Form Modal */}
+      <TemplateForm
+        isOpen={isTemplateFormOpen}
+        onClose={handleTemplateFormClose}
+        onSubmit={handleTemplateFormSubmit}
+        initialData={selectedTemplate}
+        categories={categories}
         wallets={wallets}
       />
     </div>

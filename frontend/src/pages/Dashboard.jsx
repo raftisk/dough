@@ -4,17 +4,16 @@ import NavigationBar from '../components/NavigationBar';
 import PageHeader from '../components/PageHeader';
 import MetricCard from '../components/MetricCard';
 import TransactionListItem from '../components/TransactionListItem';
-import WalletCard from '../components/WalletCard';
-import CategoryCard from '../components/CategoryCard';
 import FloatingActionButton from '../components/FloatingActionButton';
 import TransactionForm from '../components/TransactionForm';
 import TransferForm from '../components/TransferForm';
+import TemplateForm from '../components/TemplateForm';
 import CalendarView from '../components/CalendarView';
 import ErrorState from '../components/ErrorState';
 import { theme } from '../styles/theme';
 import { getCurrentMonthYear } from '../utils/date';
-import { getDashboardData, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction, createTransfer, updateTransfer, deleteTransfer } from '../services/api';
-import { getIconComponent, DEFAULT_CURRENCY } from '../constants';
+import { getDashboardData, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction, createTransfer, updateTransfer, deleteTransfer, getTemplates, createTemplate, updateTemplate } from '../services/api';
+import { DEFAULT_CURRENCY } from '../constants';
 import { formatAmount } from '../utils/format';
 
 function Dashboard() {
@@ -22,6 +21,7 @@ function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [wallets, setWallets] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [error, setError] = useState(null);
   // Transaction form states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -30,6 +30,9 @@ function Dashboard() {
   // Transfer form states
   const [isTransferFormOpen, setIsTransferFormOpen] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState(null);
+  // Template form states
+  const [isTemplateFormOpen, setIsTemplateFormOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // Fetch dashboard data on mount
   useEffect(() => {
@@ -39,25 +42,44 @@ function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setError(null);
-      const [dashData, categoriesData, walletsData] = await Promise.all([
+      const [dashData, categoriesData, walletsData, templatesData] = await Promise.all([
         getDashboardData(),
         getCategories(),
         getWallets(),
+        getTemplates(),
       ]);
       setDashboardData(dashData);
       setCategories(categoriesData.filter(c => c.is_active));
       setWallets(walletsData);
+      setTemplates(templatesData);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
       setError(err.message || 'Failed to load dashboard');
     }
   };
 
-  const handleAddTransaction = (type) => {
-    console.log('Add transaction type:', type);
+  const handleAddTransaction = (type, templateData = null) => {
+    console.log('Add transaction type:', type, 'templateData:', templateData);
     if (type === 'transfer') {
       setSelectedTransfer(null);
       setIsTransferFormOpen(true);
+    } else if (type === 'add-template') {
+      setSelectedTemplate(null);
+      setIsTemplateFormOpen(true);
+    } else if (type === 'template') {
+      // Open TransactionForm with template data pre-filled
+      setFormType(templateData.type);
+      setSelectedTransaction({
+        description: templateData.description,
+        type: templateData.type,
+        category: templateData.category,
+        amount: templateData.amount,
+        wallet: templateData.wallet,
+        date: new Date().toISOString().split('T')[0],
+        recurrence: 'none',
+        auto_post: false,
+      });
+      setIsFormOpen(true);
     } else {
       setFormType(type);
       setSelectedTransaction(null);
@@ -202,6 +224,28 @@ function Dashboard() {
       wallet_id: transaction.wallet,
     });
     setIsFormOpen(true);
+  };
+
+  const handleTemplateFormSubmit = async (formData) => {
+    try {
+      if (selectedTemplate) {
+        await updateTemplate(selectedTemplate.id, formData);
+      } else {
+        await createTemplate(formData);
+      }
+
+      await fetchDashboardData();
+      setIsTemplateFormOpen(false);
+      setSelectedTemplate(null);
+    } catch (err) {
+      console.error('Failed to save template:', err);
+      alert(err.message || 'Failed to save template');
+    }
+  };
+
+  const handleTemplateFormClose = () => {
+    setIsTemplateFormOpen(false);
+    setSelectedTemplate(null);
   };
 
   // Error state
@@ -361,7 +405,7 @@ function Dashboard() {
       </div>
 
       {/* Floating Action Button */}
-      <FloatingActionButton onSelectType={handleAddTransaction} />
+      <FloatingActionButton onSelectType={handleAddTransaction} templates={templates} />
 
       {/* Transaction Form Modal */}
       <TransactionForm
@@ -380,6 +424,16 @@ function Dashboard() {
         onClose={() => setIsTransferFormOpen(false)}
         onSubmit={handleTransferFormSubmit}
         initialData={selectedTransfer}
+        wallets={wallets}
+      />
+
+      {/* Template Form Modal */}
+      <TemplateForm
+        isOpen={isTemplateFormOpen}
+        onClose={handleTemplateFormClose}
+        onSubmit={handleTemplateFormSubmit}
+        initialData={selectedTemplate}
+        categories={categories}
         wallets={wallets}
       />
     </div>

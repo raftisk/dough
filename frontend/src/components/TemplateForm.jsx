@@ -2,55 +2,42 @@ import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { X, Plus, Minus, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
-import DatePicker from './DatePicker';
-import { formatDateToLocal, getCurrencySymbol } from '../utils/format';
+import { getCurrencySymbol } from '../utils/format';
 import { DEFAULT_CURRENCY } from '../constants';
 
-const TransactionForm = ({
+const TemplateForm = ({
   isOpen,
   onClose,
   onSubmit,
   initialData = null,
-  transactionType = 'expense',
   categories = [],
   wallets = [],
 }) => {
-  // Initialize form state
-  const [type, setType] = useState(transactionType);
+  const [type, setType] = useState('expense');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [walletId, setWalletId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [recurrence, setRecurrence] = useState('');
-  const [autoPost, setAutoPost] = useState(false);
   const [errors, setErrors] = useState({});
   const [selectedWalletCurrency, setSelectedWalletCurrency] = useState(DEFAULT_CURRENCY);
 
   // Pre-fill form when editing
   useEffect(() => {
     if (initialData) {
-      setType(initialData.type || transactionType);
+      setType(initialData.type || 'expense');
       setDescription(initialData.description || '');
       setAmount(initialData.amount?.toString() || '');
       setCategoryId(initialData.category?.toString() || '');
       setWalletId(initialData.wallet?.toString() || '');
-      setDate(initialData.date || new Date().toISOString().split('T')[0]);
-      setRecurrence(initialData.recurrence || '');
-      setAutoPost(initialData.auto_post || false);
     } else {
-      // Reset form for new transaction
-      setType(transactionType);
+      setType('expense');
       setDescription('');
       setAmount('');
       setCategoryId('');
       setWalletId(wallets.length > 0 ? wallets[0].id.toString() : '');
-      setDate(new Date().toISOString().split('T')[0]);
-      setRecurrence('');
-      setAutoPost(false);
     }
     setErrors({});
-  }, [initialData, transactionType, wallets, isOpen]);
+  }, [initialData, wallets, isOpen]);
 
   // Set default wallet when wallets load
   useEffect(() => {
@@ -82,7 +69,6 @@ const TransactionForm = ({
     }
   }, [walletId, wallets]);
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
@@ -93,27 +79,18 @@ const TransactionForm = ({
     }
 
     const amountNum = parseFloat(amount);
-    if (!amount || isNaN(amountNum) || amountNum <= 0) {
-      newErrors.amount = 'Amount must be greater than 0';
-    }
-
-    if (!categoryId) {
-      newErrors.category = 'Category is required';
+    if (amount && (isNaN(amountNum) || amountNum < 0)) {
+      newErrors.amount = 'Amount must be zero or greater';
     }
 
     if (!walletId) {
       newErrors.wallet = 'Wallet is required';
     }
 
-    if (!date) {
-      newErrors.date = 'Date is required';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -121,27 +98,23 @@ const TransactionForm = ({
       return;
     }
 
-    const formData = {
-      type,
+    const templateData = {
       description: description.trim(),
-      amount: parseFloat(amount),
-      category: parseInt(categoryId, 10),
-      wallet: parseInt(walletId, 10),
-      date,
-      recurrence, // Send the actual recurrence value (including 'None')
-      auto_post: autoPost, // Include auto_post in payload
+      type,
+      category: categoryId ? parseInt(categoryId) : null,
+      amount: amount ? parseFloat(amount) : 0,
+      wallet: parseInt(walletId),
     };
 
-    onSubmit(formData);
+    onSubmit(templateData);
   };
 
-  // Handle cancel
   const handleCancel = () => {
     setErrors({});
     onClose();
   };
 
-  // Handle Escape key
+  // Close on Escape key
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -158,7 +131,6 @@ const TransactionForm = ({
   const TypeIcon = type === 'income' ? Plus : Minus;
 
   return (
-    // Modal Overlay
     <div
       style={{
         position: 'fixed',
@@ -175,7 +147,6 @@ const TransactionForm = ({
       }}
       onClick={handleCancel}
     >
-      {/* Modal Content */}
       <div
         style={{
           backgroundColor: theme.colors.background.card,
@@ -206,7 +177,7 @@ const TransactionForm = ({
               margin: 0,
             }}
           >
-            {initialData ? 'Edit Transaction' : 'Add Transaction'}
+            {initialData ? 'Edit Template' : 'Add Template'}
           </h2>
           <button
             onClick={handleCancel}
@@ -310,7 +281,7 @@ const TransactionForm = ({
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., Salary, Groceries"
+                placeholder="e.g., Monthly Groceries"
                 maxLength={200}
                 style={{
                   width: '100%',
@@ -363,8 +334,9 @@ const TransactionForm = ({
                     left: theme.spacing[3],
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.secondary,
+                    fontSize: theme.typography.fontSize.base,
+                    pointerEvents: 'none',
                   }}
                 >
                   {getCurrencySymbol(selectedWalletCurrency)}
@@ -379,7 +351,7 @@ const TransactionForm = ({
                   style={{
                     width: '100%',
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    paddingLeft: theme.spacing[6],
+                    paddingLeft: theme.spacing[8],
                     border: `${theme.border.width.thin} ${theme.border.style.solid} ${
                       errors.amount ? theme.colors.semantic.expense : theme.colors.border.medium
                     }`,
@@ -454,7 +426,7 @@ const TransactionForm = ({
                     </option>
                   ))}
                 </select>
-                { <ChevronDown
+                <ChevronDown
                   size={20}
                   style={{
                     position: 'absolute',
@@ -464,7 +436,7 @@ const TransactionForm = ({
                     pointerEvents: 'none',
                     color: theme.colors.text.secondary,
                   }}
-                /> }
+                />
               </div>
               {errors.category && (
                 <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
@@ -494,7 +466,9 @@ const TransactionForm = ({
                     width: '100%',
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
                     paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
+                      errors.wallet ? theme.colors.semantic.expense : theme.colors.border.medium
+                    }`,
                     borderRadius: theme.border.radius.base,
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
@@ -505,10 +479,14 @@ const TransactionForm = ({
                     transition: theme.transitions.base,
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                    if (!errors.wallet) {
+                      e.currentTarget.style.borderColor = theme.colors.text.primary;
+                    }
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = theme.colors.border.medium;
+                    if (!errors.wallet) {
+                      e.currentTarget.style.borderColor = theme.colors.border.medium;
+                    }
                   }}
                 >
                   {wallets.map((wallet) => (
@@ -535,232 +513,62 @@ const TransactionForm = ({
                 </p>
               )}
             </div>
-
-            {/* Date */}
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
-                }}
-              >
-                Date
-              </label>
-              <DatePicker
-                date={date}
-                onDateChange={(newDate) => {
-                  const dateStr = newDate ? formatDateToLocal(newDate) : '';
-                  setDate(dateStr);
-                }}
-              />
-              {errors.date && (
-                <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
-                  {errors.date}
-                </p>
-              )}
-            </div>
-
-            {/* Recurrence */}
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
-                }}
-              >
-                Recurrence
-              </label>
-              <div style={{ position: 'relative' }}>
-                <select
-                  value={recurrence}
-                  onChange={(e) => setRecurrence(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                    borderRadius: theme.border.radius.base,
-                    fontSize: theme.typography.fontSize.base,
-                    color: theme.colors.text.primary,
-                    backgroundColor: theme.colors.background.card,
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    outline: 'none',
-                    transition: theme.transitions.base,
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = theme.colors.text.primary;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = theme.colors.border.medium;
-                  }}
-                >
-                  <option value="none">None</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-                <ChevronDown
-                  size={20}
-                  style={{
-                    position: 'absolute',
-                    right: theme.spacing[3],
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    pointerEvents: 'none',
-                    color: theme.colors.text.secondary,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Auto-post checkbox (only show for future dates) */}
-            {new Date(date) > new Date() && (
-              <div
-                style={{
-                  padding: theme.spacing[3],
-                  backgroundColor: theme.colors.background.page,
-                  borderRadius: theme.border.radius.base,
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-                }}
-              >
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: theme.spacing[2],
-                    cursor: 'pointer',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={autoPost}
-                    onChange={(e) => setAutoPost(e.target.checked)}
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      cursor: 'pointer',
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: theme.typography.fontSize.sm,
-                      fontWeight: theme.typography.fontWeight.medium,
-                      color: theme.colors.text.primary,
-                    }}
-                  >
-                    Auto-post when date arrives
-                  </span>
-                </label>
-                <p
-                  style={{
-                    fontSize: theme.typography.fontSize.xs,
-                    color: theme.colors.text.secondary,
-                    marginTop: theme.spacing[1],
-                    marginLeft: '24px',
-                    marginBottom: 0,
-                  }}
-                >
-                  Transaction will be posted automatically without confirmation
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Modal Footer */}
           <div
             style={{
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              justifyContent: 'flex-end',
               gap: theme.spacing[3],
               marginTop: theme.spacing[6],
             }}
           >
-            {/* Left side - Save as Template button */}
             <button
               type="button"
-              onClick={() => {
-                // TODO: Implement save as template functionality
-                console.log('Save as template clicked (not yet implemented)');
-              }}
+              onClick={handleCancel}
               style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
                 borderRadius: theme.border.radius.base,
-                fontSize: theme.typography.fontSize.sm,
-                fontWeight: theme.typography.fontWeight.normal,
-                color: theme.colors.text.secondary,
+                fontSize: theme.typography.fontSize.base,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.text.primary,
                 backgroundColor: 'transparent',
+                border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                cursor: 'pointer',
+                transition: theme.transitions.fast,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              style={{
+                padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
+                borderRadius: theme.border.radius.base,
+                fontSize: theme.typography.fontSize.base,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.text.inverse,
+                backgroundColor: theme.colors.action.primary,
                 border: 'none',
                 cursor: 'pointer',
                 transition: theme.transitions.fast,
-                textDecoration: 'underline',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = theme.colors.text.primary;
+                e.currentTarget.style.backgroundColor = theme.colors.action.primaryHover;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = theme.colors.text.secondary;
+                e.currentTarget.style.backgroundColor = theme.colors.action.primary;
               }}
             >
-              Save as Template
+              Save
             </button>
-
-            {/* Right side - Cancel and Post buttons */}
-            <div style={{ display: 'flex', gap: theme.spacing[3] }}>
-              <button
-                type="button"
-                onClick={handleCancel}
-                style={{
-                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  backgroundColor: 'transparent',
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                  cursor: 'pointer',
-                  transition: theme.transitions.fast,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                style={{
-                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.inverse,
-                  backgroundColor: theme.colors.action.primary,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: theme.transitions.fast,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.colors.action.primaryHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.colors.action.primary;
-                }}
-              >
-                Post
-              </button>
-            </div>
           </div>
         </form>
       </div>
@@ -768,26 +576,25 @@ const TransactionForm = ({
   );
 };
 
-TransactionForm.propTypes = {
+TemplateForm.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   initialData: PropTypes.object,
-  transactionType: PropTypes.oneOf(['income', 'expense']),
   categories: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-      name: PropTypes.string.isRequired,
-      icon: PropTypes.string,
-      type: PropTypes.string.isRequired,
+      name: PropTypes.string,
+      type: PropTypes.string,
     })
   ),
   wallets: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-      name: PropTypes.string.isRequired,
+      id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      name: PropTypes.string,
+      currency: PropTypes.string,
     })
   ),
 };
 
-export default TransactionForm;
+export default TemplateForm;

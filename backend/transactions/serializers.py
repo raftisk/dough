@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from decimal import Decimal
-from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem
+from .models import Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem, Template
 from .constants import get_currency_symbol
 
 
@@ -338,3 +338,45 @@ class WishlistItemSerializer(serializers.ModelSerializer):
             'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
+
+
+class TemplateSerializer(serializers.ModelSerializer):
+    category_data = serializers.SerializerMethodField()
+    wallet_data = serializers.SerializerMethodField()
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    def get_category_data(self, obj):
+        """Return nested category data"""
+        if obj.category:
+            return {
+                'id': obj.category.id,
+                'name': obj.category.name,
+                'icon': obj.category.icon,
+                'type': obj.category.type
+            }
+        return None
+
+    def get_wallet_data(self, obj):
+        """Return nested wallet data"""
+        return {
+            'id': obj.wallet.id,
+            'name': obj.wallet.name,
+            'type': obj.wallet.type,
+            'currency': obj.wallet.currency
+        }
+
+    class Meta:
+        model = Template
+        fields = [
+            'id',
+            'user',
+            'description',
+            'type',
+            'category',
+            'category_data',
+            'amount',
+            'wallet',
+            'wallet_data',
+            'created_at'
+        ]
+        read_only_fields = ['created_at', 'user']

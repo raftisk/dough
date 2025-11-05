@@ -8,6 +8,7 @@ from .views import (
     UpcomingTransactionViewSet,
     TransferViewSet,
     WishlistItemViewSet,
+    TemplateViewSet,
     monthly_summary
 )
 from .api_views import DashboardAPIView
@@ -20,6 +21,7 @@ router.register(r'budgets', BudgetViewSet, basename='budget')
 router.register(r'upcoming-transactions', UpcomingTransactionViewSet, basename='upcoming-transaction')
 router.register(r'transfers', TransferViewSet, basename='transfer')
 router.register(r'wishlist-items', WishlistItemViewSet, basename='wishlist-item')
+router.register(r'templates', TemplateViewSet, basename='template')
 
 urlpatterns = [
     # Dashboard API

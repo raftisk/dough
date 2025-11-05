@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, UserPreferences, Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem
+from .models import User, UserPreferences, Wallet, Category, Transaction, Budget, UpcomingTransaction, Transfer, WishlistItem, Template
 
 
 @admin.register(User)
@@ -145,4 +145,18 @@ class WishlistItemAdmin(admin.ModelAdmin):
     def get_description(self, obj):
         """Display description (description field)"""
         return obj.description[:50] if obj.description else ''
+    get_description.short_description = 'Description'
+
+
+@admin.register(Template)
+class TemplateAdmin(admin.ModelAdmin):
+    list_display = ['user', 'get_description', 'type', 'category', 'wallet', 'amount', 'created_at']
+    list_filter = ['type', 'wallet', 'category', 'created_at']
+    search_fields = ['description', 'user__email', 'user__username', 'wallet__name', 'category__name']
+    readonly_fields = ['created_at']
+    ordering = ['-created_at']
+
+    def get_description(self, obj):
+        """Display description (description field)"""
+        return obj.description[:50] if obj.description else f"{obj.get_type_display()} Template"
     get_description.short_description = 'Description'
