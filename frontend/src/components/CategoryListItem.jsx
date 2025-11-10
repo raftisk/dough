@@ -172,7 +172,7 @@ const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, tran
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             style={{
-              padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+              padding: theme.spacing[2],
               borderRadius: theme.border.radius.base,
               backgroundColor: 'transparent',
               border: 'none',

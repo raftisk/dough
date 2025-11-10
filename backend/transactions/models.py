@@ -253,6 +253,15 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.get_type_display()}: {self.category.name} - {self.amount} on {self.date}"
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        # Ensure Transaction date is not in the future
+        if self.date and self.date > date.today():
+            raise ValidationError({
+                'date': 'Transaction date cannot be in the future. Use Upcoming Transactions for future dates.'
+            })
+
     def get_signed_amount(self):
         """Return amount with appropriate sign based on transaction type"""
         if self.type == 'expense':
@@ -449,6 +458,11 @@ class UpcomingTransaction(Transaction):
     def __str__(self):
         recurring = " (Recurring)" if self.is_recurring() else ""
         return f"Upcoming: {self.get_type_display()} - {self.category.name} - {self.amount} on {self.date}{recurring}"
+
+    @property
+    def is_due(self):
+        """Check if this upcoming transaction is due (date is today or in the past)"""
+        return self.date <= date.today()
 
     def post_transaction(self):
         """Convert upcoming transaction to regular transaction and create next if recurring"""

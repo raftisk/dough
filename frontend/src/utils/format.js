@@ -133,7 +133,6 @@ export const getBudgetColor = (percentage) => {
 
 /**
  * Format Date object to YYYY-MM-DD string in local timezone
- * Avoids timezone conversion issues with toISOString()
  * @param {Date} date - Date object to format
  * @returns {string} Formatted date string (YYYY-MM-DD)
  */

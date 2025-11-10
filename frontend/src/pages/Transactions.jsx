@@ -160,6 +160,15 @@ const Transactions = () => {
 
   const filteredTransactions = getFilteredTransactions();
 
+  // Calculate due transactions count for badge
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueCount = upcomingTransactions.filter((transaction) => {
+    const transactionDate = new Date(transaction.date);
+    transactionDate.setHours(0, 0, 0, 0);
+    return transactionDate <= today;
+  }).length;
+
   // Handle add transaction from floating button
   const handleAddTransaction = (type, templateData = null) => {
     console.log('Add transaction type:', type, 'templateData:', templateData);
@@ -227,13 +236,24 @@ const Transactions = () => {
     setIsFormOpen(true);
   };
 
-  // Handle delete transaction
-  const handleDelete = async (transaction) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${transaction.description}"?`
-    );
+  // Build menu options for posted transactions
+  const getPostedTransactionMenuOptions = (transaction) => {
+    return [
+      {
+        label: 'Delete',
+        action: 'delete',
+        icon: 'Trash2',
+        variant: 'default',
+      },
+    ];
+  };
 
-    if (!confirmed) return;
+  // Handle menu actions for posted transactions
+  const handleMenuAction = async (action, transaction) => {
+    if (action !== 'delete') {
+      console.warn('Unknown action:', action);
+      return;
+    }
 
     try {
       if (transaction.type === 'transfer') {
@@ -397,6 +417,7 @@ const Transactions = () => {
             <button
               onClick={() => setShowUpcomingModal(true)}
               style={{
+                position: 'relative',
                 padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
                 border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
                 borderRadius: theme.border.radius.base,
@@ -415,6 +436,27 @@ const Transactions = () => {
               }}
             >
               Manage Future Transactions
+              {dueCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    backgroundColor: theme.colors.semantic.expense,
+                    color: theme.colors.text.inverse,
+                    fontSize: theme.typography.fontSize.xs,
+                    fontWeight: theme.typography.fontWeight.bold,
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {dueCount}
+                </span>
+              )}
             </button>
           }
         />
@@ -476,7 +518,8 @@ const Transactions = () => {
                     to_wallet_name: transaction.to_wallet_name,
                   }}
                   onClick={() => handleEditTransaction(transaction)}
-                  onDelete={() => handleDelete(transaction)}
+                  menuOptions={getPostedTransactionMenuOptions(transaction)}
+                  onMenuAction={handleMenuAction}
                 />
               );
             })

@@ -189,7 +189,7 @@ const MonthlyTrendChart = ({ data, currency = DEFAULT_CURRENCY, loading, error }
     if (Math.abs(value) >= 1000) {
       return `${currencySymbol}${(value / 1000).toFixed(1)}k`;
     }
-    return formatAmount(value, currency);
+    return `${currencySymbol}${Math.round(value)}`;
   };
 
   if (loading) {

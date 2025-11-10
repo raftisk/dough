@@ -215,6 +215,14 @@ const CategoryForm = ({
                       backgroundColor: theme.colors.background.card,
                       cursor: 'pointer',
                       appearance: 'none',
+                      outline: 'none',
+                      transition: theme.transitions.base,
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.text.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.border.medium;
                     }}
                   >
                     <option value="income">Income</option>
@@ -263,7 +271,19 @@ const CategoryForm = ({
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
                     backgroundColor: theme.colors.background.card,
+                    outline: 'none',
+                    transition: theme.transitions.base,
                   }}
+                  onFocus={(e) => {
+                  if (!errors.name) {
+                    e.currentTarget.style.borderColor = theme.colors.text.primary;
+                  }
+                }}
+                onBlur={(e) => {
+                  if (!errors.name) {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
+                  }
+                }}
                 />
                 {errors.name && (
                   <p

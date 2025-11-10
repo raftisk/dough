@@ -115,6 +115,58 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def update(self, request, *args, **kwargs):
+        """Override update to handle date changes from past/today to future"""
+        from datetime import datetime
+
+        instance = self.get_object()
+        data = request.data.copy()
+
+        # Check if date is being changed
+        new_date_str = data.get('date')
+        if new_date_str:
+            try:
+                new_date = datetime.strptime(new_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            today = date.today()
+
+            # If date is being changed to future, convert to UpcomingTransaction
+            if new_date > today:
+                # Prepare data for UpcomingTransaction
+                upcoming_data = {
+                    'description': data.get('description', instance.description),
+                    'amount': data.get('amount', instance.amount),
+                    'type': data.get('type', instance.type),
+                    'category': data.get('category', instance.category.id),
+                    'wallet': data.get('wallet', instance.wallet.id),
+                    'date': new_date_str,
+                    'recurrence': data.get('recurrence', instance.recurrence),
+                    'recurrence_parent': instance.recurrence_parent.id if instance.recurrence_parent else None,
+                    'auto_post': data.get('auto_post', False),
+                }
+
+                # Create UpcomingTransaction
+                upcoming_serializer = UpcomingTransactionSerializer(data=upcoming_data)
+                upcoming_serializer.is_valid(raise_exception=True)
+                upcoming = upcoming_serializer.save()
+
+                # Delete original Transaction
+                instance.delete()
+
+                return Response({
+                    'converted': True,
+                    'message': 'Transaction converted to Upcoming Transaction (future date)',
+                    'upcoming_transaction': upcoming_serializer.data
+                }, status=status.HTTP_200_OK)
+
+        # Normal update if date is not changed or stays <= today
+        return super().update(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """
@@ -233,6 +285,88 @@ class UpcomingTransactionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(wallet_id=wallet_id)
 
         return queryset
+
+    def update(self, request, *args, **kwargs):
+        """Override update to handle date changes from future to past/today"""
+        from datetime import datetime
+
+        instance = self.get_object()
+        data = request.data.copy()
+
+        # Check if date is being changed
+        new_date_str = data.get('date')
+        if new_date_str:
+            try:
+                new_date = datetime.strptime(new_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': 'Invalid date format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            today = date.today()
+
+            # If date is being changed to past/today, convert to Transaction
+            if new_date <= today:
+                # First update the instance with new data
+                serializer = self.get_serializer(instance, data=data, partial=kwargs.get('partial', False))
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+
+                # Refresh instance to get updated values
+                instance.refresh_from_db()
+
+                # Check auto_post to decide behavior
+                if instance.auto_post:
+                    # Post automatically
+                    transaction = instance.post_transaction()
+                    return Response({
+                        'converted': True,
+                        'auto_posted': True,
+                        'message': 'Upcoming Transaction posted automatically (date is due and auto_post enabled)',
+                        'transaction': TransactionSerializer(transaction).data
+                    }, status=status.HTTP_200_OK)
+                else:
+                    # Convert to Transaction manually (similar to post_transaction but explicit)
+                    transaction = Transaction.objects.create(
+                        description=instance.description,
+                        amount=instance.amount,
+                        type=instance.type,
+                        category=instance.category,
+                        wallet=instance.wallet,
+                        date=instance.date,
+                        recurrence=instance.recurrence,
+                        recurrence_parent=instance.recurrence_parent,
+                    )
+
+                    # If recurring, create next upcoming transaction
+                    if instance.recurrence and instance.recurrence != 'none':
+                        next_date = instance.calculate_next_date()
+                        if next_date:
+                            UpcomingTransaction.objects.create(
+                                description=instance.description,
+                                amount=instance.amount,
+                                type=instance.type,
+                                category=instance.category,
+                                wallet=instance.wallet,
+                                date=next_date,
+                                recurrence=instance.recurrence,
+                                recurrence_parent=instance.recurrence_parent or transaction,
+                                auto_post=instance.auto_post,
+                            )
+
+                    # Delete this upcoming transaction
+                    instance.delete()
+
+                    return Response({
+                        'converted': True,
+                        'auto_posted': False,
+                        'message': 'Upcoming Transaction converted to Transaction (date is due)',
+                        'transaction': TransactionSerializer(transaction).data
+                    }, status=status.HTTP_200_OK)
+
+        # Normal update if date is not changed or stays > today
+        return super().update(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
     def post_now(self, request, pk=None):

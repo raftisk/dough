@@ -108,12 +108,24 @@ function Dashboard() {
     }
   };
 
-  const handleDeleteTransaction = async (transaction) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${transaction.description}"?`
-    );
+  // Build menu options for posted transactions
+  const getPostedTransactionMenuOptions = () => {
+    return [
+      {
+        label: 'Delete',
+        action: 'delete',
+        icon: 'Trash2',
+        variant: 'default',
+      },
+    ];
+  };
 
-    if (!confirmed) return;
+  // Handle menu actions for posted transactions
+  const handleMenuAction = async (action, transaction) => {
+    if (action !== 'delete') {
+      console.warn('Unknown action:', action);
+      return;
+    }
 
     try {
       if (transaction.type === 'transfer') {
@@ -381,8 +393,9 @@ function Dashboard() {
                       category_icon: transaction.category_icon,
                       wallet: transaction.wallet_name,
                     }}
-                    onEdit={handleEditTransaction}
-                    onDelete={handleDeleteTransaction}
+                    onClick={handleEditTransaction}
+                    menuOptions={getPostedTransactionMenuOptions()}
+                    onMenuAction={handleMenuAction}
                   />
                 );
               })

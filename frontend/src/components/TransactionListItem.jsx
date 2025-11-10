@@ -1,11 +1,51 @@
+import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Plus, Minus, ArrowRightLeft, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Minus, ArrowRightLeft, Trash2, RefreshCw, MoreVertical, Check } from 'lucide-react';
 import { theme, getTypeColor } from '../styles/theme';
 import { getIconComponent, DEFAULT_CURRENCY } from '../constants';
 import { formatAmount } from '../utils/format';
 import CategoryTag from './CategoryTag';
 
-const TransactionListItem = ({ transaction, onClick, onDelete }) => {
+const TransactionListItem = ({ transaction, onClick, onDelete, menuOptions, onMenuAction }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuOpen]);
+
+  // Get icon component for menu option
+  const getMenuIcon = (iconName) => {
+    const icons = {
+      Plus,
+      Trash2,
+      Check,
+      RefreshCw,
+    };
+    const IconComponent = icons[iconName];
+    return IconComponent ? <IconComponent size={16} /> : null;
+  };
+
+  // Handle menu option click
+  const handleOptionClick = (option) => {
+    setMenuOpen(false);
+    if (onMenuAction) {
+      onMenuAction(option.action, transaction);
+    }
+  };
   // Determine icon based on transaction type
   const getTypeIcon = (type) => {
     switch (type?.toLowerCase()) {
@@ -126,7 +166,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
         <CategoryTag category={{ icon: transaction.category_icon, name: transaction.category }} />
       )}
 
-      {/* Right section: Amount + Actions */}
+      {/* Right section: Amount + Menu */}
       <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing[4] }}>
         {/* Amount */}
         <div
@@ -156,9 +196,92 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
           </span>
         </div>
 
-        {/* Action buttons */}
-        <div style={{ display: 'flex', gap: theme.spacing[2] }}>
-          {onDelete && (
+        {/* Menu button */}
+        <div ref={menuRef} style={{ position: 'relative' }}>
+          {menuOptions && menuOptions.length > 0 ? (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen(!menuOpen);
+                }}
+                style={{
+                  padding: theme.spacing[2],
+                  borderRadius: theme.border.radius.base,
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: theme.transitions.fast,
+                  color: theme.colors.text.secondary,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+                  e.currentTarget.style.color = theme.colors.text.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = theme.colors.text.secondary;
+                }}
+              >
+                <MoreVertical size={18} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {menuOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '100%',
+                    marginTop: theme.spacing[1],
+                    backgroundColor: theme.colors.background.card,
+                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+                    borderRadius: theme.border.radius.base,
+                    boxShadow: theme.shadows.lg,
+                    padding: theme.spacing[2],
+                    minWidth: '160px',
+                    zIndex: theme.zIndex.dropdown,
+                  }}
+                >
+                  {menuOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOptionClick(option);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: theme.spacing[2],
+                        fontSize: theme.typography.fontSize.sm,
+                        color: option.variant === 'danger' ? theme.colors.semantic.expense : theme.colors.text.primary,
+                        transition: theme.transitions.fast,
+                        borderRadius: theme.border.radius.sm,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      {getMenuIcon(option.icon)}
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : onDelete ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -183,7 +306,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete }) => {
             >
               <Trash2 size={16} color={theme.colors.text.primary} />
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -207,6 +330,15 @@ TransactionListItem.propTypes = {
   }).isRequired,
   onClick: PropTypes.func,
   onDelete: PropTypes.func,
+  menuOptions: PropTypes.arrayOf(
+    PropTypes.shape({
+      label: PropTypes.string.isRequired,
+      action: PropTypes.string.isRequired,
+      icon: PropTypes.string.isRequired,
+      variant: PropTypes.oneOf(['default', 'danger']),
+    })
+  ),
+  onMenuAction: PropTypes.func,
 };
 
 export default TransactionListItem;
