@@ -278,7 +278,7 @@ const TransferForm = ({
                   marginBottom: theme.spacing[1],
                 }}
               >
-                Amount (EUR)
+                Amount
               </label>
               <div style={{ position: 'relative' }}>
                 <span

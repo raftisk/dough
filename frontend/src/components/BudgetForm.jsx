@@ -320,6 +320,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                             width: '16px',
                             height: '16px',
                             cursor: 'pointer',
+                            accentColor: theme.colors.action.primary,
                           }}
                         />
                         <IconComponent size={16} color={theme.colors.text.primary} />
@@ -470,6 +471,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                   width: '16px',
                   height: '16px',
                   cursor: 'pointer',
+                  accentColor: theme.colors.action.primary,
                 }}
               />
               <span
@@ -513,6 +515,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                     width: '16px',
                     height: '16px',
                     cursor: 'pointer',
+                    accentColor: theme.colors.action.primary,
                   }}
                 />
                 <span

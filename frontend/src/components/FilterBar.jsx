@@ -244,6 +244,7 @@ const FilterBar = ({
           width: '16px',
           height: '16px',
           cursor: 'pointer',
+          accentColor: theme.colors.action.primary,
         }}
       />
       <span style={{ fontSize: theme.typography.fontSize.sm }}>{label}</span>
@@ -388,6 +389,7 @@ const FilterBar = ({
                           width: '16px',
                           height: '16px',
                           cursor: 'pointer',
+                          accentColor: theme.colors.action.primary,
                         }}
                       />
                       <IconComponent size={16} color={theme.colors.text.primary} />
@@ -441,6 +443,7 @@ const FilterBar = ({
                           width: '16px',
                           height: '16px',
                           cursor: 'pointer',
+                          accentColor: theme.colors.action.primary,
                         }}
                       />
                       <IconComponent size={16} color={theme.colors.text.primary} />
@@ -499,6 +502,7 @@ const FilterBar = ({
                     width: '16px',
                     height: '16px',
                     cursor: 'pointer',
+                    accentColor: theme.colors.action.primary,
                   }}
                 />
                 <span style={{ fontSize: theme.typography.fontSize.sm, flex: 1 }}>{wallet.name}</span>

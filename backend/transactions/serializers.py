@@ -85,10 +85,15 @@ class TransactionSerializer(serializers.ModelSerializer):
         source='get_signed_amount',
         help_text='Amount with sign based on type (negative for expenses)'
     )
+    is_posted = serializers.SerializerMethodField()
     description = serializers.CharField(required=False, allow_blank=True)
 
     def get_currency_symbol(self, obj):
         return get_currency_symbol(obj.wallet.currency)
+
+    def get_is_posted(self, obj):
+        from datetime import date
+        return obj.date <= date.today()
 
     class Meta:
         model = Transaction
@@ -104,6 +109,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             'amount',
             'signed_amount',
             'currency_symbol',
+            'is_posted',
             'description',
             'date',
             'recurrence',
@@ -245,11 +251,19 @@ class UpcomingTransactionSerializer(serializers.ModelSerializer):
         source='wallet.name',
         read_only=True
     )
+    wallet_currency = serializers.CharField(
+        source='wallet.currency',
+        read_only=True
+    )
     currency_symbol = serializers.SerializerMethodField()
+    is_posted = serializers.SerializerMethodField()
     description = serializers.CharField(required=False, allow_blank=True)
 
     def get_currency_symbol(self, obj):
         return get_currency_symbol(obj.wallet.currency)
+
+    def get_is_posted(self, obj):
+        return False
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -271,12 +285,14 @@ class UpcomingTransactionSerializer(serializers.ModelSerializer):
             'id',
             'wallet',
             'wallet_name',
+            'wallet_currency',
             'type',
             'category',
             'category_name',
             'category_icon',
             'amount',
             'currency_symbol',
+            'is_posted',
             'description',
             'date',
             'recurrence',

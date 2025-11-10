@@ -634,6 +634,7 @@ const TransactionForm = ({
                 <select
                   value={recurrence}
                   onChange={(e) => setRecurrence(e.target.value)}
+                  disabled={initialData?.is_posted}
                   style={{
                     width: '100%',
                     padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
@@ -642,8 +643,12 @@ const TransactionForm = ({
                     borderRadius: theme.border.radius.base,
                     fontSize: theme.typography.fontSize.base,
                     color: theme.colors.text.primary,
-                    backgroundColor: theme.colors.background.card,
-                    cursor: 'pointer',
+                    backgroundColor: initialData?.is_posted
+                      ? theme.colors.background.cardHover
+                      : theme.colors.background.card,
+                    cursor: initialData?.is_posted
+                      ? 'default'
+                      : 'pointer',
                     appearance: 'none',
                     outline: 'none',
                     transition: theme.transitions.base,
@@ -661,17 +666,19 @@ const TransactionForm = ({
                   <option value="monthly">Monthly</option>
                   <option value="yearly">Yearly</option>
                 </select>
-                <ChevronDown
-                  size={20}
-                  style={{
-                    position: 'absolute',
-                    right: theme.spacing[3],
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    pointerEvents: 'none',
-                    color: theme.colors.text.secondary,
-                  }}
-                />
+                {!initialData?.is_posted && (
+                  <ChevronDown
+                    size={20}
+                    style={{
+                      position: 'absolute',
+                      right: theme.spacing[3],
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                      color: theme.colors.text.secondary,
+                    }}
+                  />
+                )}
               </div>
             </div>
 
@@ -701,6 +708,7 @@ const TransactionForm = ({
                       width: '16px',
                       height: '16px',
                       cursor: 'pointer',
+                      accentColor: theme.colors.action.primary,
                     }}
                   />
                   <span
@@ -809,7 +817,7 @@ const TransactionForm = ({
                   e.currentTarget.style.backgroundColor = theme.colors.action.primary;
                 }}
               >
-                Post
+                {initialData && initialData.id ? 'Save' : 'Post'}
               </button>
             </div>
           </div>
