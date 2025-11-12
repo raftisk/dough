@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from month.models import MonthField
@@ -16,92 +16,13 @@ def get_current_month():
     return Month.from_date(date.today())
 
 
-class UserManager(BaseUserManager):
-
-    def create_user(self, email, username, password=None, **extra_fields):
-        if not email:
-            raise ValueError('The Email field must be set')
-        email = self.normalize_email(email)
-        user = self.model(email=email, username=username, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, username, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
-        return self.create_user(email, username, password, **extra_fields)
-
-
-class User(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(unique=True, max_length=255)
-    username = models.CharField(max_length=150)
-    date_joined = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-
-    objects = UserManager()
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-
-    class Meta:
-        ordering = ['-date_joined']
-
-    def __str__(self):
-        return self.email
-
-
-class UserPreferences(models.Model):
-    """User preferences for customization"""
-    THEME_CHOICES = [
-        ('light', 'Light'),
-        ('dark', 'Dark'),
-        ('auto', 'Auto'),
-    ]
-
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='preferences'
-    )
-    default_currency = models.CharField(
-        max_length=3,
-        choices=CURRENCIES,
-        default=DEFAULT_CURRENCY
-    )
-    default_wallet = models.ForeignKey(
-        'Wallet',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='+'
-    )
-    theme = models.CharField(
-        max_length=10,
-        choices=THEME_CHOICES,
-        default='light'
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name_plural = 'User Preferences'
-
-    def __str__(self):
-        return f"{self.user.email} preferences"
+# User and UserPreferences models have been moved to the accounts app
+# Import them from accounts.models if needed
 
 
 class Wallet(models.Model):
     user = models.ForeignKey(
-        'User',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -165,7 +86,7 @@ class Category(models.Model):
     Categories are user-configurable.
     """
     user = models.ForeignKey(
-        'User',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -584,7 +505,7 @@ class Transfer(models.Model):
 class WishlistItem(models.Model):
     """Wishlist items for tracking savings goals"""
     user = models.ForeignKey(
-        'User',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -623,7 +544,7 @@ class WishlistItem(models.Model):
 class Template(models.Model):
     """Template for quick transaction entry with pre-filled data"""
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,

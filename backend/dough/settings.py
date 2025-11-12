@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'rest_framework',
     'corsheaders',
-    'transactions'
+    'accounts',  
+    'transactions'  
 ]
 
 MIDDLEWARE = [
@@ -127,7 +128,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
-AUTH_USER_MODEL = 'transactions.User'
+AUTH_USER_MODEL = 'accounts.User'
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
