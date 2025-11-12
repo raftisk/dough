@@ -22,10 +22,26 @@ class WalletViewSet(viewsets.ModelViewSet):
     queryset = Wallet.objects.all()
     serializer_class = WalletSerializer
 
+    def get_queryset(self):
+        """Filter wallets by current user"""
+        return Wallet.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        """Auto-populate user when creating wallet"""
+        serializer.save(user=self.request.user)
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def get_queryset(self):
+        """Filter categories by current user"""
+        return Category.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        """Auto-populate user when creating category"""
+        serializer.save(user=self.request.user)
 
 
 class TransactionViewSet(viewsets.ModelViewSet):
@@ -33,7 +49,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
-        queryset = Transaction.objects.all()
+        # Filter by current user's wallets
+        queryset = Transaction.objects.filter(wallet__user=self.request.user)
 
         # Filter by wallet
         wallet_id = self.request.query_params.get('wallet', None)
@@ -209,8 +226,9 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Build queryset
+        # Build queryset - filter by current user's wallets
         queryset = Transaction.objects.filter(
+            wallet__user=request.user,
             date__gte=start_date,
             date__lte=end_date
         )
@@ -251,7 +269,8 @@ class BudgetViewSet(viewsets.ModelViewSet):
     serializer_class = BudgetSerializer
 
     def get_queryset(self):
-        queryset = Budget.objects.all()
+        # Filter by current user
+        queryset = Budget.objects.filter(user=self.request.user)
 
         # Filter by category
         category_id = self.request.query_params.get('category', None)
@@ -271,13 +290,18 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def perform_create(self, serializer):
+        """Auto-populate user when creating budget"""
+        serializer.save(user=self.request.user)
+
 
 class UpcomingTransactionViewSet(viewsets.ModelViewSet):
     queryset = UpcomingTransaction.objects.all()
     serializer_class = UpcomingTransactionSerializer
 
     def get_queryset(self):
-        queryset = UpcomingTransaction.objects.all()
+        # Filter by current user's wallets
+        queryset = UpcomingTransaction.objects.filter(wallet__user=self.request.user)
 
         # Filter by wallet
         wallet_id = self.request.query_params.get('wallet', None)
@@ -406,7 +430,10 @@ class TransferViewSet(viewsets.ModelViewSet):
     serializer_class = TransferSerializer
 
     def get_queryset(self):
-        queryset = Transfer.objects.all()
+        # Filter by current user's wallets (either from or to)
+        queryset = Transfer.objects.filter(
+            Q(from_wallet__user=self.request.user) | Q(to_wallet__user=self.request.user)
+        )
 
         # Filter by wallet (either from or to)
         wallet_id = self.request.query_params.get('wallet', None)
@@ -421,7 +448,8 @@ class WishlistItemViewSet(viewsets.ModelViewSet):
     serializer_class = WishlistItemSerializer
 
     def get_queryset(self):
-        queryset = WishlistItem.objects.all()
+        # Filter by current user
+        queryset = WishlistItem.objects.filter(user=self.request.user)
 
         # Filter by category
         category_id = self.request.query_params.get('category', None)
@@ -439,6 +467,10 @@ class WishlistItemViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_completed=is_completed.lower() == 'true')
 
         return queryset
+
+    def perform_create(self, serializer):
+        """Auto-populate user when creating wishlist item"""
+        serializer.save(user=self.request.user)
 
 
 @api_view(['GET'])
@@ -498,8 +530,9 @@ def monthly_summary(request):
         from datetime import timedelta
         end_date = end_date - timedelta(days=1)
 
-        # Query transactions for this month
+        # Query transactions for this month - filter by current user
         month_transactions = Transaction.objects.filter(
+            wallet__user=request.user,
             date__gte=start_date,
             date__lte=end_date
         )
@@ -531,3 +564,11 @@ def monthly_summary(request):
 class TemplateViewSet(viewsets.ModelViewSet):
     queryset = Template.objects.all()
     serializer_class = TemplateSerializer
+
+    def get_queryset(self):
+        """Filter templates by current user"""
+        return Template.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        """Auto-populate user when creating template"""
+        serializer.save(user=self.request.user)

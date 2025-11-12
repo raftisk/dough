@@ -9,7 +9,25 @@ const api = axios.create({
   timeout: 10000, // 10 seconds
 });
 
-// Request interceptor for error handling
+// Request interceptor to add auth token to all requests
+api.interceptors.request.use(
+  (config) => {
+    // Get token from localStorage
+    const token = localStorage.getItem('authToken');
+
+    // If token exists, add it to the Authorization header
+    if (token) {
+      config.headers.Authorization = `Token ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -23,6 +41,19 @@ api.interceptors.response.use(
       console.error('Request Method:', error.config?.method);
       console.error('Request Data:', error.config?.data);
       console.error('========================');
+
+      // Handle 401 Unauthorized errors - user session expired or invalid token
+      if (error.response.status === 401) {
+        // Clear authentication data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authUser');
+
+        // Only redirect if not already on login/signup page
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+          window.location.href = '/login';
+        }
+      }
     } else if (error.request) {
       // Request made but no response received
       console.error('Network Error: No response from server');

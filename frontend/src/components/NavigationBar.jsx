@@ -52,7 +52,7 @@ const NavigationBar = () => {
             color: theme.colors.text.primary,
           }}
         >
-          <Donut size={28} />
+          <Donut size={28} strokeWidth={2.25} />
           <span>Dough</span>
         </Link>
 

@@ -24,8 +24,6 @@ class Wallet(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name='wallets'
     )
     name = models.CharField(max_length=100)
@@ -88,11 +86,9 @@ class Category(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name='categories'
     )
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     type = models.CharField(
         max_length=10,
         choices=CATEGORY_TYPES,
@@ -212,6 +208,11 @@ class Transaction(models.Model):
 
 class Budget(models.Model):
     """Budgets are only for expense tracking"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='budgets'
+    )
     name = models.CharField(
         max_length=100,
     )
@@ -507,8 +508,6 @@ class WishlistItem(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name='wishlist_items'
     )
     description = models.TextField()
@@ -546,8 +545,6 @@ class Template(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name='transaction_templates'
     )
     description = models.TextField(blank=True)

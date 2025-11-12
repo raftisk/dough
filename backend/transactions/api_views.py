@@ -23,15 +23,17 @@ class DashboardAPIView(APIView):
         next_month = current_month_start + relativedelta(months=1)
         current_month_end = next_month - relativedelta(days=1)
 
-        # Current month income (sum of all income transactions this month)
+        # Current month income (sum of all income transactions this month) - filter by user
         current_month_income = Transaction.objects.filter(
+            wallet__user=request.user,
             type='income',
             date__gte=current_month_start,
             date__lte=current_month_end
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
-        # Current month expenses (sum of all expense transactions this month)
+        # Current month expenses (sum of all expense transactions this month) - filter by user
         current_month_expenses = Transaction.objects.filter(
+            wallet__user=request.user,
             type='expense',
             date__gte=current_month_start,
             date__lte=current_month_end
@@ -40,21 +42,24 @@ class DashboardAPIView(APIView):
         # Net savings (income - expenses)
         net_savings = current_month_income - current_month_expenses
 
-        # Total balance across all wallets
-        wallets = Wallet.objects.all()
+        # Total balance across all user's wallets
+        wallets = Wallet.objects.filter(user=request.user)
         total_balance = sum(wallet.get_current_balance() for wallet in wallets)
 
-        # Recent transactions (last 10)
-        recent_transactions = Transaction.objects.select_related(
+        # Recent transactions (last 10) - filter by user
+        recent_transactions = Transaction.objects.filter(
+            wallet__user=request.user
+        ).select_related(
             'wallet', 'category'
         ).order_by('-date', '-created_at')[:10]
         recent_transactions_data = TransactionSerializer(recent_transactions, many=True).data
 
-        # Wallet count
-        wallet_count = Wallet.objects.count()
+        # Wallet count - filter by user
+        wallet_count = Wallet.objects.filter(user=request.user).count()
 
-        # Transaction count this month
+        # Transaction count this month - filter by user
         transaction_count = Transaction.objects.filter(
+            wallet__user=request.user,
             date__gte=current_month_start,
             date__lte=current_month_end
         ).count()
