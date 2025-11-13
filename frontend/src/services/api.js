@@ -518,10 +518,23 @@ export const deleteTemplate = async (id) => {
 export const getMonthlySummary = async (year = null) => {
   try {
     const params = year ? { year } : {};
-    const response = await api.get('/insights/monthly-summary/', { params });
+    const response = await api.get('/analytics/monthly-summaries/insights/', { params });
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch monthly summary');
+  }
+};
+
+/**
+ * Fetch current month summary from analytics
+ * @returns {Promise<Object>} Current month summary object
+ */
+export const getCurrentMonthSummary = async () => {
+  try {
+    const response = await api.get('/analytics/current-month/');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch current month summary');
   }
 };
 

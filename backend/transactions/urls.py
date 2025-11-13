@@ -8,8 +8,7 @@ from .views import (
     UpcomingTransactionViewSet,
     TransferViewSet,
     WishlistItemViewSet,
-    TemplateViewSet,
-    monthly_summary
+    TemplateViewSet
 )
 from .api_views import DashboardAPIView
 
@@ -26,9 +25,6 @@ router.register(r'templates', TemplateViewSet, basename='template')
 urlpatterns = [
     # Dashboard API
     path('dashboard/', DashboardAPIView.as_view(), name='api-dashboard'),
-
-    # Insights API
-    path('insights/monthly-summary/', monthly_summary, name='monthly-summary'),
 
     # API routes
     path('', include(router.urls)),

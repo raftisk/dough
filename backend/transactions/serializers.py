@@ -350,6 +350,7 @@ class WishlistItemSerializer(serializers.ModelSerializer):
             'priority',
             'target',
             'is_completed',
+            'use_savings',
             'created_at',
             'updated_at'
         ]

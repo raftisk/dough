@@ -12,7 +12,7 @@ import CalendarView from '../components/CalendarView';
 import ErrorState from '../components/ErrorState';
 import { theme } from '../styles/theme';
 import { getCurrentMonthYear } from '../utils/date';
-import { getDashboardData, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction, createTransfer, updateTransfer, deleteTransfer, getTemplates, createTemplate, updateTemplate } from '../services/api';
+import { getDashboardData, getCurrentMonthSummary, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction, createTransfer, updateTransfer, deleteTransfer, getTemplates, createTemplate, updateTemplate } from '../services/api';
 import { DEFAULT_CURRENCY } from '../constants';
 import { formatAmount, formatDateToLocal } from '../utils/format';
 
@@ -42,13 +42,26 @@ function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setError(null);
-      const [dashData, categoriesData, walletsData, templatesData] = await Promise.all([
+      const [dashData, currentMonthData, categoriesData, walletsData, templatesData] = await Promise.all([
         getDashboardData(),
+        getCurrentMonthSummary(),
         getCategories(),
         getWallets(),
         getTemplates(),
       ]);
-      setDashboardData(dashData);
+
+      // Merge dashboard data with current month summary from analytics
+      const mergedData = {
+        ...dashData,
+        current_month_income: currentMonthData.total_income,
+        current_month_expenses: currentMonthData.total_expenses,
+        net_savings: currentMonthData.net_surplus,
+        total_balance: currentMonthData.total_balance,
+        income_trend: currentMonthData.income_trend,
+        expenses_trend: currentMonthData.expenses_trend,
+      };
+
+      setDashboardData(mergedData);
       setCategories(categoriesData.filter(c => c.is_active));
       setWallets(walletsData);
       setTemplates(templatesData);
@@ -330,14 +343,30 @@ function Dashboard() {
               value={formatAmount(parseFloat(dashboardData.current_month_income), DEFAULT_CURRENCY)}
               icon={TrendingUp}
               iconColor={theme.colors.semantic.income}
-              subtitle={`${dashboardData.transaction_count} transaction${dashboardData.transaction_count !== 1 ? 's' : ''} this month`}
+              subtitle={
+                dashboardData.income_trend !== null && dashboardData.income_trend !== undefined
+                  ? dashboardData.income_trend > 0
+                    ? `${Math.round(dashboardData.income_trend)}% more than last month`
+                    : dashboardData.income_trend < 0
+                    ? `${Math.round(Math.abs(dashboardData.income_trend))}% less than last month`
+                    : 'Same as last month'
+                  : 'No comparison data'
+              }
             />
             <MetricCard
               label="Total Expenses"
               value={formatAmount(parseFloat(dashboardData.current_month_expenses), DEFAULT_CURRENCY)}
               icon={TrendingDown}
               iconColor={theme.colors.semantic.expense}
-              subtitle={`${dashboardData.transaction_count} transaction${dashboardData.transaction_count !== 1 ? 's' : ''} this month`}
+              subtitle={
+                dashboardData.expenses_trend !== null && dashboardData.expenses_trend !== undefined
+                  ? dashboardData.expenses_trend > 0
+                    ? `${Math.round(dashboardData.expenses_trend)}% more than last month`
+                    : dashboardData.expenses_trend < 0
+                    ? `${Math.round(Math.abs(dashboardData.expenses_trend))}% less than last month`
+                    : 'Same as last month'
+                  : 'No comparison data'
+              }
             />
             <MetricCard
               label="Net Savings"
@@ -355,7 +384,7 @@ function Dashboard() {
               value={formatAmount(parseFloat(dashboardData.total_balance), DEFAULT_CURRENCY)}
               icon={Wallet}
               iconColor={theme.colors.text.secondary}
-              subtitle={`Across ${dashboardData.wallet_count} wallets`}
+              subtitle={`Across ${dashboardData.wallet_count} wallet${dashboardData.wallet_count !== 1 ? 's' : ''}`}
               masked={true}
             />
           </div>

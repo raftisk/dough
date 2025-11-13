@@ -218,7 +218,7 @@ const styles = {
   submitButton: {
     marginTop: theme.spacing[2],
     padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.medium,
     color: theme.colors.text.inverse,
     backgroundColor: theme.colors.action.primary,

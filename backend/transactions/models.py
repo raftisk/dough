@@ -530,6 +530,10 @@ class WishlistItem(models.Model):
         help_text='Target month to purchase this item'
     )
     is_completed = models.BooleanField(default=False)
+    use_savings = models.BooleanField(
+        default=False,
+        help_text='Whether to use savings/reserved balance for this purchase'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
