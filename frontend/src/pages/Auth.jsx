@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Donut } from 'lucide-react';
 import LoginForm from '../components/LoginForm';
@@ -13,29 +14,46 @@ function Auth() {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
 
+  const [reverse, setReverse] = useState(false);
+
   return (
-    <div style={styles.container}>
-      {/* Left Side - Branding Panel */}
-      <div style={styles.leftPanel}>
-        <div style={styles.brandingContent}>
-          <div style={styles.logoContainer}>
-            <Donut size={81} strokeWidth={2.25} style={styles.logoIcon} />
+    <>
+      <style>
+        {`
+          @keyframes rotate-steps {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+      <div style={styles.container}>
+        {/* Left Side - Branding Panel */}
+        <div style={styles.leftPanel}>
+          <div style={styles.brandingContent}>
+            <div style={styles.logoContainer}>
+              <Donut 
+                size={81} 
+                strokeWidth={2.25} 
+                style={{ ...styles.logoIcon, animationDirection: reverse ? 'reverse' : 'normal' }}
+                onClick={() => setReverse(!reverse)}
+              />
+            </div>
+            <h1 style={styles.brandTitle}>dough</h1>
+            <p style={styles.brandSubtitle}>Minimal expense tracking</p>
           </div>
-          <h1 style={styles.brandTitle}>Dough</h1>
-          <p style={styles.brandSubtitle}>Minimal expense tracking</p>
+
+          {/* Signature */}
+          <div style={styles.signature}>
+            <span style={styles.signatureText}>by raftisk</span>
+          </div>
         </div>
 
-        {/* Signature */}
-        <div style={styles.signature}>
-          <span style={styles.signatureText}>by raftisk</span>
+        {/* Right Side - Form Panel */}
+        <div style={styles.rightPanel}>
+          {isLoginPage ? <LoginForm /> : <SignupForm />}
         </div>
       </div>
-
-      {/* Right Side - Form Panel */}
-      <div style={styles.rightPanel}>
-        {isLoginPage ? <LoginForm /> : <SignupForm />}
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -68,10 +86,13 @@ const styles = {
 
   logoContainer: {
     marginBottom: theme.spacing[3],
+    className: 'animate-spin-slow',
   },
 
   logoIcon: {
     color: theme.colors.text.inverse,
+    animation: 'rotate-steps 5s infinite',
+    cursor: 'pointer'
   },
 
   brandTitle: {
@@ -101,7 +122,7 @@ const styles = {
   rightPanel: {
     flex: '0 0 60%',
     display: 'flex',
-    backgroundColor: theme.colors.text.primary,
+    backgroundColor: theme.colors.background.pageAlt,
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing[8],

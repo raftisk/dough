@@ -192,7 +192,7 @@ function SignupForm() {
             }
           }}
         >
-          {loading ? 'Creating account...' : 'Create account'}
+          {loading ? 'Creating account...' : 'Sign up'}
         </button>
       </form>
 

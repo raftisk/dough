@@ -4,6 +4,7 @@ import { X, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { getIconComponent, DEFAULT_CURRENCY } from '../constants';
 import { getCurrencySymbol } from '../utils/format';
+import Toggle from './Toggle';
 
 const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
   const [name, setName] = useState('');
@@ -447,97 +448,31 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
             </div>
           </div>
 
-          {/* Reset Checkbox */}
+          {/* Recurring Toggle */}
           <div style={{ marginBottom: theme.spacing[4] }}>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: theme.spacing[2],
-                cursor: 'pointer',
+            <Toggle
+              checked={reset}
+              onChange={() => {
+                setReset(!reset);
+                // If unchecking reset, also uncheck rollover
+                if (reset) {
+                  setRollover(false);
+                }
               }}
-            >
-              <input
-                type="checkbox"
-                checked={reset}
-                onChange={(e) => {
-                  setReset(e.target.checked);
-                  // If unchecking reset, also uncheck rollover
-                  if (!e.target.checked) {
-                    setRollover(false);
-                  }
-                }}
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  cursor: 'pointer',
-                  accentColor: theme.colors.action.primary,
-                }}
-              />
-              <span
-                style={{
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                }}
-              >
-                Recurring
-              </span>
-            </label>
-            <p
-              style={{
-                fontSize: theme.typography.fontSize.xs,
-                color: theme.colors.text.muted,
-                marginTop: theme.spacing[1],
-                marginLeft: `calc(16px + ${theme.spacing[2]})`,
-              }}
-            >
-              Budget automatically renews each period
-            </p>
+              label="Recurring"
+              description="Budget automatically renews each period"
+            />
           </div>
 
-          {/* Rollover Checkbox - only show if Reset is checked */}
+          {/* Rollover Toggle - only show if Recurring is enabled */}
           {reset && (
             <div style={{ marginBottom: theme.spacing[4] }}>
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: theme.spacing[2],
-                  cursor: 'pointer',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={rollover}
-                  onChange={(e) => setRollover(e.target.checked)}
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer',
-                    accentColor: theme.colors.action.primary,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: theme.typography.fontSize.sm,
-                    fontWeight: theme.typography.fontWeight.medium,
-                    color: theme.colors.text.primary,
-                  }}
-                >
-                  Rollover
-                </span>
-              </label>
-              <p
-                style={{
-                  fontSize: theme.typography.fontSize.xs,
-                  color: theme.colors.text.muted,
-                  marginTop: theme.spacing[1],
-                  marginLeft: `calc(16px + ${theme.spacing[2]})`,
-                }}
-              >
-                Unused budget carries over to next period
-              </p>
+              <Toggle
+                checked={rollover}
+                onChange={() => setRollover(!rollover)}
+                label="Rollover"
+                description="Unused budget carries over to next period"
+              />
             </div>
           )}
 

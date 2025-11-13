@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Donut, User } from 'lucide-react';
+import { Donut, Settings } from 'lucide-react';
 import { theme } from '../styles/theme';
 
 const NavigationBar = () => {
@@ -120,7 +120,7 @@ const NavigationBar = () => {
           e.currentTarget.style.color = theme.colors.text.secondary;
         }}
       >
-        <User size={20} />
+        <Settings size={20} />
       </Link>
     </nav>
   );

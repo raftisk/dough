@@ -86,6 +86,10 @@ class UserPreferences(models.Model):
         default=False,
         help_text='Enable smart budget allocation algorithm'
     )
+    multi_currency = models.BooleanField(
+        default=False,
+        help_text='Enable multi-currency support (Beta feature)'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

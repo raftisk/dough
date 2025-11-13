@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { X, Plus, Minus, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
 import DatePicker from './DatePicker';
+import Toggle from './Toggle';
 import { formatDateToLocal, getCurrencySymbol } from '../utils/format';
 import { DEFAULT_CURRENCY } from '../constants';
 import { createTemplate } from '../services/api';
@@ -682,7 +683,7 @@ const TransactionForm = ({
               </div>
             </div>
 
-            {/* Auto-post checkbox (only show for future dates) */}
+            {/* Auto-post toggle (only show for future dates) */}
             {new Date(date) > new Date() && (
               <div
                 style={{
@@ -692,46 +693,12 @@ const TransactionForm = ({
                   border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
                 }}
               >
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: theme.spacing[2],
-                    cursor: 'pointer',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={autoPost}
-                    onChange={(e) => setAutoPost(e.target.checked)}
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      cursor: 'pointer',
-                      accentColor: theme.colors.action.primary,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: theme.typography.fontSize.sm,
-                      fontWeight: theme.typography.fontWeight.medium,
-                      color: theme.colors.text.primary,
-                    }}
-                  >
-                    Auto-post when date arrives
-                  </span>
-                </label>
-                <p
-                  style={{
-                    fontSize: theme.typography.fontSize.xs,
-                    color: theme.colors.text.secondary,
-                    marginTop: theme.spacing[1],
-                    marginLeft: '24px',
-                    marginBottom: 0,
-                  }}
-                >
-                  Transaction will be posted automatically without confirmation
-                </p>
+                <Toggle
+                  checked={autoPost}
+                  onChange={() => setAutoPost(!autoPost)}
+                  label="Auto-post when date arrives"
+                  description="Transaction will be posted automatically without confirmation"
+                />
               </div>
             )}
           </div>

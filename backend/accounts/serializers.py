@@ -88,6 +88,7 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
             'default_wallet_name',
             'theme',
             'smart_allocation',
+            'multi_currency',
             'created_at',
             'updated_at'
         ]

@@ -21,3 +21,4 @@ export { default as CurrencyPicker } from './CurrencyPicker';
 export { default as WalletForm } from './WalletForm';
 export { default as UpcomingTransactionsList } from './UpcomingTransactionsList';
 export { default as TransferForm } from './TransferForm';
+export { default as Toggle } from './Toggle';

@@ -85,14 +85,40 @@ class LogoutView(APIView):
 
 class CurrentUserView(APIView):
     """
-    API view to get current authenticated user's data.
+    API view to get, update, and delete current authenticated user's data.
     GET /auth/user/
+    PATCH /auth/user/
+    DELETE /auth/user/
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        """Update user data (currently supports username only)"""
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        """Delete the current user's account"""
+        try:
+            user = request.user
+            # Delete the user's token first
+            user.auth_token.delete()
+            # Delete the user account (this will cascade delete related data)
+            user.delete()
+            return Response({
+                'message': 'Account successfully deleted.'
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'error': 'Failed to delete account.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class UserPreferencesView(generics.RetrieveUpdateAPIView):
