@@ -4,7 +4,7 @@ import { MoreVertical, Edit, Trash2, Eye, EyeOff, CheckCircle, XCircle} from 'lu
 import { theme } from '../styles/theme';
 import { getIconComponent } from '../constants';
 
-const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, transactionCount, isAlreadyAdded, isActivated }) => {
+const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, onClick, transactionCount, isAlreadyAdded, isActivated }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -73,6 +73,12 @@ const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, tran
 
   return (
     <div
+      onClick={(e) => {
+        // Only trigger onClick if not clicking on menu button or menu items
+        if (!e.target.closest('button') && onClick && statusDot !== 'preset') {
+          onClick(category);
+        }
+      }}
       style={{
         backgroundColor,
         border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
@@ -86,6 +92,7 @@ const CategoryListItem = ({ category, statusDot, menuOptions, onMenuAction, tran
         minHeight: '68px', // Match height with TransactionListItem
         transition: theme.transitions.fast,
         position: 'relative',
+        cursor: statusDot !== 'preset' && onClick ? 'pointer' : 'default',
       }}
       onMouseEnter={(e) => {
         if (statusDot !== 'preset') {
@@ -266,6 +273,7 @@ CategoryListItem.propTypes = {
     })
   ),
   onMenuAction: PropTypes.func,
+  onClick: PropTypes.func,
   transactionCount: PropTypes.number,
   isAlreadyAdded: PropTypes.bool,
   isActivated: PropTypes.bool,

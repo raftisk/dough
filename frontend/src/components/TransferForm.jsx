@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { X, ArrowRightLeft, ChevronDown } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
 import DatePicker from './DatePicker';
 import { formatDateToLocal } from '../utils/format';
@@ -162,12 +162,13 @@ const TransferForm = ({
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: theme.spacing[6],
-            borderBottom: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+            paddingBottom: 0,
+            marginBottom: theme.spacing[6],
           }}
         >
           <h2
             style={{
-              fontSize: theme.typography.fontSize['2xl'],
+              fontSize: theme.typography.fontSize.xl,
               fontWeight: theme.typography.fontWeight.bold,
               color: theme.colors.text.primary,
               margin: 0,
@@ -181,7 +182,7 @@ const TransferForm = ({
               backgroundColor: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              padding: theme.spacing[2],
+              padding: theme.spacing[1],
               borderRadius: theme.border.radius.base,
               display: 'flex',
               alignItems: 'center',
@@ -200,27 +201,8 @@ const TransferForm = ({
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} style={{ padding: theme.spacing[6] }}>
+        <form onSubmit={handleSubmit} style={{ padding: theme.spacing[6], paddingTop: 0 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[4] }}>
-            {/* Transfer subtitle */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: theme.spacing[2],
-              }}
-            >
-              <ArrowRightLeft size={16} color={theme.colors.semantic.transfer} />
-              <span
-                style={{
-                  fontSize: theme.typography.fontSize.sm,
-                  color: theme.colors.text.secondary,
-                }}
-              >
-                Transfer between wallets
-              </span>
-            </div>
-
             {/* Description */}
             <div>
               <label

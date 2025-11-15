@@ -136,7 +136,8 @@ const WalletForm = ({
           <div
             style={{
               padding: theme.spacing[6],
-              borderBottom: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+              paddingBottom: 0,
+              marginBottom: theme.spacing[6],
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -144,8 +145,8 @@ const WalletForm = ({
           >
             <h2
               style={{
-                fontSize: theme.typography.fontSize['2xl'],
-                fontWeight: theme.typography.fontWeight.semibold,
+                fontSize: theme.typography.fontSize.xl,
+                fontWeight: theme.typography.fontWeight.bold,
                 color: theme.colors.text.primary,
                 margin: 0,
               }}
@@ -155,16 +156,15 @@ const WalletForm = ({
             <button
               onClick={onClose}
               style={{
-                background: 'none',
+                backgroundColor: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                padding: theme.spacing[2],
+                padding: theme.spacing[1],
+                borderRadius: theme.border.radius.base,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: theme.colors.text.secondary,
-                borderRadius: theme.border.radius.base,
-                transition: theme.transitions.base,
+                transition: theme.transitions.fast,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
@@ -173,7 +173,7 @@ const WalletForm = ({
                 e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
-              <X size={24} />
+              <X size={24} color={theme.colors.text.secondary} />
             </button>
           </div>
 
@@ -184,6 +184,7 @@ const WalletForm = ({
                 flex: 1,
                 overflowY: 'auto',
                 padding: theme.spacing[6],
+                paddingTop: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: theme.spacing[5],
@@ -438,7 +439,6 @@ const WalletForm = ({
             <div
               style={{
                 padding: theme.spacing[6],
-                borderTop: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
                 display: 'flex',
                 justifyContent: 'flex-end',
                 gap: theme.spacing[3],
@@ -448,12 +448,12 @@ const WalletForm = ({
                 type="button"
                 onClick={onClose}
                 style={{
-                  padding: `${theme.spacing[3]} ${theme.spacing[6]}`,
+                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
                   fontSize: theme.typography.fontSize.base,
                   fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.secondary,
+                  color: theme.colors.text.primary,
                   backgroundColor: 'transparent',
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
                   borderRadius: theme.border.radius.base,
                   cursor: 'pointer',
                   transition: theme.transitions.base,
@@ -470,21 +470,21 @@ const WalletForm = ({
               <button
                 type="submit"
                 style={{
-                  padding: `${theme.spacing[3]} ${theme.spacing[6]}`,
+                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
                   fontSize: theme.typography.fontSize.base,
                   fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.background.card,
-                  backgroundColor: theme.colors.text.primary,
+                  color: theme.colors.text.inverse,
+                  backgroundColor: theme.colors.action.primary,
                   border: 'none',
                   borderRadius: theme.border.radius.base,
                   cursor: 'pointer',
                   transition: theme.transitions.base,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.9';
+                  e.currentTarget.style.backgroundColor = theme.colors.action.primaryHover;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.backgroundColor = theme.colors.action.primary;
                 }}
               >
                 {mode === 'edit' ? 'Save' : 'Create'}

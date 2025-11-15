@@ -127,7 +127,8 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
           borderRadius: theme.border.radius.xl,
           maxWidth: '500px',
           width: '100%',
-          padding: theme.spacing[6],
+          maxHeight: '90vh',
+          overflowY: 'auto',
           boxShadow: theme.shadows.xl,
         }}
         onClick={(e) => e.stopPropagation()}
@@ -138,14 +139,17 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            padding: theme.spacing[6],
+            paddingBottom: 0,
             marginBottom: theme.spacing[6],
           }}
         >
           <h2
             style={{
               fontSize: theme.typography.fontSize.xl,
-              fontWeight: theme.typography.fontWeight.semibold,
+              fontWeight: theme.typography.fontWeight.bold,
               color: theme.colors.text.primary,
+              margin: 0,
             }}
           >
             {initialData ? 'Edit Budget' : 'Add Budget'}
@@ -157,16 +161,25 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
               border: 'none',
               cursor: 'pointer',
               padding: theme.spacing[1],
+              borderRadius: theme.border.radius.base,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              transition: theme.transitions.fast,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
             }}
           >
             <X size={24} color={theme.colors.text.secondary} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={{ padding: theme.spacing[6], paddingTop: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[4] }}>
           {/* Error Message */}
           {error && (
             <div
@@ -175,7 +188,6 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                 color: theme.colors.semantic.expense,
                 padding: theme.spacing[3],
                 borderRadius: theme.border.radius.base,
-                marginBottom: theme.spacing[4],
                 fontSize: theme.typography.fontSize.sm,
               }}
             >
@@ -184,7 +196,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
           )}
 
           {/* Budget Name */}
-          <div style={{ marginBottom: theme.spacing[4] }}>
+          <div>
             <label
               style={{
                 display: 'block',
@@ -223,7 +235,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
           </div>
 
           {/* Categories Dropdown with Checkboxes */}
-          <div style={{ marginBottom: theme.spacing[4] }}>
+          <div>
             <label
               style={{
                 display: 'block',
@@ -335,7 +347,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
           </div>
 
           {/* Amount */}
-          <div style={{ marginBottom: theme.spacing[4] }}>
+          <div>
             <label
               style={{
                 display: 'block',
@@ -392,7 +404,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
           </div>
 
           {/* Period */}
-          <div style={{ marginBottom: theme.spacing[4] }}>
+          <div>
             <label
               style={{
                 display: 'block',
@@ -449,7 +461,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
           </div>
 
           {/* Recurring Toggle */}
-          <div style={{ marginBottom: theme.spacing[4] }}>
+          <div>
             <Toggle
               checked={reset}
               onChange={() => {
@@ -466,7 +478,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
 
           {/* Rollover Toggle - only show if Recurring is enabled */}
           {reset && (
-            <div style={{ marginBottom: theme.spacing[4] }}>
+            <div>
               <Toggle
                 checked={rollover}
                 onChange={() => setRollover(!rollover)}
@@ -475,6 +487,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
               />
             </div>
           )}
+          </div>
 
           {/* Submit Buttons */}
           <div

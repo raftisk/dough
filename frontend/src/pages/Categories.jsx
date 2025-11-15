@@ -74,6 +74,7 @@ const Categories = () => {
   // Handle FloatingActionButton menu actions
   const handleFabMenuAction = (action) => {
     if (action === 'create') {
+      setEditingCategory(null); // Ensure we're in create mode
       setShowCategoryForm(true);
     } else if (action === 'preset') {
       setShowPresetModal(true);
@@ -84,23 +85,40 @@ const Categories = () => {
   // Handle category form submission
   const handleCategorySubmit = async (formData) => {
     try {
-      // Create new category via API
-      await createCategory({
-        name: formData.name,
-        icon: formData.icon,
-        type: formData.type,
-        is_active: true,
-      });
+      if (editingCategory) {
+        // Update existing category via API
+        await updateCategory(editingCategory.id, {
+          name: formData.name,
+          icon: formData.icon,
+          type: formData.type,
+          is_active: formData.is_active,
+        });
+      } else {
+        // Create new category via API
+        await createCategory({
+          name: formData.name,
+          icon: formData.icon,
+          type: formData.type,
+          is_active: true,
+        });
+      }
 
       // Refresh categories list
       await fetchCategories();
 
       // Close form
       setShowCategoryForm(false);
+      setEditingCategory(null);
     } catch (err) {
-      console.error('Failed to create category:', err);
-      alert(err.message || 'Failed to create category');
+      console.error('Failed to save category:', err);
+      alert(err.message || 'Failed to save category');
     }
+  };
+
+  // Handle category form close
+  const handleCategoryFormClose = () => {
+    setShowCategoryForm(false);
+    setEditingCategory(null);
   };
 
   // Handle category menu actions
@@ -126,8 +144,12 @@ const Categories = () => {
     }
   };
 
+  // State for category editing
+  const [editingCategory, setEditingCategory] = useState(null);
+
   const handleEdit = (category) => {
-    alert(`Edit category: ${category.name} - Edit functionality coming soon`);
+    setEditingCategory(category);
+    setShowCategoryForm(true);
   };
 
   const handleDelete = async (category) => {
@@ -329,11 +351,11 @@ const Categories = () => {
                   category={category}
                   statusDot="active"
                   menuOptions={[
-                    { label: 'Edit', action: 'edit', icon: 'Edit' },
                     { label: 'Deactivate', action: 'deactivate', icon: 'XCircle' },
                     { label: 'Delete', action: 'delete', icon: 'Trash2' },
                   ]}
                   onMenuAction={handleMenuAction}
+                  onClick={handleEdit}
                   transactionCount={category.transaction_count || 0}
                 />
               ))
@@ -378,6 +400,7 @@ const Categories = () => {
                     { label: 'Delete', action: 'delete', icon: 'Trash2' },
                   ]}
                   onMenuAction={handleMenuAction}
+                  onClick={handleEdit}
                   transactionCount={category.transaction_count || 0}
                 />
               ))
@@ -506,9 +529,10 @@ const Categories = () => {
       {/* Category Form Modal */}
       <CategoryForm
         isOpen={showCategoryForm}
-        onClose={() => setShowCategoryForm(false)}
+        onClose={handleCategoryFormClose}
         onSubmit={handleCategorySubmit}
-        mode="create"
+        initialData={editingCategory}
+        mode={editingCategory ? 'edit' : 'create'}
       />
 
       {/* Preset Categories Modal */}

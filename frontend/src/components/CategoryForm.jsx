@@ -137,12 +137,13 @@ const CategoryForm = ({
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: theme.spacing[6],
-              borderBottom: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+              paddingBottom: 0,
+              marginBottom: theme.spacing[6],
             }}
           >
             <h2
               style={{
-                fontSize: theme.typography.fontSize['2xl'],
+                fontSize: theme.typography.fontSize.xl,
                 fontWeight: theme.typography.fontWeight.bold,
                 color: theme.colors.text.primary,
                 margin: 0,
@@ -156,7 +157,7 @@ const CategoryForm = ({
                 backgroundColor: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                padding: theme.spacing[2],
+                padding: theme.spacing[1],
                 borderRadius: theme.border.radius.base,
                 display: 'flex',
                 alignItems: 'center',
@@ -175,7 +176,7 @@ const CategoryForm = ({
           </div>
 
           {/* Modal Body */}
-          <form onSubmit={handleSubmit} style={{ padding: theme.spacing[6] }}>
+          <form onSubmit={handleSubmit} style={{ padding: theme.spacing[6], paddingTop: 0 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[5] }}>
               {/* Type */}
               <div>
@@ -321,6 +322,7 @@ const CategoryForm = ({
                       errors.icon ? theme.colors.semantic.expense : theme.colors.border.medium
                     }`,
                     borderRadius: theme.border.radius.base,
+                    fontSize: theme.typography.fontSize.base,
                     backgroundColor: theme.colors.background.card,
                     cursor: 'pointer',
                     display: 'flex',
@@ -348,10 +350,10 @@ const CategoryForm = ({
                   <span
                     style={{
                       fontSize: theme.typography.fontSize.base,
-                      color: selectedIcon ? theme.colors.text.primary : theme.colors.text.muted,
+                      color: theme.colors.text.muted,
                     }}
                   >
-                    {selectedIcon ? 'Icon Selected' : 'Choose Icon'}
+                    Select Icon
                   </span>
                 </div>
                 {errors.icon && (

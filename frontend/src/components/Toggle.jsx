@@ -24,8 +24,8 @@ const Toggle = ({ checked, onChange, label, description, disabled = false }) => 
         onClick={onChange}
         disabled={disabled}
         style={{
-          width: '44px',
-          height: '24px',
+          width: '36px',
+          height: '20px',
           backgroundColor: checked ? theme.colors.action.primary : theme.colors.background.card,
           border: `${theme.border.width.thin} ${theme.border.style.solid} ${checked ? theme.colors.action.primary : theme.colors.border.medium}`,
           borderRadius: theme.border.radius.full,
@@ -39,13 +39,13 @@ const Toggle = ({ checked, onChange, label, description, disabled = false }) => 
       >
         <div
           style={{
-            width: '18px',
-            height: '18px',
+            width: '14px',
+            height: '14px',
             backgroundColor: theme.colors.text.inverse,
             borderRadius: '50%',
             position: 'absolute',
             top: '2px',
-            left: checked ? '22px' : '2px',
+            left: checked ? '18px' : '2px',
             transition: theme.transitions.base,
           }}
         />

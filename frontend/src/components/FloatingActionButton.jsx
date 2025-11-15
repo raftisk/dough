@@ -67,6 +67,7 @@ const FloatingActionButton = ({ onSelectType, templates = [] }) => {
   const completeMenu = [
     ...menuOptions,
     ...(templates.length > 0 ? [{ type: 'separator' }] : []),
+    ...(templates.length > 0 ? [{ type: 'header', label: 'TEMPLATES' }] : []),
     ...incomeTemplates.map(template => ({
       type: 'template',
       templateData: template,
@@ -121,6 +122,24 @@ const FloatingActionButton = ({ onSelectType, templates = [] }) => {
                     margin: `${theme.spacing[1]} 0`,
                   }}
                 />
+              );
+            }
+
+            // Render header
+            if (option.type === 'header') {
+              return (
+                <div
+                  key={`header-${index}`}
+                  style={{
+                    padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
+                    fontSize: theme.typography.fontSize.xs,
+                    fontWeight: theme.typography.fontWeight.semibold,
+                    color: theme.colors.text.muted,
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {option.label}
+                </div>
               );
             }
 

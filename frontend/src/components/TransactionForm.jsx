@@ -250,12 +250,13 @@ const TransactionForm = ({
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: theme.spacing[6],
-            borderBottom: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+            paddingBottom: 0,
+            marginBottom: theme.spacing[6],
           }}
         >
           <h2
             style={{
-              fontSize: theme.typography.fontSize['2xl'],
+              fontSize: theme.typography.fontSize.xl,
               fontWeight: theme.typography.fontWeight.bold,
               color: theme.colors.text.primary,
               margin: 0,
@@ -269,7 +270,7 @@ const TransactionForm = ({
               backgroundColor: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              padding: theme.spacing[2],
+              padding: theme.spacing[1],
               borderRadius: theme.border.radius.base,
               display: 'flex',
               alignItems: 'center',
@@ -288,7 +289,7 @@ const TransactionForm = ({
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} style={{ padding: theme.spacing[6] }}>
+        <form onSubmit={handleSubmit} style={{ padding: theme.spacing[6], paddingTop: 0 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[4] }}>
             {/* Type */}
             <div>
@@ -685,14 +686,7 @@ const TransactionForm = ({
 
             {/* Auto-post toggle (only show for future dates) */}
             {new Date(date) > new Date() && (
-              <div
-                style={{
-                  padding: theme.spacing[3],
-                  backgroundColor: theme.colors.background.page,
-                  borderRadius: theme.border.radius.base,
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-                }}
-              >
+              <div>
                 <Toggle
                   checked={autoPost}
                   onChange={() => setAutoPost(!autoPost)}
