@@ -201,12 +201,15 @@ class BudgetSerializer(serializers.ModelSerializer):
 
     def get_currency_symbol(self, obj):
         """
-        Return currency symbol for budget display.
-        Budgets don't have wallets, so use DEFAULT_CURRENCY.
-        In future, could track user's preferred currency or per-budget currency.
+        Return currency symbol for budget display using user's default currency.
         """
-        from .constants import DEFAULT_CURRENCY
-        return get_currency_symbol(DEFAULT_CURRENCY)
+        try:
+            user_currency = obj.user.preferences.default_currency
+            return get_currency_symbol(user_currency)
+        except Exception:
+            # Fallback if preferences don't exist
+            from .constants import FALLBACK_CURRENCY
+            return get_currency_symbol(FALLBACK_CURRENCY)
 
     class Meta:
         model = Budget

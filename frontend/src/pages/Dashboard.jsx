@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { TrendingUp, TrendingDown, PiggyBank, Wallet } from 'lucide-react';
+import { AuthContext } from '../contexts/AuthContext';
 import NavigationBar from '../components/NavigationBar';
 import PageHeader from '../components/PageHeader';
 import MetricCard from '../components/MetricCard';
@@ -13,10 +14,15 @@ import ErrorState from '../components/ErrorState';
 import { theme } from '../styles/theme';
 import { getCurrentMonthYear } from '../utils/date';
 import { getDashboardData, getCurrentMonthSummary, getCategories, getWallets, createTransaction, updateTransaction, deleteTransaction, createTransfer, updateTransfer, deleteTransfer, getTemplates, createTemplate, updateTemplate } from '../services/api';
-import { DEFAULT_CURRENCY } from '../constants';
+import { FALLBACK_CURRENCY } from '../constants';
 import { formatAmount, formatDateToLocal } from '../utils/format';
 
 function Dashboard() {
+  // Get user preferences from context
+  const { preferences } = useContext(AuthContext);
+  const userCurrency = preferences?.default_currency || FALLBACK_CURRENCY;
+  const userAmountFormat = preferences?.amount_format || null;
+
   // State management
   const [dashboardData, setDashboardData] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -340,7 +346,7 @@ function Dashboard() {
           >
             <MetricCard
               label="Total Income"
-              value={formatAmount(parseFloat(dashboardData.current_month_income), DEFAULT_CURRENCY)}
+              value={formatAmount(parseFloat(dashboardData.current_month_income), userCurrency, userAmountFormat)}
               icon={TrendingUp}
               iconColor={theme.colors.semantic.income}
               subtitle={
@@ -355,7 +361,7 @@ function Dashboard() {
             />
             <MetricCard
               label="Total Expenses"
-              value={formatAmount(parseFloat(dashboardData.current_month_expenses), DEFAULT_CURRENCY)}
+              value={formatAmount(parseFloat(dashboardData.current_month_expenses), userCurrency, userAmountFormat)}
               icon={TrendingDown}
               iconColor={theme.colors.semantic.expense}
               subtitle={
@@ -370,7 +376,7 @@ function Dashboard() {
             />
             <MetricCard
               label="Net Savings"
-              value={formatAmount(parseFloat(dashboardData.net_savings), DEFAULT_CURRENCY)}
+              value={formatAmount(parseFloat(dashboardData.net_savings), userCurrency, userAmountFormat)}
               icon={PiggyBank}
               iconColor={theme.colors.text.secondary}
               subtitle={
@@ -381,7 +387,7 @@ function Dashboard() {
             />
             <MetricCard
               label="Total Wealth"
-              value={formatAmount(parseFloat(dashboardData.total_balance), DEFAULT_CURRENCY)}
+              value={formatAmount(parseFloat(dashboardData.total_balance), userCurrency, userAmountFormat)}
               icon={Wallet}
               iconColor={theme.colors.text.secondary}
               subtitle={`Across ${dashboardData.wallet_count} wallet${dashboardData.wallet_count !== 1 ? 's' : ''}`}

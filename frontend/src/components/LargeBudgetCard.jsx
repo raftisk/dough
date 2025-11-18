@@ -3,7 +3,7 @@ import { RefreshCw } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { getIconComponent } from '../constants';
 import { formatAmount } from '../utils/format';
-import { DEFAULT_CURRENCY } from '../constants';
+import { FALLBACK_CURRENCY } from '../constants';
 import BudgetDoughnut from './BudgetDoughnut';
 import CategoryTag from './CategoryTag';
 
@@ -12,7 +12,7 @@ import CategoryTag from './CategoryTag';
  * Shows budget info with visual progress indicator
  */
 const LargeBudgetCard = ({ budget, onClick }) => {
-  const currency = budget.currency_symbol || DEFAULT_CURRENCY;
+  const currency = budget.currency_symbol || FALLBACK_CURRENCY;
 
   return (
     <div

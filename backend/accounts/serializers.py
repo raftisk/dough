@@ -89,6 +89,7 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
             'theme',
             'smart_allocation',
             'multi_currency',
+            'amount_format',
             'created_at',
             'updated_at'
         ]

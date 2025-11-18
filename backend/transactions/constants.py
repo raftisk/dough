@@ -20,9 +20,11 @@ CURRENCIES = [
     ('PLN', 'Polish Zloty (zł)'),
     ('CZK', 'Czech Koruna (Kč)'),
     ('HUF', 'Hungarian Forint (Ft)'),
+    ('SGD', 'Singapore Dollar (S$)'),
 ]
 
-DEFAULT_CURRENCY = 'EUR'
+# Fallback currency for when user preferences are not available
+FALLBACK_CURRENCY = 'EUR'
 
 # Wallet type choices
 WALLET_TYPES = [

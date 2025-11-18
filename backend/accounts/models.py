@@ -51,8 +51,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class UserPreferences(models.Model):
     """User preferences for customization"""
-    # Import CURRENCIES and DEFAULT_CURRENCY from transactions constants
-    from transactions.constants import CURRENCIES, DEFAULT_CURRENCY
+    # Import CURRENCIES and FALLBACK_CURRENCY from transactions constants
+    from transactions.constants import CURRENCIES, FALLBACK_CURRENCY
 
     THEME_CHOICES = [
         ('light', 'Light'),
@@ -68,7 +68,7 @@ class UserPreferences(models.Model):
     default_currency = models.CharField(
         max_length=3,
         choices=CURRENCIES,
-        default=DEFAULT_CURRENCY
+        default=FALLBACK_CURRENCY
     )
     default_wallet = models.ForeignKey(
         'transactions.Wallet',
@@ -89,6 +89,12 @@ class UserPreferences(models.Model):
     multi_currency = models.BooleanField(
         default=False,
         help_text='Enable multi-currency support (Beta feature)'
+    )
+    amount_format = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        help_text='Locale for currency formatting (e.g., en-US, de-DE). Leave empty to use currency default.'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

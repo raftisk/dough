@@ -1,4 +1,4 @@
-import { DEFAULT_CURRENCY, CURRENCY_MAP, DEFAULT_LOCALE } from '../constants';
+import { FALLBACK_CURRENCY, CURRENCY_MAP, FALLBACK_LOCALE } from '../constants';
 
 // Cache for Intl.NumberFormat instances (performance optimization)
 const formatters = {};
@@ -17,47 +17,51 @@ export const getCurrencySymbol = (currencyCode) => {
  * Handles all formatting automatically: decimal places, thousands separators, sign, symbol placement
  *
  * @param {number|string} amount - Amount to format
- * @param {string} currency - Currency code (default: DEFAULT_CURRENCY)
+ * @param {string} currency - Currency code (default: FALLBACK_CURRENCY)
+ * @param {string|null} amountFormat - Optional locale override (e.g., 'de-DE', 'en-US'). If null, uses currency's default locale.
  * @returns {string} Formatted currency string (e.g., "€1,234.56", "$1,234.56", "¥1,235")
- *
  */
-export const formatAmount = (amount, currency = DEFAULT_CURRENCY) => {
+export const formatAmount = (amount, currency = FALLBACK_CURRENCY, amountFormat = null) => {
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
 
   // Handle invalid amounts
   if (isNaN(numAmount)) {
     console.warn(`formatAmount: Invalid amount "${amount}", defaulting to 0`);
-    return formatAmount(0, currency);
+    return formatAmount(0, currency, amountFormat);
   }
 
-  // Get or create cached formatter for this currency
-  if (!formatters[currency]) {
-    const currencyConfig = CURRENCY_MAP[currency];
+  // Get currency config
+  const currencyConfig = CURRENCY_MAP[currency];
+  if (!currencyConfig) {
+    console.warn(`formatAmount: Unsupported currency "${currency}", using FALLBACK_CURRENCY`);
+    return formatAmount(numAmount, FALLBACK_CURRENCY, amountFormat);
+  }
 
-    if (!currencyConfig) {
-      console.warn(`formatAmount: Unsupported currency "${currency}", using DEFAULT_CURRENCY`);
-      return formatAmount(numAmount, DEFAULT_CURRENCY);
-    }
+  // Determine locale: use amountFormat override, or currency's default locale
+  const locale = amountFormat || currencyConfig.locale;
+  const decimals = currencyConfig.decimals ?? 2;
 
-    const locale = DEFAULT_LOCALE === '' ? currencyConfig.locale : DEFAULT_LOCALE;
-    const decimals = currencyConfig.decimals ?? 2;
+  // Create cache key combining currency and locale
+  const cacheKey = `${currency}-${locale}`;
 
+  // Get or create cached formatter
+  if (!formatters[cacheKey]) {
     try {
-      formatters[currency] = new Intl.NumberFormat(locale, {
+      formatters[cacheKey] = new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: currency,
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       });
     } catch (error) {
-      console.error(`formatAmount: Error creating formatter for ${currency}:`, error);
+      console.error(`formatAmount: Error creating formatter for ${currency} with locale ${locale}:`, error);
       // Fallback to manual formatting
       const symbol = getCurrencySymbol(currency);
       return `${symbol}${numAmount.toFixed(decimals)}`;
     }
   }
 
-  return formatters[currency].format(numAmount);
+  return formatters[cacheKey].format(numAmount);
 };
 
 /**

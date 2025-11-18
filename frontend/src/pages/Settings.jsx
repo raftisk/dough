@@ -28,7 +28,7 @@ function Settings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const { logout } = useContext(AuthContext);
+  const { logout, updatePreferences: updatePreferencesContext } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -108,6 +108,8 @@ function Settings() {
     try {
       const response = await api.patch('/auth/preferences/', { [field]: value });
       setPreferences(response.data);
+      // Update preferences in AuthContext so all components get the new values
+      updatePreferencesContext(response.data);
     } catch (err) {
       console.error('Update preference error:', err);
       alert('Failed to update preference. Please try again.');
@@ -444,6 +446,43 @@ function Settings() {
               >
                 {preferences.default_currency}
               </button>
+            </div>
+
+            {/* Amount Format */}
+            <div>
+              <div style={{
+                fontSize: theme.typography.fontSize.xs,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.text.secondary,
+                marginBottom: theme.spacing[2],
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}>
+                Amount Format
+              </div>
+              <select
+                value={preferences.amount_format || ''}
+                onChange={(e) => handleUpdatePreference('amount_format', e.target.value || null)}
+                style={{
+                  padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                  fontSize: theme.typography.fontSize.base,
+                  color: theme.colors.text.primary,
+                  backgroundColor: theme.colors.background.page,
+                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+                  borderRadius: theme.border.radius.base,
+                  cursor: 'pointer',
+                  outline: 'none',
+                  width: '250px',
+                }}
+              >
+                <option value="">Use currency default</option>
+                <option value="en-US">United States (1,234.56)</option>
+                <option value="de-DE">Germany (1.234,56)</option>
+                <option value="en-GB">United Kingdom (1,234.56)</option>
+                <option value="fr-FR">France (1 234,56)</option>
+                <option value="es-ES">Spain (1.234,56)</option>
+                <option value="it-IT">Italy (1.234,56)</option>
+              </select>
             </div>
 
             {/* Default Wallet */}

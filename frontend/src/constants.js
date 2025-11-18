@@ -22,10 +22,10 @@ import {
   Thermometer, ThermometerSnowflake, ThermometerSun, Umbrella, Tablet, Train, DollarSign, Activity, Droplet, Calculator, RectangleGoggles
 } from 'lucide-react';
 
-// Default currency (TODO: User configurable)
-export const DEFAULT_CURRENCY = 'EUR';
-// Default locale (TODO: User configurable)
-export const DEFAULT_LOCALE = 'en-US';
+// Fallback currency for when user preferences are not loaded
+export const FALLBACK_CURRENCY = 'EUR';
+// Fallback locale for when user preferences are not loaded
+export const FALLBACK_LOCALE = 'en-US';
 
 // Preset categories for Dough expense tracker
 export const PRESET_CATEGORIES = {

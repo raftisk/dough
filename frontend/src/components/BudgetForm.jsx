@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { X, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
-import { getIconComponent, DEFAULT_CURRENCY } from '../constants';
+import { getIconComponent, FALLBACK_CURRENCY } from '../constants';
 import { getCurrencySymbol } from '../utils/format';
 import Toggle from './Toggle';
 
@@ -371,7 +371,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                   pointerEvents: 'none',
                 }}
               >
-                {getCurrencySymbol(DEFAULT_CURRENCY)}
+                {getCurrencySymbol(FALLBACK_CURRENCY)}
               </span>
               <input
                 type="number"

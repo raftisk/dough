@@ -11,13 +11,13 @@ import {
 } from 'recharts';
 import { theme } from '../styles/theme';
 import { formatAmount, getCurrencySymbol } from '../utils/format';
-import { DEFAULT_CURRENCY } from '../constants';
+import { FALLBACK_CURRENCY } from '../constants';
 
 /**
  * Custom tooltip component for the monthly trend chart
  * Shows detailed breakdown of income, expenses, and net savings
  */
-const CustomTooltip = ({ active, payload, currency = DEFAULT_CURRENCY }) => {
+const CustomTooltip = ({ active, payload, currency = FALLBACK_CURRENCY }) => {
   if (!active || !payload || payload.length === 0) {
     return null;
   }
@@ -164,7 +164,7 @@ CustomTooltip.propTypes = {
  * Displays monthly financial trends as smooth line charts showing income and expenses.
  * Uses invisible bars to create hover zones for better UX.
  */
-const MonthlyTrendChart = ({ data, currency = DEFAULT_CURRENCY, loading, error }) => {
+const MonthlyTrendChart = ({ data, currency = FALLBACK_CURRENCY, loading, error }) => {
   // Format data for Recharts
   const chartData = data.map((item) => ({
     month: item.month,
@@ -362,7 +362,7 @@ MonthlyTrendChart.propTypes = {
 };
 
 MonthlyTrendChart.defaultProps = {
-  currency: DEFAULT_CURRENCY,
+  currency: FALLBACK_CURRENCY,
   loading: false,
   error: null,
 };

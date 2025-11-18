@@ -5,7 +5,7 @@ import { theme } from '../styles/theme';
 import DatePicker from './DatePicker';
 import Toggle from './Toggle';
 import { formatDateToLocal, getCurrencySymbol } from '../utils/format';
-import { DEFAULT_CURRENCY } from '../constants';
+import { FALLBACK_CURRENCY } from '../constants';
 import { createTemplate } from '../services/api';
 
 const TransactionForm = ({
@@ -27,7 +27,7 @@ const TransactionForm = ({
   const [recurrence, setRecurrence] = useState('');
   const [autoPost, setAutoPost] = useState(false);
   const [errors, setErrors] = useState({});
-  const [selectedWalletCurrency, setSelectedWalletCurrency] = useState(DEFAULT_CURRENCY);
+  const [selectedWalletCurrency, setSelectedWalletCurrency] = useState(FALLBACK_CURRENCY);
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -80,7 +80,7 @@ const TransactionForm = ({
   useEffect(() => {
     if (walletId && wallets.length > 0) {
       const selectedWallet = wallets.find(w => w.id === parseInt(walletId));
-      setSelectedWalletCurrency(selectedWallet?.currency || DEFAULT_CURRENCY);
+      setSelectedWalletCurrency(selectedWallet?.currency || FALLBACK_CURRENCY);
     }
   }, [walletId, wallets]);
 

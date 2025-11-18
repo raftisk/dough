@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
-import { X, ChevronDown } from 'lucide-react';
+import { X, ChevronDown, Lock } from 'lucide-react';
 import { theme } from '../styles/theme';
 import CurrencyPicker from './CurrencyPicker';
 import { CURRENCIES } from '../constants';
+import { AuthContext } from '../contexts/AuthContext';
 
 const WalletForm = ({
   isOpen,
@@ -12,6 +13,9 @@ const WalletForm = ({
   initialData = null,
   mode = 'create',
 }) => {
+  // Get user preferences from context
+  const { preferences } = useContext(AuthContext);
+
   // Initialize form state
   const [name, setName] = useState('');
   const [type, setType] = useState('spending');
@@ -19,6 +23,9 @@ const WalletForm = ({
   const [currency, setCurrency] = useState({ code: 'EUR', name: 'Euro', symbol: '€' });
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Check if currency field should be locked
+  const isCurrencyLocked = !preferences?.multi_currency;
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -36,10 +43,17 @@ const WalletForm = ({
       setName('');
       setType('spending');
       setInitialBalance('0.00');
-      setCurrency({ code: 'EUR', name: 'Euro', symbol: '€' });
+
+      // Set currency to user's default when creating new wallet
+      if (preferences?.default_currency) {
+        const currencyObj = CURRENCIES.find(c => c.code === preferences.default_currency) || { code: 'EUR', name: 'Euro', symbol: '€' };
+        setCurrency(currencyObj);
+      } else {
+        setCurrency({ code: 'EUR', name: 'Euro', symbol: '€' });
+      }
     }
     setErrors({});
-  }, [initialData, mode, isOpen]);
+  }, [initialData, mode, isOpen, preferences]);
 
   // Validate form
   const validateForm = () => {
@@ -311,47 +325,62 @@ const WalletForm = ({
                 <div style={{ position: 'relative' }}>
                   <button
                     type="button"
-                    onClick={() => setShowCurrencyPicker(!showCurrencyPicker)}
+                    onClick={() => !isCurrencyLocked && setShowCurrencyPicker(!showCurrencyPicker)}
+                    disabled={isCurrencyLocked}
                     style={{
                       width: '100%',
                       padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                      //paddingRight: theme.spacing[10],
                       fontSize: theme.typography.fontSize.base,
                       border: `${theme.border.width.thin} ${theme.border.style.solid} ${
                         errors.currency ? theme.colors.semantic.expense : theme.colors.border.light
                       }`,
                       borderRadius: theme.border.radius.base,
-                      backgroundColor: theme.colors.background.card,
-                      color: theme.colors.text.primary,
+                      backgroundColor: isCurrencyLocked ? theme.colors.background.cardHover : theme.colors.background.card,
+                      color: isCurrencyLocked ? theme.colors.text.secondary : theme.colors.text.primary,
                       outline: 'none',
-                      cursor: 'pointer',
+                      cursor: isCurrencyLocked ? 'not-allowed' : 'pointer',
                       textAlign: 'left',
                       position: 'relative',
                       transition: theme.transitions.base,
+                      opacity: isCurrencyLocked ? 0.6 : 1,
                     }}
                     onMouseEnter={(e) => {
-                      if (!errors.currency) {
+                      if (!errors.currency && !isCurrencyLocked) {
                         e.currentTarget.style.borderColor = theme.colors.text.primary;
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!errors.currency) {
+                      if (!errors.currency && !isCurrencyLocked) {
                         e.currentTarget.style.borderColor = theme.colors.border.light;
                       }
                     }}
                   >
                     {currency ? `${currency.code} (${currency.symbol})` : 'Choose currency'}
-                    <ChevronDown
-                      size={20}
-                      style={{
-                        position: 'absolute',
-                        right: theme.spacing[3],
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: theme.colors.text.secondary,
-                        pointerEvents: 'none',
-                      }}
-                    />
+                    {isCurrencyLocked ? (
+                      <Lock
+                        size={16}
+                        style={{
+                          position: 'absolute',
+                          right: theme.spacing[3],
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: theme.colors.text.secondary,
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    ) : (
+                      <ChevronDown
+                        size={20}
+                        style={{
+                          position: 'absolute',
+                          right: theme.spacing[3],
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: theme.colors.text.secondary,
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    )}
                   </button>
                   {/* Currency Picker Popover */}
                   <CurrencyPicker
@@ -364,6 +393,11 @@ const WalletForm = ({
                 {errors.currency && (
                   <span style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense }}>
                     {errors.currency}
+                  </span>
+                )}
+                {isCurrencyLocked && (
+                  <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary }}>
+                    Multi-currency is disabled. Enable it in Settings to use different currencies.
                   </span>
                 )}
               </div>

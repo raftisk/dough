@@ -7,7 +7,7 @@ from month.models import MonthField
 from month import Month
 from dateutil.relativedelta import relativedelta
 from .constants import (
-    WALLET_TYPES, CURRENCIES, DEFAULT_CURRENCY, CATEGORY_TYPES,
+    WALLET_TYPES, CURRENCIES, FALLBACK_CURRENCY, CATEGORY_TYPES,
     TRANSACTION_TYPES, RECURRENCE_CHOICES, PERIOD_CHOICES, PRIORITY_CHOICES,
     MONEY_FIELD_CONFIG
 )
@@ -39,7 +39,7 @@ class Wallet(models.Model):
     currency = models.CharField(
         max_length=3,
         choices=CURRENCIES,
-        default=DEFAULT_CURRENCY
+        default=FALLBACK_CURRENCY
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -49,6 +49,21 @@ class Wallet(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.get_type_display()})"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        # Validate currency against user's multi_currency setting
+        if self.user_id:
+            try:
+                user_prefs = self.user.preferences
+                if not user_prefs.multi_currency:
+                    if self.currency != user_prefs.default_currency:
+                        raise ValidationError({
+                            'currency': f'Multi-currency is disabled. Please use your default currency ({user_prefs.default_currency}) or enable multi-currency in Settings.'
+                        })
+            except Exception:
+                pass  # No preferences yet or other error, allow wallet creation
 
     def get_current_balance(self):
         """Calculate current balance including all transactions and transfers"""

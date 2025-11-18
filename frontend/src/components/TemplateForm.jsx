@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { X, Plus, Minus, ChevronDown } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { getCurrencySymbol } from '../utils/format';
-import { DEFAULT_CURRENCY } from '../constants';
+import { FALLBACK_CURRENCY } from '../constants';
 
 const TemplateForm = ({
   isOpen,
@@ -19,7 +19,7 @@ const TemplateForm = ({
   const [categoryId, setCategoryId] = useState('');
   const [walletId, setWalletId] = useState('');
   const [errors, setErrors] = useState({});
-  const [selectedWalletCurrency, setSelectedWalletCurrency] = useState(DEFAULT_CURRENCY);
+  const [selectedWalletCurrency, setSelectedWalletCurrency] = useState(FALLBACK_CURRENCY);
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -65,7 +65,7 @@ const TemplateForm = ({
   useEffect(() => {
     if (walletId && wallets.length > 0) {
       const selectedWallet = wallets.find(w => w.id === parseInt(walletId));
-      setSelectedWalletCurrency(selectedWallet?.currency || DEFAULT_CURRENCY);
+      setSelectedWalletCurrency(selectedWallet?.currency || FALLBACK_CURRENCY);
     }
   }, [walletId, wallets]);
 

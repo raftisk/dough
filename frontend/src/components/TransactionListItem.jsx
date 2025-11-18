@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Plus, Minus, ArrowRightLeft, Trash2, RefreshCw, MoreVertical, Check } from 'lucide-react';
 import { theme, getTypeColor } from '../styles/theme';
-import { getIconComponent, DEFAULT_CURRENCY } from '../constants';
+import { getIconComponent, FALLBACK_CURRENCY } from '../constants';
 import { formatAmount } from '../utils/format';
 import CategoryTag from './CategoryTag';
 
@@ -71,7 +71,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete, menuOptions, onMe
   };
 
   // Get currency CODE from wallet (not symbol)
-  const currency = transaction.wallet_currency || DEFAULT_CURRENCY;
+  const currency = transaction.wallet_currency || FALLBACK_CURRENCY;
 
   // Determine sign and sign color based on transaction type
   const getSignDisplay = () => {
