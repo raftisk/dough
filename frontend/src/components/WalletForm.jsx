@@ -115,31 +115,11 @@ const WalletForm = ({
   return (
     <>
       {/* Modal Overlay */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: theme.zIndex.modal,
-          padding: theme.spacing[4],
-        }}
-        onClick={onClose}
-      >
+      <div style={theme.components.modal.overlay} onClick={onClose}>
         {/* Modal Content */}
         <div
           style={{
-            backgroundColor: theme.colors.background.card,
-            borderRadius: theme.border.radius.xl,
-            boxShadow: theme.shadows.xl,
-            maxWidth: '500px',
-            width: '100%',
-            maxHeight: '90vh',
+            ...theme.components.modal.content,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -147,39 +127,13 @@ const WalletForm = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div
-            style={{
-              padding: theme.spacing[6],
-              paddingBottom: 0,
-              marginBottom: theme.spacing[6],
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <h2
-              style={{
-                fontSize: theme.typography.fontSize.xl,
-                fontWeight: theme.typography.fontWeight.bold,
-                color: theme.colors.text.primary,
-                margin: 0,
-              }}
-            >
+          <div style={theme.components.modal.header}>
+            <h2 style={theme.components.modal.title}>
               {mode === 'edit' ? 'Edit Wallet' : 'Add Wallet'}
             </h2>
             <button
               onClick={onClose}
-              style={{
-                backgroundColor: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: theme.spacing[1],
-                borderRadius: theme.border.radius.base,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: theme.transitions.fast,
-              }}
+              style={theme.components.modal.closeButton}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
               }}
@@ -206,14 +160,7 @@ const WalletForm = ({
             >
               {/* Name Field */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[2] }}>
-                <label
-                  htmlFor="wallet-name"
-                  style={{
-                    fontSize: theme.typography.fontSize.sm,
-                    fontWeight: theme.typography.fontWeight.medium,
-                    color: theme.colors.text.primary,
-                  }}
-                >
+                <label htmlFor="wallet-name" style={theme.components.form.label}>
                   Name
                 </label>
                 <input
@@ -223,16 +170,10 @@ const WalletForm = ({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Spending Wallet, Savings Account"
                   style={{
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    fontSize: theme.typography.fontSize.base,
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                      errors.name ? theme.colors.semantic.expense : theme.colors.border.light
-                    }`,
-                    borderRadius: theme.border.radius.base,
-                    backgroundColor: theme.colors.background.card,
-                    color: theme.colors.text.primary,
-                    outline: 'none',
-                    transition: theme.transitions.base,
+                    ...theme.components.form.input,
+                    borderColor: errors.name
+                      ? theme.colors.semantic.expense
+                      : theme.colors.border.medium,
                   }}
                   onFocus={(e) => {
                     if (!errors.name) {
@@ -241,27 +182,16 @@ const WalletForm = ({
                   }}
                   onBlur={(e) => {
                     if (!errors.name) {
-                      e.currentTarget.style.borderColor = theme.colors.border.light;
+                      e.currentTarget.style.borderColor = theme.colors.border.medium;
                     }
                   }}
                 />
-                {errors.name && (
-                  <span style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense }}>
-                    {errors.name}
-                  </span>
-                )}
+                {errors.name && <span style={theme.components.form.errorText}>{errors.name}</span>}
               </div>
 
               {/* Type Field */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[2] }}>
-                <label
-                  htmlFor="wallet-type"
-                  style={{
-                    fontSize: theme.typography.fontSize.sm,
-                    fontWeight: theme.typography.fontWeight.medium,
-                    color: theme.colors.text.primary,
-                  }}
-                >
+                <label htmlFor="wallet-type" style={theme.components.form.label}>
                   Type
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -270,25 +200,14 @@ const WalletForm = ({
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                     style={{
-                      width: '100%',
-                      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                      paddingRight: theme.spacing[6],
-                      fontSize: theme.typography.fontSize.base,
-                      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-                      borderRadius: theme.border.radius.base,
-                      backgroundColor: theme.colors.background.card,
-                      color: theme.colors.text.primary,
-                      outline: 'none',
-                      appearance: 'none',
-                      cursor: 'pointer',
-                      transition: theme.transitions.base,
+                      ...theme.components.form.select,
                       textTransform: 'capitalize',
                     }}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = theme.colors.text.primary;
                     }}
                     onBlur={(e) => {
-                      e.currentTarget.style.borderColor = theme.colors.border.light;
+                      e.currentTarget.style.borderColor = theme.colors.border.medium;
                     }}
                   >
                     <option value="spending">Spending</option>
@@ -296,30 +215,13 @@ const WalletForm = ({
                     <option value="cash">Cash</option>
                     <option value="investment">Investment</option>
                   </select>
-                  <ChevronDown
-                    size={20}
-                    style={{
-                      position: 'absolute',
-                      right: theme.spacing[3],
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: theme.colors.text.secondary,
-                      pointerEvents: 'none',
-                    }}
-                  />
+                  <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
                 </div>
               </div>
 
               {/* Currency Field */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[2] }}>
-                <label
-                  htmlFor="wallet-currency"
-                  style={{
-                    fontSize: theme.typography.fontSize.sm,
-                    fontWeight: theme.typography.fontWeight.medium,
-                    color: theme.colors.text.primary,
-                  }}
-                >
+                <label htmlFor="wallet-currency" style={theme.components.form.label}>
                   Currency
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -328,20 +230,19 @@ const WalletForm = ({
                     onClick={() => !isCurrencyLocked && setShowCurrencyPicker(!showCurrencyPicker)}
                     disabled={isCurrencyLocked}
                     style={{
-                      width: '100%',
-                      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                      fontSize: theme.typography.fontSize.base,
-                      border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                        errors.currency ? theme.colors.semantic.expense : theme.colors.border.light
-                      }`,
-                      borderRadius: theme.border.radius.base,
-                      backgroundColor: isCurrencyLocked ? theme.colors.background.cardHover : theme.colors.background.card,
-                      color: isCurrencyLocked ? theme.colors.text.secondary : theme.colors.text.primary,
-                      outline: 'none',
+                      ...theme.components.form.input,
+                      borderColor: errors.currency
+                        ? theme.colors.semantic.expense
+                        : theme.colors.border.medium,
+                      backgroundColor: isCurrencyLocked
+                        ? theme.colors.background.cardHover
+                        : theme.colors.background.card,
+                      color: isCurrencyLocked
+                        ? theme.colors.text.secondary
+                        : theme.colors.text.primary,
                       cursor: isCurrencyLocked ? 'not-allowed' : 'pointer',
                       textAlign: 'left',
                       position: 'relative',
-                      transition: theme.transitions.base,
                       opacity: isCurrencyLocked ? 0.6 : 1,
                     }}
                     onMouseEnter={(e) => {
@@ -351,35 +252,15 @@ const WalletForm = ({
                     }}
                     onMouseLeave={(e) => {
                       if (!errors.currency && !isCurrencyLocked) {
-                        e.currentTarget.style.borderColor = theme.colors.border.light;
+                        e.currentTarget.style.borderColor = theme.colors.border.medium;
                       }
                     }}
                   >
                     {currency ? `${currency.code} (${currency.symbol})` : 'Choose currency'}
                     {isCurrencyLocked ? (
-                      <Lock
-                        size={16}
-                        style={{
-                          position: 'absolute',
-                          right: theme.spacing[3],
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: theme.colors.text.secondary,
-                          pointerEvents: 'none',
-                        }}
-                      />
+                      <Lock size={16} style={theme.components.popover.chevronIcon} />
                     ) : (
-                      <ChevronDown
-                        size={20}
-                        style={{
-                          position: 'absolute',
-                          right: theme.spacing[3],
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: theme.colors.text.secondary,
-                          pointerEvents: 'none',
-                        }}
-                      />
+                      <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
                     )}
                   </button>
                   {/* Currency Picker Popover */}
@@ -391,9 +272,7 @@ const WalletForm = ({
                   />
                 </div>
                 {errors.currency && (
-                  <span style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense }}>
-                    {errors.currency}
-                  </span>
+                  <span style={theme.components.form.errorText}>{errors.currency}</span>
                 )}
                 {isCurrencyLocked && (
                   <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.text.secondary }}>
@@ -404,27 +283,11 @@ const WalletForm = ({
 
               {/* Initial Balance Field */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[2] }}>
-                <label
-                  htmlFor="wallet-balance"
-                  style={{
-                    fontSize: theme.typography.fontSize.sm,
-                    fontWeight: theme.typography.fontWeight.medium,
-                    color: theme.colors.text.primary,
-                  }}
-                >
+                <label htmlFor="wallet-balance" style={theme.components.form.label}>
                   Initial Balance
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <span
-                    style={{
-                      position: 'absolute',
-                      left: theme.spacing[2],
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      fontSize: theme.typography.fontSize.base,
-                      color: theme.colors.text.secondary,
-                    }}
-                  >
+                  <span style={theme.components.form.currencyPrefix}>
                     {currency?.symbol || '€'}
                   </span>
                   <input
@@ -436,18 +299,11 @@ const WalletForm = ({
                     onChange={(e) => setInitialBalance(e.target.value)}
                     placeholder="0.00"
                     style={{
-                      width: '100%',
-                      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                      ...theme.components.form.input,
                       paddingLeft: theme.spacing[6],
-                      fontSize: theme.typography.fontSize.base,
-                      border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                        errors.initialBalance ? theme.colors.semantic.expense : theme.colors.border.light
-                      }`,
-                      borderRadius: theme.border.radius.base,
-                      backgroundColor: theme.colors.background.card,
-                      color: theme.colors.text.primary,
-                      outline: 'none',
-                      transition: theme.transitions.base,
+                      borderColor: errors.initialBalance
+                        ? theme.colors.semantic.expense
+                        : theme.colors.border.medium,
                     }}
                     onFocus={(e) => {
                       if (!errors.initialBalance) {
@@ -456,15 +312,13 @@ const WalletForm = ({
                     }}
                     onBlur={(e) => {
                       if (!errors.initialBalance) {
-                        e.currentTarget.style.borderColor = theme.colors.border.light;
+                        e.currentTarget.style.borderColor = theme.colors.border.medium;
                       }
                     }}
                   />
                 </div>
                 {errors.initialBalance && (
-                  <span style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense }}>
-                    {errors.initialBalance}
-                  </span>
+                  <span style={theme.components.form.errorText}>{errors.initialBalance}</span>
                 )}
               </div>
             </div>
@@ -481,17 +335,7 @@ const WalletForm = ({
               <button
                 type="button"
                 onClick={onClose}
-                style={{
-                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
-                  fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  backgroundColor: 'transparent',
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                  borderRadius: theme.border.radius.base,
-                  cursor: 'pointer',
-                  transition: theme.transitions.base,
-                }}
+                style={theme.components.button.secondary}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
                 }}
@@ -503,17 +347,7 @@ const WalletForm = ({
               </button>
               <button
                 type="submit"
-                style={{
-                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
-                  fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.inverse,
-                  backgroundColor: theme.colors.action.primary,
-                  border: 'none',
-                  borderRadius: theme.border.radius.base,
-                  cursor: 'pointer',
-                  transition: theme.transitions.base,
-                }}
+                style={theme.components.button.primary}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.action.primaryHover;
                 }}

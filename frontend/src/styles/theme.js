@@ -163,6 +163,276 @@ export const theme = {
   },
 };
 
+// ============================================================================
+// COMPONENT STYLES
+// Standardized component styles to reduce inline style duplication
+// Defined after theme object to allow referencing theme properties
+// ============================================================================
+
+theme.components = {
+  // MODALS
+  modal: {
+    // Full-screen overlay backdrop for modals
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: theme.zIndex.modal,
+      padding: theme.spacing[4],
+    },
+
+    // Modal content container
+    content: {
+      backgroundColor: theme.colors.background.card,
+      borderRadius: theme.border.radius.xl,
+      maxWidth: '500px',
+      width: '100%',
+      maxHeight: '90vh',
+      overflowY: 'auto',
+      boxShadow: theme.shadows.xl,
+    },
+
+    // Modal header container
+    header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: theme.spacing[6],
+      paddingBottom: 0,
+      marginBottom: theme.spacing[6],
+    },
+
+    // Modal title (h2)
+    title: {
+      fontSize: theme.typography.fontSize.xl,
+      fontWeight: theme.typography.fontWeight.bold,
+      color: theme.colors.text.primary,
+      margin: 0,
+    },
+
+    // Close button (X icon)
+    closeButton: {
+      backgroundColor: 'transparent',
+      border: 'none',
+      cursor: 'pointer',
+      padding: theme.spacing[1],
+      borderRadius: theme.border.radius.base,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: theme.transitions.fast,
+      // Hover state: backgroundColor = theme.colors.background.cardHover
+    },
+  },
+
+  // BUTTONS
+  button: {
+    // Primary action button (Save, Submit, Create, etc.)
+    primary: {
+      padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
+      borderRadius: theme.border.radius.base,
+      fontSize: theme.typography.fontSize.base,
+      fontWeight: theme.typography.fontWeight.medium,
+      color: theme.colors.text.inverse,
+      backgroundColor: theme.colors.action.primary,
+      border: 'none',
+      cursor: 'pointer',
+      transition: theme.transitions.fast,
+      // Hover state: backgroundColor = theme.colors.action.primaryHover
+    },
+
+    // Secondary/Cancel button
+    secondary: {
+      padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
+      borderRadius: theme.border.radius.base,
+      fontSize: theme.typography.fontSize.base,
+      fontWeight: theme.typography.fontWeight.medium,
+      color: theme.colors.text.primary,
+      backgroundColor: 'transparent',
+      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+      cursor: 'pointer',
+      transition: theme.transitions.fast,
+      // Hover state: backgroundColor = theme.colors.background.cardHover
+    },
+
+    // Icon-only hover button (used for edit, delete, menu triggers, etc.)
+    // This is a small button that only shows hover state when interacted with
+    // Common use case: Edit/delete icons on cards, menu buttons, close buttons
+    iconHover: {
+      backgroundColor: 'transparent',
+      border: 'none',
+      cursor: 'pointer',
+      padding: theme.spacing[2],
+      borderRadius: theme.border.radius.base,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: theme.transitions.fast,
+      // Hover state: backgroundColor = theme.colors.background.cardHover
+    },
+
+    // Navigation link button (used in NavigationBar)
+    navigationLink: {
+      padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
+      borderRadius: theme.border.radius.base,
+      fontSize: theme.typography.fontSize.sm,
+      fontWeight: theme.typography.fontWeight.medium,
+      color: theme.colors.text.primary,
+      backgroundColor: 'transparent',
+      transition: theme.transitions.fast,
+      // Active state: backgroundColor = theme.colors.background.cardHover
+    },
+  },
+
+  // FORMS
+  form: {
+    // Form field label
+    label: {
+      display: 'block',
+      fontSize: theme.typography.fontSize.sm,
+      fontWeight: theme.typography.fontWeight.medium,
+      color: theme.colors.text.primary,
+      marginBottom: theme.spacing[1],
+    },
+
+    // Text input field
+    input: {
+      width: '100%',
+      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+      borderRadius: theme.border.radius.base,
+      fontSize: theme.typography.fontSize.base,
+      color: theme.colors.text.primary,
+      backgroundColor: theme.colors.background.card,
+      outline: 'none',
+      transition: theme.transitions.base,
+      // Focus state: borderColor = theme.colors.text.primary
+      // Blur state: borderColor = theme.colors.border.medium
+    },
+
+    // Select dropdown (styled same as input)
+    select: {
+      width: '100%',
+      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+      paddingRight: theme.spacing[8],
+      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
+      borderRadius: theme.border.radius.base,
+      fontSize: theme.typography.fontSize.base,
+      color: theme.colors.text.primary,
+      backgroundColor: theme.colors.background.card,
+      cursor: 'pointer',
+      textAlign: 'left',
+      appearance: 'none',
+      outline: 'none',
+      transition: theme.transitions.base,
+      // Focus state: borderColor = theme.colors.text.primary
+      // Blur state: borderColor = theme.colors.border.medium
+    },
+
+    // Error message text
+    errorText: {
+      fontSize: theme.typography.fontSize.xs,
+      color: theme.colors.semantic.expense,
+      marginTop: theme.spacing[1],
+      margin: 0,
+    },
+
+    // Checkbox input
+    checkbox: {
+      width: '16px',
+      height: '16px',
+      cursor: 'pointer',
+      accentColor: theme.colors.action.primary,
+    },
+
+    // Currency symbol prefix (absolutely positioned in input)
+    currencyPrefix: {
+      position: 'absolute',
+      left: theme.spacing[3],
+      top: '50%',
+      transform: 'translateY(-50%)',
+      fontSize: theme.typography.fontSize.base,
+      color: theme.colors.text.secondary,
+      pointerEvents: 'none',
+    },
+  },
+
+  // CARDS
+  card: {
+    // Standard card container (MetricCard, CategoryCard, WalletCard, etc.)
+    // Used for larger card components with more padding
+    container: {
+      backgroundColor: theme.colors.background.card,
+      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+      borderRadius: theme.border.radius.lg,
+      padding: theme.spacing[6],
+      transition: theme.transitions.fast,
+      cursor: 'pointer',
+      // Hover state: boxShadow = theme.shadows.md, transform = 'translateY(-2px)'
+    },
+
+    // List item container (TransactionListItem, CategoryListItem, etc.)
+    // Used for list items with less padding and base border radius
+    listItem: {
+      backgroundColor: theme.colors.background.card,
+      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+      borderRadius: theme.border.radius.base,
+      padding: theme.spacing[2],
+      transition: theme.transitions.fast,
+      cursor: 'pointer',
+      // Hover state: boxShadow = theme.shadows.md
+    },
+  },
+
+  // POPOVERS & DROPDOWNS
+  popover: {
+    // Dropdown menu / popover container
+    menu: {
+      position: 'absolute',
+      top: 'calc(100% + 4px)',
+      left: 0,
+      backgroundColor: theme.colors.background.card,
+      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+      borderRadius: theme.border.radius.lg,
+      boxShadow: theme.shadows.lg,
+      padding: theme.spacing[2],
+      zIndex: theme.zIndex.popover,
+      // Note: position (top, left, right) may vary by use case
+    },
+
+    // Chevron icon (absolutely positioned in select/dropdown)
+    chevronIcon: {
+      position: 'absolute',
+      right: theme.spacing[3],
+      top: '50%',
+      transform: 'translateY(-50%)',
+      pointerEvents: 'none',
+      color: theme.colors.text.secondary,
+    },
+  },
+
+  // NAVIGATION
+  navigation: {
+    // Navigation link (active and inactive states)
+    link: {
+      padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
+      borderRadius: theme.border.radius.base,
+      fontSize: theme.typography.fontSize.sm,
+      fontWeight: theme.typography.fontWeight.medium,
+      color: theme.colors.text.primary,
+      backgroundColor: 'transparent',
+      transition: theme.transitions.fast,
+      // Active state: backgroundColor = theme.colors.background.cardHover
+    },
+  },
+};
+
 // Utility function to get color by transaction type
 export const getTypeColor = (type) => {
   const typeMap = {

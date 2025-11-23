@@ -85,7 +85,7 @@ function SignupForm() {
 
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Email</label>
+          <label style={theme.components.form.label}>Email</label>
           <div style={styles.inputWrapper}>
             <Mail size={18} style={styles.inputIcon} />
             <input
@@ -94,7 +94,12 @@ function SignupForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
               required
-              style={styles.input}
+              style={{
+                ...theme.components.form.input,
+                paddingLeft: theme.spacing[10],
+                backgroundColor: theme.colors.background.page,
+                borderColor: theme.colors.border.light,
+              }}
               disabled={loading}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = theme.colors.text.primary;
@@ -107,7 +112,7 @@ function SignupForm() {
         </div>
 
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Username</label>
+          <label style={theme.components.form.label}>Username</label>
           <div style={styles.inputWrapper}>
             <User size={18} style={styles.inputIcon} />
             <input
@@ -116,7 +121,12 @@ function SignupForm() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Your name"
               required
-              style={styles.input}
+              style={{
+                ...theme.components.form.input,
+                paddingLeft: theme.spacing[10],
+                backgroundColor: theme.colors.background.page,
+                borderColor: theme.colors.border.light,
+              }}
               disabled={loading}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = theme.colors.text.primary;
@@ -129,7 +139,7 @@ function SignupForm() {
         </div>
 
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Password</label>
+          <label style={theme.components.form.label}>Password</label>
           <div style={styles.inputWrapper}>
             <Lock size={18} style={styles.inputIcon} />
             <input
@@ -139,7 +149,12 @@ function SignupForm() {
               placeholder="Minimum 8 characters"
               required
               minLength={8}
-              style={styles.input}
+              style={{
+                ...theme.components.form.input,
+                paddingLeft: theme.spacing[10],
+                backgroundColor: theme.colors.background.page,
+                borderColor: theme.colors.border.light,
+              }}
               disabled={loading}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = theme.colors.text.primary;
@@ -152,7 +167,7 @@ function SignupForm() {
         </div>
 
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Confirm Password</label>
+          <label style={theme.components.form.label}>Confirm Password</label>
           <div style={styles.inputWrapper}>
             <Lock size={18} style={styles.inputIcon} />
             <input
@@ -162,7 +177,12 @@ function SignupForm() {
               placeholder="Confirm your password"
               required
               minLength={8}
-              style={styles.input}
+              style={{
+                ...theme.components.form.input,
+                paddingLeft: theme.spacing[10],
+                backgroundColor: theme.colors.background.page,
+                borderColor: theme.colors.border.light,
+              }}
               disabled={loading}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = theme.colors.text.primary;
@@ -178,8 +198,9 @@ function SignupForm() {
           type="submit"
           disabled={loading}
           style={{
-            ...styles.submitButton,
-            ...(loading ? styles.submitButtonDisabled : {}),
+            ...theme.components.button.primary,
+            marginTop: theme.spacing[2],
+            ...(loading && styles.submitButtonDisabled),
           }}
           onMouseEnter={(e) => {
             if (!loading) {
@@ -262,13 +283,6 @@ const styles = {
   inputGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: theme.spacing[2],
-  },
-
-  label: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.primary,
   },
 
   inputWrapper: {
@@ -282,31 +296,6 @@ const styles = {
     left: theme.spacing[3],
     color: theme.colors.text.muted,
     pointerEvents: 'none',
-  },
-
-  input: {
-    width: '100%',
-    padding: `${theme.spacing[2]} ${theme.spacing[3]} ${theme.spacing[2]} ${theme.spacing[10]}`,
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.primary,
-    backgroundColor: theme.colors.background.page,
-    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-    borderRadius: theme.border.radius.base,
-    outline: 'none',
-    transition: theme.transitions.base,
-  },
-
-  submitButton: {
-    marginTop: theme.spacing[2],
-    padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.text.inverse,
-    backgroundColor: theme.colors.action.primary,
-    border: 'none',
-    borderRadius: theme.border.radius.base,
-    cursor: 'pointer',
-    transition: theme.transitions.base,
   },
 
   submitButtonDisabled: {

@@ -101,69 +101,17 @@ const CategoryForm = ({
   return (
     <>
       {/* Modal Overlay */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: theme.zIndex.modal,
-          padding: theme.spacing[4],
-        }}
-        onClick={handleCancel}
-      >
+      <div style={theme.components.modal.overlay} onClick={handleCancel}>
         {/* Modal Content */}
-        <div
-          style={{
-            backgroundColor: theme.colors.background.card,
-            borderRadius: theme.border.radius.xl,
-            maxWidth: '500px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: theme.shadows.xl,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div style={theme.components.modal.content} onClick={(e) => e.stopPropagation()}>
           {/* Modal Header */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: theme.spacing[6],
-              paddingBottom: 0,
-              marginBottom: theme.spacing[6],
-            }}
-          >
-            <h2
-              style={{
-                fontSize: theme.typography.fontSize.xl,
-                fontWeight: theme.typography.fontWeight.bold,
-                color: theme.colors.text.primary,
-                margin: 0,
-              }}
-            >
+          <div style={theme.components.modal.header}>
+            <h2 style={theme.components.modal.title}>
               {mode === 'edit' ? 'Edit Category' : 'Create Category'}
             </h2>
             <button
               onClick={handleCancel}
-              style={{
-                backgroundColor: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: theme.spacing[1],
-                borderRadius: theme.border.radius.base,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: theme.transitions.fast,
-              }}
+              style={theme.components.modal.closeButton}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
               }}
@@ -182,13 +130,10 @@ const CategoryForm = ({
               <div>
                 <label
                   style={{
+                    ...theme.components.form.label,
                     display: 'flex',
                     alignItems: 'center',
                     gap: theme.spacing[2],
-                    fontSize: theme.typography.fontSize.sm,
-                    fontWeight: theme.typography.fontWeight.medium,
-                    color: theme.colors.text.primary,
-                    marginBottom: theme.spacing[2],
                   }}
                 >
                   <TypeIcon
@@ -205,20 +150,7 @@ const CategoryForm = ({
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                      paddingRight: theme.spacing[8],
-                      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                      borderRadius: theme.border.radius.base,
-                      fontSize: theme.typography.fontSize.base,
-                      color: theme.colors.text.primary,
-                      backgroundColor: theme.colors.background.card,
-                      cursor: 'pointer',
-                      appearance: 'none',
-                      outline: 'none',
-                      transition: theme.transitions.base,
-                    }}
+                    style={theme.components.form.select}
                     onFocus={(e) => {
                       e.currentTarget.style.borderColor = theme.colors.text.primary;
                     }}
@@ -229,33 +161,13 @@ const CategoryForm = ({
                     <option value="income">Income</option>
                     <option value="expense">Expense</option>
                   </select>
-                  <ChevronDown
-                    size={20}
-                    style={{
-                      position: 'absolute',
-                      right: theme.spacing[3],
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
-                      color: theme.colors.text.secondary,
-                    }}
-                  />
+                  <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
                 </div>
               </div>
 
               {/* Name */}
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: theme.typography.fontSize.sm,
-                    fontWeight: theme.typography.fontWeight.medium,
-                    color: theme.colors.text.primary,
-                    marginBottom: theme.spacing[2],
-                  }}
-                >
-                  Name
-                </label>
+                <label style={theme.components.form.label}>Name</label>
                 <input
                   type="text"
                   value={name}
@@ -263,72 +175,39 @@ const CategoryForm = ({
                   placeholder="e.g., Groceries"
                   maxLength={50}
                   style={{
-                    width: '100%',
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                      errors.name ? theme.colors.semantic.expense : theme.colors.border.medium
-                    }`,
-                    borderRadius: theme.border.radius.base,
-                    fontSize: theme.typography.fontSize.base,
-                    color: theme.colors.text.primary,
-                    backgroundColor: theme.colors.background.card,
-                    outline: 'none',
-                    transition: theme.transitions.base,
+                    ...theme.components.form.input,
+                    borderColor: errors.name
+                      ? theme.colors.semantic.expense
+                      : theme.colors.border.medium,
                   }}
                   onFocus={(e) => {
-                  if (!errors.name) {
-                    e.currentTarget.style.borderColor = theme.colors.text.primary;
-                  }
-                }}
-                onBlur={(e) => {
-                  if (!errors.name) {
-                    e.currentTarget.style.borderColor = theme.colors.border.medium;
-                  }
-                }}
+                    if (!errors.name) {
+                      e.currentTarget.style.borderColor = theme.colors.text.primary;
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!errors.name) {
+                      e.currentTarget.style.borderColor = theme.colors.border.medium;
+                    }
+                  }}
                 />
-                {errors.name && (
-                  <p
-                    style={{
-                      fontSize: theme.typography.fontSize.sm,
-                      color: theme.colors.semantic.expense,
-                      marginTop: theme.spacing[1],
-                      margin: `${theme.spacing[1]} 0 0 0`,
-                    }}
-                  >
-                    {errors.name}
-                  </p>
-                )}
+                {errors.name && <p style={theme.components.form.errorText}>{errors.name}</p>}
               </div>
 
               {/* Icon */}
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: theme.typography.fontSize.sm,
-                    fontWeight: theme.typography.fontWeight.medium,
-                    color: theme.colors.text.primary,
-                    marginBottom: theme.spacing[2],
-                  }}
-                >
-                  Icon
-                </label>
+                <label style={theme.components.form.label}>Icon</label>
                 <div
                   onClick={() => setShowIconPicker(true)}
                   style={{
-                    width: '100%',
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                      errors.icon ? theme.colors.semantic.expense : theme.colors.border.medium
-                    }`,
-                    borderRadius: theme.border.radius.base,
-                    fontSize: theme.typography.fontSize.base,
-                    backgroundColor: theme.colors.background.card,
-                    cursor: 'pointer',
+                    ...theme.components.form.input,
+                    borderColor: errors.icon
+                      ? theme.colors.semantic.expense
+                      : theme.colors.border.medium,
                     display: 'flex',
                     alignItems: 'center',
                     gap: theme.spacing[2],
-                    transition: theme.transitions.fast,
+                    cursor: 'pointer',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
@@ -356,18 +235,7 @@ const CategoryForm = ({
                     Select Icon
                   </span>
                 </div>
-                {errors.icon && (
-                  <p
-                    style={{
-                      fontSize: theme.typography.fontSize.sm,
-                      color: theme.colors.semantic.expense,
-                      marginTop: theme.spacing[1],
-                      margin: `${theme.spacing[1]} 0 0 0`,
-                    }}
-                  >
-                    {errors.icon}
-                  </p>
-                )}
+                {errors.icon && <p style={theme.components.form.errorText}>{errors.icon}</p>}
               </div>
             </div>
 
@@ -383,17 +251,7 @@ const CategoryForm = ({
               <button
                 type="button"
                 onClick={handleCancel}
-                style={{
-                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  backgroundColor: 'transparent',
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                  cursor: 'pointer',
-                  transition: theme.transitions.fast,
-                }}
+                style={theme.components.button.secondary}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
                 }}
@@ -405,18 +263,8 @@ const CategoryForm = ({
               </button>
               <button
                 type="submit"
-                onClick={handleSubmit} 
-                style={{
-                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.inverse,
-                  backgroundColor: theme.colors.action.primary,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: theme.transitions.fast,
-                }}
+                onClick={handleSubmit}
+                style={theme.components.button.primary}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.action.primaryHover;
                 }}

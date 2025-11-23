@@ -23,15 +23,13 @@ const MetricCard = ({
   return (
     <div
       style={{
-        backgroundColor: theme.colors.background.card,
-        border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-        borderRadius: theme.border.radius.lg,
-        padding: theme.spacing[5],
+        ...theme.components.card.container,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-        transition: theme.transitions.base,
+        padding: theme.spacing[5],
         position: 'relative',
+        transition: theme.transitions.base,
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = theme.shadows.md;
@@ -69,16 +67,7 @@ const MetricCard = ({
           {masked && (
             <button
               onClick={() => setIsVisible(!isVisible)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: theme.spacing[1],
-                display: 'flex',
-                alignItems: 'center',
-                borderRadius: theme.border.radius.base,
-                transition: theme.transitions.fast,
-              }}
+              style={theme.components.button.iconHover}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
               }}

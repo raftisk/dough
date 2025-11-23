@@ -129,7 +129,8 @@ const PresetCategoriesList = ({
               justifyContent: 'space-between',
               alignItems: 'center',
               padding: theme.spacing[6],
-              borderBottom: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+              paddingBottom: 0,
+              marginBottom: theme.spacing[6],
             }}
           >
             <h2

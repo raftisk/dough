@@ -214,69 +214,17 @@ const TransactionForm = ({
 
   return (
     // Modal Overlay
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: theme.zIndex.modal,
-        padding: theme.spacing[4],
-      }}
-      onClick={handleCancel}
-    >
+    <div style={theme.components.modal.overlay} onClick={handleCancel}>
       {/* Modal Content */}
-      <div
-        style={{
-          backgroundColor: theme.colors.background.card,
-          borderRadius: theme.border.radius.xl,
-          maxWidth: '500px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxShadow: theme.shadows.xl,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div style={theme.components.modal.content} onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: theme.spacing[6],
-            paddingBottom: 0,
-            marginBottom: theme.spacing[6],
-          }}
-        >
-          <h2
-            style={{
-              fontSize: theme.typography.fontSize.xl,
-              fontWeight: theme.typography.fontWeight.bold,
-              color: theme.colors.text.primary,
-              margin: 0,
-            }}
-          >
+        <div style={theme.components.modal.header}>
+          <h2 style={theme.components.modal.title}>
             {initialData && initialData.id ? 'Edit Transaction' : 'Add Transaction'}
           </h2>
           <button
             onClick={handleCancel}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: theme.spacing[1],
-              borderRadius: theme.border.radius.base,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: theme.transitions.fast,
-            }}
+            style={theme.components.modal.closeButton}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
             }}
@@ -295,13 +243,10 @@ const TransactionForm = ({
             <div>
               <label
                 style={{
+                  ...theme.components.form.label,
                   display: 'flex',
                   alignItems: 'center',
                   gap: theme.spacing[2],
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
                 }}
               >
                 <TypeIcon size={16} color={type === 'income' ? theme.colors.semantic.income : theme.colors.semantic.expense} />
@@ -311,20 +256,7 @@ const TransactionForm = ({
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                    borderRadius: theme.border.radius.base,
-                    fontSize: theme.typography.fontSize.base,
-                    color: theme.colors.text.primary,
-                    backgroundColor: theme.colors.background.card,
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    outline: 'none',
-                    transition: theme.transitions.base,
-                  }}
+                  style={theme.components.form.select}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = theme.colors.text.primary;
                   }}
@@ -335,33 +267,13 @@ const TransactionForm = ({
                   <option value="income">Income</option>
                   <option value="expense">Expense</option>
                 </select>
-                <ChevronDown
-                  size={20}
-                  style={{
-                    position: 'absolute',
-                    right: theme.spacing[3],
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    pointerEvents: 'none',
-                    color: theme.colors.text.secondary,
-                  }}
-                />
+                <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
-                }}
-              >
-                Description
-              </label>
+              <label style={theme.components.form.label}>Description</label>
               <input
                 type="text"
                 value={description}
@@ -369,17 +281,10 @@ const TransactionForm = ({
                 placeholder="e.g., Salary, Groceries"
                 maxLength={200}
                 style={{
-                  width: '100%',
-                  padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                    errors.description ? theme.colors.semantic.expense : theme.colors.border.medium
-                  }`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  color: theme.colors.text.primary,
-                  backgroundColor: theme.colors.background.card,
-                  outline: 'none',
-                  transition: theme.transitions.base,
+                  ...theme.components.form.input,
+                  borderColor: errors.description
+                    ? theme.colors.semantic.expense
+                    : theme.colors.border.medium,
                 }}
                 onFocus={(e) => {
                   if (!errors.description) {
@@ -393,36 +298,15 @@ const TransactionForm = ({
                 }}
               />
               {errors.description && (
-                <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
-                  {errors.description}
-                </p>
+                <p style={theme.components.form.errorText}>{errors.description}</p>
               )}
             </div>
 
             {/* Amount */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
-                }}
-              >
-                Amount
-              </label>
+              <label style={theme.components.form.label}>Amount</label>
               <div style={{ position: 'relative' }}>
-                <span
-                  style={{
-                    position: 'absolute',
-                    left: theme.spacing[3],
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    fontSize: theme.typography.fontSize.base,
-                    color: theme.colors.text.secondary,
-                  }}
-                >
+                <span style={theme.components.form.currencyPrefix}>
                   {getCurrencySymbol(selectedWalletCurrency)}
                 </span>
                 <input
@@ -433,18 +317,11 @@ const TransactionForm = ({
                   step="0.01"
                   min="0"
                   style={{
-                    width: '100%',
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                    ...theme.components.form.input,
                     paddingLeft: theme.spacing[6],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${
-                      errors.amount ? theme.colors.semantic.expense : theme.colors.border.medium
-                    }`,
-                    borderRadius: theme.border.radius.base,
-                    fontSize: theme.typography.fontSize.base,
-                    color: theme.colors.text.primary,
-                    backgroundColor: theme.colors.background.card,
-                    outline: 'none',
-                    transition: theme.transitions.base,
+                    borderColor: errors.amount
+                      ? theme.colors.semantic.expense
+                      : theme.colors.border.medium,
                   }}
                   onFocus={(e) => {
                     if (!errors.amount) {
@@ -458,44 +335,17 @@ const TransactionForm = ({
                   }}
                 />
               </div>
-              {errors.amount && (
-                <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
-                  {errors.amount}
-                </p>
-              )}
+              {errors.amount && <p style={theme.components.form.errorText}>{errors.amount}</p>}
             </div>
 
             {/* Category */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
-                }}
-              >
-                Category
-              </label>
+              <label style={theme.components.form.label}>Category</label>
               <div style={{ position: 'relative' }}>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                    borderRadius: theme.border.radius.base,
-                    fontSize: theme.typography.fontSize.base,
-                    color: theme.colors.text.primary,
-                    backgroundColor: theme.colors.background.card,
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    outline: 'none',
-                    transition: theme.transitions.base,
-                  }}
+                  style={theme.components.form.select}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = theme.colors.text.primary;
                   }}
@@ -510,56 +360,21 @@ const TransactionForm = ({
                     </option>
                   ))}
                 </select>
-                { <ChevronDown
-                  size={20}
-                  style={{
-                    position: 'absolute',
-                    right: theme.spacing[3],
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    pointerEvents: 'none',
-                    color: theme.colors.text.secondary,
-                  }}
-                /> }
+                <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
               </div>
               {errors.category && (
-                <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
-                  {errors.category}
-                </p>
+                <p style={theme.components.form.errorText}>{errors.category}</p>
               )}
             </div>
 
             {/* Wallet */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
-                }}
-              >
-                Wallet
-              </label>
+              <label style={theme.components.form.label}>Wallet</label>
               <div style={{ position: 'relative' }}>
                 <select
                   value={walletId}
                   onChange={(e) => setWalletId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                    borderRadius: theme.border.radius.base,
-                    fontSize: theme.typography.fontSize.base,
-                    color: theme.colors.text.primary,
-                    backgroundColor: theme.colors.background.card,
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    outline: 'none',
-                    transition: theme.transitions.base,
-                  }}
+                  style={theme.components.form.select}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = theme.colors.text.primary;
                   }}
@@ -573,38 +388,14 @@ const TransactionForm = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown
-                  size={20}
-                  style={{
-                    position: 'absolute',
-                    right: theme.spacing[3],
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    pointerEvents: 'none',
-                    color: theme.colors.text.secondary,
-                  }}
-                />
+                <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
               </div>
-              {errors.wallet && (
-                <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
-                  {errors.wallet}
-                </p>
-              )}
+              {errors.wallet && <p style={theme.components.form.errorText}>{errors.wallet}</p>}
             </div>
 
             {/* Date */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
-                }}
-              >
-                Date
-              </label>
+              <label style={theme.components.form.label}>Date</label>
               <DatePicker
                 date={date}
                 onDateChange={(newDate) => {
@@ -612,48 +403,23 @@ const TransactionForm = ({
                   setDate(dateStr);
                 }}
               />
-              {errors.date && (
-                <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.semantic.expense, marginTop: theme.spacing[1], margin: 0 }}>
-                  {errors.date}
-                </p>
-              )}
+              {errors.date && <p style={theme.components.form.errorText}>{errors.date}</p>}
             </div>
 
             {/* Recurrence */}
             <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: theme.typography.fontSize.sm,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing[1],
-                }}
-              >
-                Recurrence
-              </label>
+              <label style={theme.components.form.label}>Recurrence</label>
               <div style={{ position: 'relative' }}>
                 <select
                   value={recurrence}
                   onChange={(e) => setRecurrence(e.target.value)}
                   disabled={initialData?.is_posted}
                   style={{
-                    width: '100%',
-                    padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                    paddingRight: theme.spacing[8],
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                    borderRadius: theme.border.radius.base,
-                    fontSize: theme.typography.fontSize.base,
-                    color: theme.colors.text.primary,
+                    ...theme.components.form.select,
                     backgroundColor: initialData?.is_posted
                       ? theme.colors.background.cardHover
                       : theme.colors.background.card,
-                    cursor: initialData?.is_posted
-                      ? 'default'
-                      : 'pointer',
-                    appearance: 'none',
-                    outline: 'none',
-                    transition: theme.transitions.base,
+                    cursor: initialData?.is_posted ? 'default' : 'pointer',
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = theme.colors.text.primary;
@@ -669,17 +435,7 @@ const TransactionForm = ({
                   <option value="yearly">Yearly</option>
                 </select>
                 {!initialData?.is_posted && (
-                  <ChevronDown
-                    size={20}
-                    style={{
-                      position: 'absolute',
-                      right: theme.spacing[3],
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      pointerEvents: 'none',
-                      color: theme.colors.text.secondary,
-                    }}
-                  />
+                  <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
                 )}
               </div>
             </div>
@@ -738,17 +494,7 @@ const TransactionForm = ({
               <button
                 type="button"
                 onClick={handleCancel}
-                style={{
-                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.primary,
-                  backgroundColor: 'transparent',
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                  cursor: 'pointer',
-                  transition: theme.transitions.fast,
-                }}
+                style={theme.components.button.secondary}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
                 }}
@@ -760,17 +506,7 @@ const TransactionForm = ({
               </button>
               <button
                 type="submit"
-                style={{
-                  padding: `${theme.spacing[2]} ${theme.spacing[5]}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  fontWeight: theme.typography.fontWeight.medium,
-                  color: theme.colors.text.inverse,
-                  backgroundColor: theme.colors.action.primary,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: theme.transitions.fast,
-                }}
+                style={theme.components.button.primary}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = theme.colors.action.primaryHover;
                 }}

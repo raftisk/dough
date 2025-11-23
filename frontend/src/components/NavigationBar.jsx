@@ -69,15 +69,10 @@ const NavigationBar = () => {
               key={link.path}
               to={link.path}
               style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                borderRadius: theme.border.radius.base,
-                fontSize: theme.typography.fontSize.sm,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.colors.text.primary,
+                ...theme.components.navigation.link,
                 backgroundColor: isActive(link.path)
                   ? theme.colors.background.cardHover
                   : 'transparent',
-                transition: theme.transitions.fast,
               }}
               onMouseEnter={(e) => {
                 if (!isActive(link.path)) {
@@ -100,15 +95,7 @@ const NavigationBar = () => {
       <Link
         to="/settings"
         style={{
-          backgroundColor: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          padding: theme.spacing[2],
-          borderRadius: theme.border.radius.base,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: theme.transitions.fast,
+          ...theme.components.button.iconHover,
           color: theme.colors.text.secondary,
         }}
         onMouseEnter={(e) => {

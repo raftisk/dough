@@ -103,70 +103,22 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: theme.zIndex.modal || 1000,
-      }}
+      style={theme.components.modal.overlay}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div
-        style={{
-          backgroundColor: theme.colors.background.card,
-          borderRadius: theme.border.radius.xl,
-          maxWidth: '500px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxShadow: theme.shadows.xl,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div style={theme.components.modal.content} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: theme.spacing[6],
-            paddingBottom: 0,
-            marginBottom: theme.spacing[6],
-          }}
-        >
-          <h2
-            style={{
-              fontSize: theme.typography.fontSize.xl,
-              fontWeight: theme.typography.fontWeight.bold,
-              color: theme.colors.text.primary,
-              margin: 0,
-            }}
-          >
+        <div style={theme.components.modal.header}>
+          <h2 style={theme.components.modal.title}>
             {initialData ? 'Edit Budget' : 'Add Budget'}
           </h2>
           <button
             onClick={onClose}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: theme.spacing[1],
-              borderRadius: theme.border.radius.base,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: theme.transitions.fast,
-            }}
+            style={theme.components.modal.closeButton}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
             }}
@@ -197,32 +149,12 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
 
           {/* Budget Name */}
           <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: theme.typography.fontSize.sm,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.colors.text.primary,
-                marginBottom: theme.spacing[1],
-              }}
-            >
-              Budget Name
-            </label>
+            <label style={theme.components.form.label}>Budget Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{
-                width: '100%',
-                padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                backgroundColor: theme.colors.background.card,
-                border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                borderRadius: theme.border.radius.base,
-                fontSize: theme.typography.fontSize.base,
-                color: theme.colors.text.primary,
-                outline: 'none',
-                transition: theme.transitions.base,
-              }}
+              style={theme.components.form.input}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = theme.colors.text.primary;
               }}
@@ -236,35 +168,12 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
 
           {/* Categories Dropdown with Checkboxes */}
           <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: theme.typography.fontSize.sm,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.colors.text.primary,
-                marginBottom: theme.spacing[1],
-              }}
-            >
-              Categories
-            </label>
+            <label style={theme.components.form.label}>Categories</label>
             <div style={{ position: 'relative' }} ref={categoriesDropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
-                style={{
-                  width: '100%',
-                  padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                  paddingRight: theme.spacing[8],
-                  backgroundColor: theme.colors.background.card,
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  color: theme.colors.text.primary,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  outline: 'none',
-                  transition: theme.transitions.base,
-                }}
+                style={theme.components.form.select}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = theme.colors.text.primary;
                 }}
@@ -276,32 +185,14 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                   ? 'Select categories'
                   : `${categoryIds.length} categor${categoryIds.length === 1 ? 'y' : 'ies'} selected`}
               </button>
-              <ChevronDown
-                size={20}
-                style={{
-                  position: 'absolute',
-                  right: theme.spacing[3],
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  pointerEvents: 'none',
-                  color: theme.colors.text.secondary,
-                }}
-              />
+              <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
               {isCategoriesOpen && (
                 <div
                   style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 4px)',
-                    left: 0,
+                    ...theme.components.popover.menu,
                     width: '100%',
-                    backgroundColor: theme.colors.background.card,
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-                    borderRadius: theme.border.radius.lg,
-                    boxShadow: theme.shadows.lg,
-                    padding: theme.spacing[2],
                     maxHeight: '300px',
                     overflowY: 'auto',
-                    zIndex: theme.zIndex.popover || 1000,
                   }}
                 >
                   {categories.map((category) => {
@@ -329,12 +220,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                           type="checkbox"
                           checked={categoryIds.includes(category.id)}
                           onChange={() => handleCategoryToggle(category.id)}
-                          style={{
-                            width: '16px',
-                            height: '16px',
-                            cursor: 'pointer',
-                            accentColor: theme.colors.action.primary,
-                          }}
+                          style={theme.components.form.checkbox}
                         />
                         <IconComponent size={16} color={theme.colors.text.primary} />
                         <span style={{ fontSize: theme.typography.fontSize.sm }}>{category.name}</span>
@@ -348,29 +234,9 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
 
           {/* Amount */}
           <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: theme.typography.fontSize.sm,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.colors.text.primary,
-                marginBottom: theme.spacing[1],
-              }}
-            >
-              Amount
-            </label>
+            <label style={theme.components.form.label}>Amount</label>
             <div style={{ position: 'relative' }}>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: theme.spacing[3],
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  fontSize: theme.typography.fontSize.base,
-                  color: theme.colors.text.secondary,
-                  pointerEvents: 'none',
-                }}
-              >
+              <span style={theme.components.form.currencyPrefix}>
                 {getCurrencySymbol(FALLBACK_CURRENCY)}
               </span>
               <input
@@ -380,16 +246,8 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 style={{
-                  width: '100%',
-                  padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
+                  ...theme.components.form.input,
                   paddingLeft: theme.spacing[6],
-                  backgroundColor: theme.colors.background.card,
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  color: theme.colors.text.primary,
-                  outline: 'none',
-                  transition: theme.transitions.base,
                 }}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = theme.colors.text.primary;
@@ -405,35 +263,12 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
 
           {/* Period */}
           <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: theme.typography.fontSize.sm,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.colors.text.primary,
-                marginBottom: theme.spacing[1],
-              }}
-            >
-              Period
-            </label>
+            <label style={theme.components.form.label}>Period</label>
             <div style={{ position: 'relative' }}>
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: `${theme.spacing[2]} ${theme.spacing[3]}`,
-                  paddingRight: theme.spacing[8],
-                  backgroundColor: theme.colors.background.card,
-                  border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                  borderRadius: theme.border.radius.base,
-                  fontSize: theme.typography.fontSize.base,
-                  color: theme.colors.text.primary,
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  outline: 'none',
-                  transition: theme.transitions.base,
-                }}
+                style={theme.components.form.select}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = theme.colors.text.primary;
                 }}
@@ -446,17 +281,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
                 <option value="6-month">Half-Year</option>
                 <option value="yearly">Yearly</option>
               </select>
-              <ChevronDown
-                size={20}
-                style={{
-                  position: 'absolute',
-                  right: theme.spacing[3],
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  pointerEvents: 'none',
-                  color: theme.colors.text.secondary,
-                }}
-              />
+              <ChevronDown size={20} style={theme.components.popover.chevronIcon} />
             </div>
           </div>
 
@@ -501,17 +326,7 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
             <button
               type="button"
               onClick={onClose}
-              style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                backgroundColor: 'transparent',
-                border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.medium}`,
-                borderRadius: theme.border.radius.base,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.colors.text.primary,
-                cursor: 'pointer',
-                transition: theme.transitions.fast,
-              }}
+              style={theme.components.button.secondary}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
               }}
@@ -523,22 +338,12 @@ const BudgetForm = ({ isOpen, onClose, onSubmit, initialData, categories }) => {
             </button>
             <button
               type="submit"
-              style={{
-                padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                backgroundColor: theme.colors.action.primary,
-                border: 'none',
-                borderRadius: theme.border.radius.base,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.colors.text.inverse,
-                cursor: 'pointer',
-                transition: theme.transitions.fast,
-              }}
+              style={theme.components.button.primary}
               onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '0.9';
+                e.currentTarget.style.backgroundColor = theme.colors.action.primaryHover;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.backgroundColor = theme.colors.action.primary;
               }}
             >
               {initialData ? 'Save' : 'Create'}

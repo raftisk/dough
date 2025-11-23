@@ -22,14 +22,12 @@ const WalletCard = ({ wallet, onClick, onEdit }) => {
     <div
       onClick={() => onClick && onClick(wallet)}
       style={{
-        backgroundColor: theme.colors.background.card,
-        border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-        borderRadius: theme.border.radius.lg,
-        padding: theme.spacing[4],
+        ...theme.components.card.container,
         minWidth: '180px',
         display: 'flex',
         flexDirection: 'column',
         gap: theme.spacing[3],
+        padding: theme.spacing[4],
         cursor: onClick ? 'pointer' : 'default',
         transition: theme.transitions.base,
         position: 'relative',
