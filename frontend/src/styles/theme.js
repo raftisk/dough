@@ -417,6 +417,43 @@ theme.components = {
     },
   },
 
+  // DROPDOWN MENUS
+  // Lower-priority menus attached to buttons (vs higher-priority popovers)
+  dropdown: {
+    // Dropdown menu container (right-aligned, lower z-index than popover)
+    menu: {
+      position: 'absolute',
+      right: 0,
+      top: '100%',
+      marginTop: theme.spacing[1],
+      backgroundColor: theme.colors.background.card,
+      border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
+      borderRadius: theme.border.radius.base,
+      boxShadow: theme.shadows.lg,
+      padding: theme.spacing[2],
+      minWidth: '160px',
+      zIndex: theme.zIndex.dropdown,
+    },
+
+    // Menu item button (used inside dropdown menus)
+    menuItem: {
+      width: '100%',
+      padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
+      backgroundColor: 'transparent',
+      border: 'none',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing[2],
+      fontSize: theme.typography.fontSize.sm,
+      color: theme.colors.text.primary,
+      transition: theme.transitions.fast,
+      borderRadius: theme.border.radius.sm,
+      textAlign: 'left',
+      // Hover state: backgroundColor = theme.colors.background.cardHover
+    },
+  },
+
   // NAVIGATION
   navigation: {
     // Navigation link (active and inactive states)

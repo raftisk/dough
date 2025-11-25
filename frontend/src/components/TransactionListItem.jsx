@@ -206,15 +206,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete, menuOptions, onMe
                   setMenuOpen(!menuOpen);
                 }}
                 style={{
-                  padding: theme.spacing[2],
-                  borderRadius: theme.border.radius.base,
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: theme.transitions.fast,
+                  ...theme.components.button.iconHover,
                   color: theme.colors.text.secondary,
                 }}
                 onMouseEnter={(e) => {
@@ -231,21 +223,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete, menuOptions, onMe
 
               {/* Dropdown Menu */}
               {menuOpen && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '100%',
-                    marginTop: theme.spacing[1],
-                    backgroundColor: theme.colors.background.card,
-                    border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-                    borderRadius: theme.border.radius.base,
-                    boxShadow: theme.shadows.lg,
-                    padding: theme.spacing[2],
-                    minWidth: '160px',
-                    zIndex: theme.zIndex.dropdown,
-                  }}
-                >
+                <div style={theme.components.dropdown.menu}>
                   {menuOptions.map((option, index) => (
                     <button
                       key={index}
@@ -254,18 +232,8 @@ const TransactionListItem = ({ transaction, onClick, onDelete, menuOptions, onMe
                         handleOptionClick(option);
                       }}
                       style={{
-                        width: '100%',
-                        padding: `${theme.spacing[2]} ${theme.spacing[4]}`,
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: theme.spacing[2],
-                        fontSize: theme.typography.fontSize.sm,
+                        ...theme.components.dropdown.menuItem,
                         color: option.variant === 'danger' ? theme.colors.semantic.expense : theme.colors.text.primary,
-                        transition: theme.transitions.fast,
-                        borderRadius: theme.border.radius.sm,
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
@@ -287,16 +255,7 @@ const TransactionListItem = ({ transaction, onClick, onDelete, menuOptions, onMe
                 e.stopPropagation();
                 onDelete(transaction);
               }}
-              style={{
-                padding: theme.spacing[2],
-                borderRadius: theme.border.radius.base,
-                backgroundColor: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                transition: theme.transitions.fast,
-              }}
+              style={theme.components.button.iconHover}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = theme.colors.background.cardHover;
               }}

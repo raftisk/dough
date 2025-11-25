@@ -18,15 +18,10 @@ const LargeBudgetCard = ({ budget, onClick }) => {
     <div
       onClick={onClick}
       style={{
-        backgroundColor: theme.colors.background.card,
-        border: `${theme.border.width.thin} ${theme.border.style.solid} ${theme.colors.border.light}`,
-        borderRadius: theme.border.radius.lg,
-        padding: theme.spacing[6],
-        cursor: 'pointer',
+        ...theme.components.card.container,
         display: 'flex',
         flexDirection: 'row',
         gap: theme.spacing[6],
-        transition: theme.transitions.fast,
         boxShadow: theme.shadows.sm,
       }}
       onMouseEnter={(e) => {

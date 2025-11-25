@@ -340,7 +340,34 @@ class WishlistItemSerializer(serializers.ModelSerializer):
         source='category.name',
         read_only=True
     )
-    description = serializers.CharField()
+    category_icon = serializers.CharField(
+        source='category.icon',
+        read_only=True
+    )
+    description = serializers.CharField(required=True, allow_blank=False, max_length=500)
+    amount = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        required=True,
+        min_value=Decimal('0.01')
+    )
+    target = serializers.CharField(
+        required=True,
+        help_text='Target month in YYYY-MM format'
+    )
+
+    def validate_description(self, value):
+        """Validate description is not empty"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Description cannot be empty.")
+        return value.strip()
+
+    def validate_target(self, value):
+        """Validate target is in correct YYYY-MM format"""
+        import re
+        if not re.match(r'^\d{4}-\d{2}$', str(value)):
+            raise serializers.ValidationError("Target must be in YYYY-MM format.")
+        return value
 
     class Meta:
         model = WishlistItem
@@ -350,6 +377,7 @@ class WishlistItemSerializer(serializers.ModelSerializer):
             'amount',
             'category',
             'category_name',
+            'category_icon',
             'priority',
             'target',
             'is_completed',
